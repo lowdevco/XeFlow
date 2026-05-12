@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "datatables.net-dt": "^2.3.8",
+    "datatables.net-react": "^1.0.2",
+    "recharts": "^3.8.1"
+  }
+}

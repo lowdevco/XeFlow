@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@import "tailwindcss";
+
+/* ================================================================
+   XEVENTURE DESIGN SYSTEM — LIGHT + DARK
+   Light: Crisp white/silver, deep navy brand (matches xeventure.com)
+   Dark:  Deep slate bg with royal-blue accent
+   ================================================================ */
+
+@theme {
+  /* ── Brand ──────────────────────────────────────── */
+  --color-xeflow-brand:     #1B4FD8;   /* Royal blue CTA (light) */
+  --color-xeflow-brand-alt: #163FAE;   /* Hover/pressed variant   */
+  --color-xeflow-electric:  #2563EB;   /* Accent blue             */
+
+  /* ── Semantic ────────────────────────────────────── */
+  --color-xeflow-success:   #059669;
+  --color-xeflow-warning:   #D97706;
+  --color-xeflow-danger:    #DC2626;
+
+  /* ── Light Mode Surfaces (DEFAULT) ──────────────── */
+  --color-xeflow-bg:        #F0F4FA;   /* Page background         */
+  --color-xeflow-surface:   #FFFFFF;   /* Card / Panel            */
+  --color-xeflow-surface2:  #F7F9FC;   /* Nested panel / thead bg */
+  --color-xeflow-navy:      #0D2247;   /* Top-bar / deep heading  */
+
+  /* ── Light Mode Type & Chrome ────────────────────── */
+  --color-xeflow-text:      #0D1B2A;
+  --color-xeflow-muted:     #64748B;
+  --color-xeflow-border:    #DDE3EF;
+}
+
+/* ── Dark Mode Overrides (applied via .dark on <html> or wrapper) ── */
+.dark {
+  --color-xeflow-brand:     #3C50E0;
+  --color-xeflow-brand-alt: #4F63F0;
+  --color-xeflow-electric:  #4F63F0;
+
+  --color-xeflow-bg:        #1A222C;
+  --color-xeflow-surface:   #24303F;
+  --color-xeflow-surface2:  #1E2A36;
+  --color-xeflow-navy:      #3C50E0;
+
+  --color-xeflow-text:      #F1F5F9;
+  --color-xeflow-muted:     #8A99AF;
+  --color-xeflow-border:    #313D4A;
+}
+
+/* ── Base ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-xeflow-bg);
+  color: var(--color-xeflow-text);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 5px; height: 5px; }
+::-webkit-scrollbar-track    { background: var(--color-xeflow-bg); }
+::-webkit-scrollbar-thumb    { background: var(--color-xeflow-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-xeflow-muted); }
+
+
+/* ================================================================
+   DATATABLES v2 — FULL CUSTOM OVERRIDE
+   Install: npm install datatables.net-react datatables.net-dt
+   DO NOT import 'datatables.net-dt/css/dataTables.dataTables.css'
+   — these styles replace it entirely.
+   ================================================================ */
+
+/* ── Wrapper ─────────────────────────────────────────────────────── */
+div.dt-container {
+  font-family: inherit;
+  color: var(--color-xeflow-text);
+  width: 100%;
+}
+
+/* ── Layout rows (DT v2 wraps everything in .dt-layout-row) ──────── */
+div.dt-container .dt-layout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+div.dt-container .dt-layout-cell {
+  display: flex;
+  align-items: center;
+}
+
+div.dt-container .dt-layout-start { justify-content: flex-start; }
+div.dt-container .dt-layout-end   { justify-content: flex-end;   }
+
+/* ── Top bar: Length + Search ───────────────────────────────────── */
+div.dt-container .dt-layout-row:first-child {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-xeflow-border);
+  background: var(--color-xeflow-surface2);
+}
+
+div.dt-container .dt-length,
+div.dt-container .dt-search {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+div.dt-container .dt-length label,
+div.dt-container .dt-search label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-xeflow-muted);
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+div.dt-container .dt-length select,
+div.dt-container .dt-search input {
+  background: var(--color-xeflow-surface);
+  border: 1.5px solid var(--color-xeflow-border);
+  color: var(--color-xeflow-text);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+div.dt-container .dt-length select {
+  padding-right: 1.75rem;
+  appearance: auto;
+}
+
+div.dt-container .dt-length select:focus,
+div.dt-container .dt-search input:focus {
+  border-color: var(--color-xeflow-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-xeflow-brand) 14%, transparent);
+}
+
+div.dt-container .dt-search input {
+  width: 200px;
+}
+
+div.dt-container .dt-search input::placeholder {
+  color: var(--color-xeflow-muted);
+  opacity: 0.6;
+}
+
+/* ── Table ───────────────────────────────────────────────────────── */
+table.dataTable {
+  width: 100% !important;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  table-layout: auto;
+}
+
+/* ── Head ───────────────────────────────────────────────────────── */
+table.dataTable thead tr {
+  background: var(--color-xeflow-surface2);
+}
+
+table.dataTable thead th {
+  padding: 0.9rem 1.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-xeflow-muted);
+  border-bottom: 1.5px solid var(--color-xeflow-border);
+  border-top: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: color 0.15s;
+}
+
+table.dataTable thead th:hover {
+  color: var(--color-xeflow-text);
+}
+
+/* ── Sort icons — hide DT's built-in span-based icons entirely ──── */
+table.dataTable thead th .dt-column-order { display: none !important; }
+
+/* Replace with clean CSS ::after arrows */
+table.dataTable thead th.dt-orderable-asc,
+table.dataTable thead th.dt-orderable-desc {
+  padding-right: 2.25rem;
+}
+
+table.dataTable thead th.dt-orderable-asc::after,
+table.dataTable thead th.dt-orderable-desc::after {
+  content: '⇅';
+  position: absolute;
+  right: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+table.dataTable thead th.dt-ordering-asc::after {
+  content: '↑';
+  opacity: 1;
+  color: var(--color-xeflow-brand);
+}
+
+table.dataTable thead th.dt-ordering-desc::after {
+  content: '↓';
+  opacity: 1;
+  color: var(--color-xeflow-brand);
+}
+
+/* ── Body ───────────────────────────────────────────────────────── */
+table.dataTable tbody tr {
+  border-bottom: 1px solid var(--color-xeflow-border);
+  transition: background 0.15s ease;
+}
+
+table.dataTable tbody tr:last-child {
+  border-bottom: none;
+}
+
+table.dataTable tbody tr:hover td {
+  background: color-mix(in srgb, var(--color-xeflow-brand) 4%, var(--color-xeflow-surface));
+}
+
+table.dataTable tbody td {
+  padding: 1.05rem 1.75rem;
+  color: var(--color-xeflow-text);
+  background: var(--color-xeflow-surface);
+  vertical-align: middle;
+  border-top: none;
+}
+
+/* ── Bottom bar: Info + Pagination ──────────────────────────────── */
+div.dt-container .dt-layout-row:last-child {
+  padding: 0.9rem 1.5rem;
+  border-top: 1px solid var(--color-xeflow-border);
+  background: var(--color-xeflow-surface2);
+}
+
+div.dt-container .dt-info {
+  font-size: 0.75rem;
+  color: var(--color-xeflow-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Pagination ─────────────────────────────────────────────────── */
+div.dt-container .dt-paging {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+div.dt-container .dt-paging .dt-paging-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.6rem;
+  background: var(--color-xeflow-surface);
+  border: 1.5px solid var(--color-xeflow-border);
+  color: var(--color-xeflow-muted);
+  border-radius: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  line-height: 1;
+}
+
+div.dt-container .dt-paging .dt-paging-button:hover:not(.disabled) {
+  background: var(--color-xeflow-brand);
+  border-color: var(--color-xeflow-brand);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--color-xeflow-brand) 35%, transparent);
+}
+
+div.dt-container .dt-paging .dt-paging-button.current {
+  background: var(--color-xeflow-brand);
+  border-color: var(--color-xeflow-brand);
+  color: #fff;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--color-xeflow-brand) 30%, transparent);
+}
+
+div.dt-container .dt-paging .dt-paging-button.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Status Badges (rendered via DataTables cell renderer) ──────── */
+.dt-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.75rem;
+  border-radius: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border: 1.5px solid transparent;
+}
+
+.dt-badge-paid {
+  background: color-mix(in srgb, #059669 12%, transparent);
+  color: #059669;
+  border-color: color-mix(in srgb, #059669 25%, transparent);
+}
+
+.dt-badge-pending {
+  background: color-mix(in srgb, #D97706 12%, transparent);
+  color: #B45309;
+  border-color: color-mix(in srgb, #D97706 25%, transparent);
+}
+
+.dark .dt-badge-pending { color: #FBBF24; }
+
+.dt-badge-overdue {
+  background: color-mix(in srgb, #DC2626 12%, transparent);
+  color: #DC2626;
+  border-color: color-mix(in srgb, #DC2626 25%, transparent);
+}
+
+/* ── Empty / processing states ──────────────────────────────────── */
+table.dataTable tbody td.dt-empty {
+  text-align: center;
+  color: var(--color-xeflow-muted);
+  padding: 3rem 1.75rem;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+div.dt-container .dt-processing {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-xeflow-surface);
+  border: 1px solid var(--color-xeflow-border);
+  color: var(--color-xeflow-muted);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
