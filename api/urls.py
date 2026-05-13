@@ -1,6 +1,6 @@
 from django.urls import path
-from . import views
- 
+from .views import SidebarMenuView
+
 urlpatterns = [
-    # path("api/sidebar/", views.sidebar_modules, name="sidebar-modules"),
+    path('sidebar/', SidebarMenuView.as_view(), name='api-sidebar'),
 ]
