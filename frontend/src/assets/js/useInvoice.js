@@ -1,8 +1,3 @@
-/**
- * useInvoice.js
- * All state and business logic for the NewInvoice form.
- * Import { useInvoice } into NewInvoice.jsx.
- */
 
 import { useState, useRef } from "react";
 

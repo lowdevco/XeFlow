@@ -29,4 +29,18 @@ class Menu_Child(models.Model):
     def __str__(self):
         return f"{self.module.name} > {self.name}"
 
-#------------------------------------------#
+#---------------Customer Details-------------------#
+
+class Customer(models.Model):
+    company_name = models.CharField(max_length=200)
+    rep_name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField()
+    logo = models.ImageField(upload_to='logos/', blank=True, null=True) 
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.company_name
+
+
+#------------------------------------------------#

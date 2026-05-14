@@ -21,12 +21,6 @@ import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "xeflow-theme"; // key stored in localStorage
 const DARK_CLASS = "dark"; // class toggled on <html>
-
-/**
- * Returns the initial dark-mode value:
- *   1. Saved localStorage value wins
- *   2. OS prefers-color-scheme is the fallback
- */
 function getInitialDark() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);

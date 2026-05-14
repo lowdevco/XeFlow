@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import Menu_Module , Menu_Child
+from .models import Menu_Module , Menu_Child, Customer
+
+
+#--------------Module Serializer---------------#
 
 class ChildSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,3 +15,10 @@ class ModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Menu_Module
         fields = ['id', 'name', 'icon', 'url', 'children']
+
+#--------------Customer Serializer---------------#  
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = '__all__'
