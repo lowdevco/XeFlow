@@ -1,36 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 @import "tailwindcss";
 
-/* ================================================================
-   XEVENTURE DESIGN SYSTEM — LIGHT + DARK
-   Light: Crisp white/silver, deep navy brand (matches xeventure.com)
-   Dark:  Deep slate bg with royal-blue accent
-   ================================================================ */
-
 @theme {
   /* ── Brand ──────────────────────────────────────── */
+
   --color-xeflow-brand:     #1B4FD8;   /* Royal blue CTA (light) */
   --color-xeflow-brand-alt: #163FAE;   /* Hover/pressed variant   */
   --color-xeflow-electric:  #2563EB;   /* Accent blue             */
 
   /* ── Semantic ────────────────────────────────────── */
+
   --color-xeflow-success:   #059669;
   --color-xeflow-warning:   #D97706;
   --color-xeflow-danger:    #DC2626;
 
   /* ── Light Mode Surfaces (DEFAULT) ──────────────── */
+
   --color-xeflow-bg:        #F0F4FA;   /* Page background         */
   --color-xeflow-surface:   #FFFFFF;   /* Card / Panel            */
   --color-xeflow-surface2:  #F7F9FC;   /* Nested panel / thead bg */
   --color-xeflow-navy:      #0D2247;   /* Top-bar / deep heading  */
 
   /* ── Light Mode Type & Chrome ────────────────────── */
+
   --color-xeflow-text:      #0D1B2A;
   --color-xeflow-muted:     #64748B;
   --color-xeflow-border:    #DDE3EF;
 }
 
 /* ── Dark Mode Overrides (applied via .dark on <html> or wrapper) ── */
+
+
 .dark {
   --color-xeflow-brand:     #3C50E0;
   --color-xeflow-brand-alt: #4F63F0;
@@ -47,6 +47,8 @@
 }
 
 /* ── Base ───────────────────────────────────────────────────────── */
+
+
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
@@ -59,20 +61,17 @@ body {
 }
 
 /* ── Scrollbar ──────────────────────────────────────────────────── */
+
+
 ::-webkit-scrollbar          { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track    { background: var(--color-xeflow-bg); }
 ::-webkit-scrollbar-thumb    { background: var(--color-xeflow-border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-xeflow-muted); }
 
 
-/* ================================================================
-   DATATABLES v2 — FULL CUSTOM OVERRIDE
-   Install: npm install datatables.net-react datatables.net-dt
-   DO NOT import 'datatables.net-dt/css/dataTables.dataTables.css'
-   — these styles replace it entirely.
-   ================================================================ */
-
 /* ── Wrapper ─────────────────────────────────────────────────────── */
+
+
 div.dt-container {
   font-family: inherit;
   color: var(--color-xeflow-text);
@@ -80,6 +79,9 @@ div.dt-container {
 }
 
 /* ── Layout rows (DT v2 wraps everything in .dt-layout-row) ──────── */
+
+
+
 div.dt-container .dt-layout-row {
   display: flex;
   align-items: center;
@@ -97,6 +99,8 @@ div.dt-container .dt-layout-start { justify-content: flex-start; }
 div.dt-container .dt-layout-end   { justify-content: flex-end;   }
 
 /* ── Top bar: Length + Search ───────────────────────────────────── */
+
+
 div.dt-container .dt-layout-row:first-child {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--color-xeflow-border);
@@ -154,6 +158,8 @@ div.dt-container .dt-search input::placeholder {
 }
 
 /* ── Table ───────────────────────────────────────────────────────── */
+
+
 table.dataTable {
   width: 100% !important;
   border-collapse: collapse;
@@ -162,6 +168,8 @@ table.dataTable {
 }
 
 /* ── Head ───────────────────────────────────────────────────────── */
+
+
 table.dataTable thead tr {
   background: var(--color-xeflow-surface2);
 }
@@ -187,6 +195,8 @@ table.dataTable thead th:hover {
 }
 
 /* ── Sort icons — hide DT's built-in span-based icons entirely ──── */
+
+
 table.dataTable thead th .dt-column-order { display: none !important; }
 
 /* Replace with clean CSS ::after arrows */
@@ -220,6 +230,7 @@ table.dataTable thead th.dt-ordering-desc::after {
 }
 
 /* ── Body ───────────────────────────────────────────────────────── */
+
 table.dataTable tbody tr {
   border-bottom: 1px solid var(--color-xeflow-border);
   transition: background 0.15s ease;
@@ -242,6 +253,7 @@ table.dataTable tbody td {
 }
 
 /* ── Bottom bar: Info + Pagination ──────────────────────────────── */
+
 div.dt-container .dt-layout-row:last-child {
   padding: 0.9rem 1.5rem;
   border-top: 1px solid var(--color-xeflow-border);
@@ -256,6 +268,7 @@ div.dt-container .dt-info {
 }
 
 /* ── Pagination ─────────────────────────────────────────────────── */
+
 div.dt-container .dt-paging {
   display: flex;
   align-items: center;
@@ -303,6 +316,7 @@ div.dt-container .dt-paging .dt-paging-button.disabled {
 }
 
 /* ── Status Badges (rendered via DataTables cell renderer) ──────── */
+
 .dt-status-badge {
   display: inline-flex;
   align-items: center;
@@ -336,6 +350,7 @@ div.dt-container .dt-paging .dt-paging-button.disabled {
 }
 
 /* ── Empty / processing states ──────────────────────────────────── */
+
 table.dataTable tbody td.dt-empty {
   text-align: center;
   color: var(--color-xeflow-muted);

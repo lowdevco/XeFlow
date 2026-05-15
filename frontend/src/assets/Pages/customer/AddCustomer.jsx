@@ -10,6 +10,8 @@ import {
   FiHash,
 } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast"; 
+import { fetchWithAuth } from "../../js/api";
 
 const AddCustomer = () => {
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ const AddCustomer = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    const loadingToast = toast.loading("Saving customer..."); 
 
     const submitData = new FormData();
     submitData.append("company_name", formData.companyName);
@@ -48,21 +51,26 @@ const AddCustomer = () => {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/customers/", {
+      const response = await fetchWithAuth("/customers/", {
         method: "POST",
         body: submitData,
       });
 
       if (response.ok) {
+        toast.success("Customer saved successfully!", { id: loadingToast }); 
         navigate("/customer/view");
       } else {
         const errorData = await response.json();
         console.error("Failed to save:", errorData);
-        alert("Failed to save customer. Please check the fields.");
+        toast.error("Failed to save customer. Please check the fields.", {
+          id: loadingToast,
+        }); 
       }
     } catch (error) {
       console.error("Network error:", error);
-      alert("Network error. Is your Django server running?");
+      toast.error("Network error. Is your Django server running?", {
+        id: loadingToast,
+      }); 
     } finally {
       setIsSubmitting(false);
     }

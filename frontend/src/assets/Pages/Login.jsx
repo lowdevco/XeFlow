@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { FiMail, FiLock, FiArrowRight } from "react-icons/fi";
+import { FiUser, FiLock, FiArrowRight } from "react-icons/fi"; // Swapped FiMail for FiUser
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: "",
+    username: "", // Changed from email to username
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -22,20 +22,39 @@ const Login = () => {
     setIsLoading(true);
     setError(null);
 
-    // TODO: Replace this timeout with your actual Django JWT login fetch request
     try {
-      // Simulating network request
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Real Django JWT login fetch request
+      const response = await fetch("http://127.0.0.1:8000/api/token/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+        }),
+      });
 
-      // Temporary fake authentication check
-      if (formData.email && formData.password.length >= 6) {
-        // Success! Redirect to the dashboard
+      const data = await response.json();
+
+      if (response.ok) {
+        // Success! Save tokens and redirect to the dashboard
+        localStorage.setItem("accessToken", data.access);
+        localStorage.setItem("refreshToken", data.refresh);
         navigate("/dashboard");
       } else {
-        throw new Error("Invalid email or password. Please try again.");
+        // Show specific error from Django, or a default message
+        throw new Error(
+          data.detail || "Invalid username or password. Please try again.",
+        );
       }
     } catch (err) {
-      setError(err.message);
+      // Handle network errors (e.g., Django server isn't running)
+      setError(
+        err.message === "Failed to fetch"
+          ? "Cannot connect to server. Is Django running?"
+          : err.message,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -69,23 +88,23 @@ const Login = () => {
             </div>
           )}
 
-          {/* Email Field */}
+          {/* Username Field */}
           <div>
             <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
-              Email Address
+              Username
             </label>
             <div className="relative">
-              <FiMail
+              <FiUser
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
                 size={18}
               />
               <input
                 required
-                type="email"
-                name="email"
-                value={formData.email}
+                type="text" // Changed from email to text
+                name="username" // Changed from email to username
+                value={formData.username}
                 onChange={handleChange}
-                placeholder="you@company.com"
+                placeholder="Enter your username" // Updated placeholder
                 className="w-full pl-11 pr-4 py-3.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted/50 outline-none focus:border-xeflow-brand transition-all duration-200"
               />
             </div>

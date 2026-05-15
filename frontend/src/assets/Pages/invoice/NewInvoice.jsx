@@ -1,20 +1,249 @@
+import { useState, useEffect, useMemo } from "react";
+import { FiPlus, FiTrash2, FiDownload, FiSend, FiSave } from "react-icons/fi";
+import toast from "react-hot-toast";
 
-import {
-  FiPlus,
-  FiTrash2,
-  FiDownload,
-  FiSend,
-  FiUpload,
-  FiSave,
-} from "react-icons/fi";
+// ─── IMPORTS ─────────────────────────────────────────────────────────────
+import { fetchWithAuth } from "../../js/api";
+import Xeventure_Logo from "../../image/Xeventure.png";
+const GSTIN = "32ABCDE1234F1Z5";
 
 const NewInvoice = () => {
+  // ─── STATE: DATA FETCHING ──────────────
+  const [dbCustomers, setDbCustomers] = useState([]);
+  const [dbServices, setDbServices] = useState([]);
+
+  // ─── STATE: INVOICE DETAILS ─────────────
+  const [invoiceMeta, setInvoiceMeta] = useState({
+    invoiceNumber: "INV-" + Math.floor(1000 + Math.random() * 9000),
+    issueDate: new Date().toISOString().split("T")[0],
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 15))
+      .toISOString()
+      .split("T")[0],
+    notes: "Thank you for your business!",
+    terms: "Payment is due within 15 days.",
+  });
+
+  // ─── STATE: SELECTED RELATIONS ────────────────
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  const [lineItems, setLineItems] = useState([
+    {
+      id: Date.now(),
+      service_id: "",
+      description: "",
+      quantity: "1",
+      rate: "",
+      amount: 0,
+    },
+  ]);
+
+  // ─── STATE: FINANCIALS ─────────────────────────────────────────────────
+  const [cgstRate, setCgstRate] = useState("9");
+  const [sgstRate, setSgstRate] = useState("9");
+  const [discount, setDiscount] = useState("");
+  const [discountType, setDiscountType] = useState("percent");
+  const [amountPaid, setAmountPaid] = useState("");
+
+  // ─── STATE: SUBMITTING ─────────────────────────────────────────────────
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ─── EFFECT: FETCH INITIAL DATA ────────────────────────────────────────
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const [custRes, servRes] = await Promise.all([
+          fetchWithAuth("/customers/", { method: "GET" }),
+          fetchWithAuth("/services/", { method: "GET" }),
+        ]);
+
+        if (custRes.ok) setDbCustomers(await custRes.json());
+        if (servRes.ok) setDbServices(await servRes.json());
+      } catch (error) {
+        console.error("Failed to load DB data:", error);
+      }
+    };
+    loadInitialData();
+  }, []);
+
+  // ─── HANDLERS: LINE ITEMS ──────────────────────────────────────────────
+  const addLineItem = () => {
+    setLineItems([
+      ...lineItems,
+      {
+        id: Date.now(),
+        service_id: "",
+        description: "",
+        quantity: "1",
+        rate: "",
+        amount: 0,
+      },
+    ]);
+  };
+
+  const removeLineItem = (idToRemove) => {
+    if (lineItems.length > 1) {
+      setLineItems(lineItems.filter((item) => item.id !== idToRemove));
+    }
+  };
+
+  const handleLineItemChange = (id, field, value) => {
+    const updatedItems = lineItems.map((item) => {
+      if (item.id === id) {
+        let updatedItem = { ...item, [field]: value };
+
+        // Auto-fill from DB selection
+        if (field === "service_id") {
+          const selectedService = dbServices.find(
+            (s) => s.id.toString() === value,
+          );
+          if (selectedService) {
+            updatedItem.description = selectedService.name;
+            updatedItem.rate = selectedService.price;
+          }
+        }
+
+        // Safely calculate amount ignoring empty strings
+        const safeQty = parseFloat(updatedItem.quantity) || 0;
+        const safeRate = parseFloat(updatedItem.rate) || 0;
+        updatedItem.amount = safeQty * safeRate;
+
+        return updatedItem;
+      }
+      return item;
+    });
+    setLineItems(updatedItems);
+  };
+
+  // ─── MATH ENGINE ───────────────────────────────────────────────────────
+  const {
+    subtotal,
+    discountAmount,
+    cgstAmount,
+    sgstAmount,
+    total,
+    balanceDue,
+  } = useMemo(() => {
+    const calcSubtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
+
+    const safeDiscount = parseFloat(discount) || 0;
+    const safeCgstRate = parseFloat(cgstRate) || 0;
+    const safeSgstRate = parseFloat(sgstRate) || 0;
+    const safeAmountPaid = parseFloat(amountPaid) || 0;
+
+    // Calculate Discount
+    let calcDiscount = 0;
+    if (discountType === "percent") {
+      calcDiscount = calcSubtotal * (safeDiscount / 100);
+    } else {
+      calcDiscount = safeDiscount;
+    }
+
+    // GST is calculated on the amount AFTER discount
+    const taxableAmount = calcSubtotal - calcDiscount;
+    const calcCgst = taxableAmount * (safeCgstRate / 100);
+    const calcSgst = taxableAmount * (safeSgstRate / 100);
+
+    const calcTotal = taxableAmount + calcCgst + calcSgst;
+    const calcBalance = calcTotal - safeAmountPaid;
+
+    return {
+      subtotal: calcSubtotal,
+      discountAmount: calcDiscount,
+      cgstAmount: calcCgst,
+      sgstAmount: calcSgst,
+      total: calcTotal,
+      balanceDue: calcBalance,
+    };
+  }, [lineItems, cgstRate, sgstRate, discount, discountType, amountPaid]);
+
+  // ─── FORMATTER (INR) ───────────────────────────────────────────────────
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount || 0);
+  };
+
+  // ─── HANDLER: SAVE TO DATABASE ─────────────────────────────────────────
+  // ─── HANDLER: SAVE TO DATABASE ─────────────────────────────────────────
+  const handleSaveDraft = async () => {
+    // Basic validation
+    if (!selectedCustomer) {
+      toast.error("Please select a customer before saving."); // <-- Updated
+      return;
+    }
+    if (lineItems.length === 0 || lineItems[0].description === "") {
+      toast.error("Please add at least one valid line item."); // <-- Updated
+      return;
+    }
+
+    // Optional: Show a loading toast
+    const loadingToastId = toast.loading("Saving invoice...");
+
+    setIsSubmitting(true);
+
+    const payload = {
+      customer: selectedCustomer.id,
+      invoice_number: invoiceMeta.invoiceNumber,
+      issue_date: invoiceMeta.issueDate,
+      due_date: invoiceMeta.dueDate,
+      status: "Draft",
+      notes: invoiceMeta.notes,
+      terms: invoiceMeta.terms,
+
+      subtotal: subtotal,
+      discount_amount: discountAmount,
+      cgst_rate: parseFloat(cgstRate) || 0,
+      sgst_rate: parseFloat(sgstRate) || 0,
+      cgst_amount: cgstAmount,
+      sgst_amount: calcSgst,
+      total_amount: total,
+      amount_paid: parseFloat(amountPaid) || 0,
+      balance_due: balanceDue,
+      items: lineItems.map((item) => ({
+        service: item.service_id ? parseInt(item.service_id) : null,
+        description: item.description,
+        quantity: parseFloat(item.quantity) || 0,
+        rate: parseFloat(item.rate) || 0,
+        amount: item.amount,
+      })),
+    };
+
+    try {
+      const response = await fetchWithAuth("/invoices/", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save");
+      }
+
+      // Success! Dismiss the loading toast and show success.
+      toast.success("Invoice saved successfully!", { id: loadingToastId });
+
+      // Optional: navigate("/invoices/view");
+    } catch (error) {
+      console.error("Save Error:", error);
+      // Show error toast
+      toast.error("Failed to save invoice. Please try again.", {
+        id: loadingToastId,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300">
-      {/* Top Action Bar */}
+      {/* ── TOP ACTION BAR ──────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto flex flex-wrap justify-end gap-3 mb-8">
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-xeflow-border bg-xeflow-surface text-xeflow-text hover:bg-xeflow-brand/5 font-semibold text-sm transition-all">
-          <FiSave size={16} /> Save Draft
+        <button
+          onClick={handleSaveDraft}
+          disabled={isSubmitting}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-xeflow-border bg-xeflow-surface text-xeflow-text hover:bg-xeflow-brand/5 font-semibold text-sm transition-all disabled:opacity-50"
+        >
+          <FiSave size={16} /> {isSubmitting ? "Saving..." : "Save Draft"}
         </button>
         <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-xeflow-border bg-xeflow-surface text-xeflow-text hover:bg-xeflow-brand/5 font-semibold text-sm transition-all">
           <FiDownload size={16} /> Download
@@ -24,47 +253,27 @@ const NewInvoice = () => {
         </button>
       </div>
 
-      {/* Invoice Paper Form */}
-      <div className="max-w-5xl mx-auto bg-xeflow-surface p-8 md:p-16 rounded-xl shadow-xl border border-xeflow-border text-xeflow-text transition-colors duration-300">
+      {/* ── INVOICE PAPER FORM ──────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto bg-xeflow-surface p-6 md:p-12 lg:p-16 rounded-2xl shadow-xl border border-xeflow-border text-xeflow-text transition-colors duration-300">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between gap-10 border-b border-xeflow-border pb-10 mb-10">
-          {/* From Details */}
-          <div className="w-full md:w-1/2 space-y-2">
-            <div className="w-24 h-24 bg-xeflow-bg border-2 border-dashed border-xeflow-border rounded-xl flex flex-col items-center justify-center text-xeflow-muted cursor-pointer hover:bg-xeflow-brand/5 hover:border-xeflow-brand/50 transition-colors mb-6">
-              <FiUpload size={24} />
-              <span className="text-[10px] font-bold uppercase mt-2">Logo</span>
-            </div>
-            <input
-              type="text"
-              placeholder="Your Company Name"
-              defaultValue="XeFlow Technologies"
-              className="w-full text-2xl font-bold bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
+          {/* Static From Details (Xeventure) */}
+          <div className="w-full md:w-1/2 space-y-4">
+            <img
+              src={Xeventure_Logo}
+              alt="Xeventure Logo"
+              className="w-auto h-24 pl-13 md:h-32 scale-500"
             />
-            <input
-              type="text"
-              placeholder="Company Address"
-              className="w-full text-sm text-xeflow-muted bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-            />
-            <input
-              type="text"
-              placeholder="Email Address"
-              className="w-full text-sm text-xeflow-muted bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-            />
-            <div className="flex gap-4">
-              <input
-                type="text"
-                placeholder="Phone Number"
-                className="w-1/2 text-sm text-xeflow-muted bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-              />
-              <input
-                type="text"
-                placeholder="GST Number"
-                className="w-1/2 text-sm text-xeflow-muted bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-              />
+            <div className="text-sm text-xeflow-muted space-y-1 mt-2">
+              <p>123 Tech Park, Cyber Hub</p>
+              <p>Kerala, India 673592</p>
+              <p>Email: billing@xeventure.com</p>
+              <p>Phone: +91 98765 43210</p>
+              <p className="font-bold text-xeflow-text pt-2">GSTIN: {GSTIN}</p>
             </div>
           </div>
 
-          {/* Invoice Meta */}
+          {/* Invoice Meta Data */}
           <div className="w-full md:w-1/3 text-left md:text-right space-y-4">
             <h1 className="text-4xl md:text-5xl font-black text-xeflow-border uppercase tracking-widest">
               Invoice
@@ -76,8 +285,13 @@ const NewInvoice = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="INV-001"
-                  defaultValue="INV-2024-001"
+                  value={invoiceMeta.invoiceNumber}
+                  onChange={(e) =>
+                    setInvoiceMeta({
+                      ...invoiceMeta,
+                      invoiceNumber: e.target.value,
+                    })
+                  }
                   className="text-right font-bold w-32 bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
                 />
               </div>
@@ -87,6 +301,13 @@ const NewInvoice = () => {
                 </span>
                 <input
                   type="date"
+                  value={invoiceMeta.issueDate}
+                  onChange={(e) =>
+                    setInvoiceMeta({
+                      ...invoiceMeta,
+                      issueDate: e.target.value,
+                    })
+                  }
                   className="text-right text-sm text-xeflow-text bg-transparent outline-none cursor-pointer border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
                 />
               </div>
@@ -96,6 +317,10 @@ const NewInvoice = () => {
                 </span>
                 <input
                   type="date"
+                  value={invoiceMeta.dueDate}
+                  onChange={(e) =>
+                    setInvoiceMeta({ ...invoiceMeta, dueDate: e.target.value })
+                  }
                   className="text-right text-sm text-xeflow-text bg-transparent outline-none cursor-pointer border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
                 />
               </div>
@@ -103,201 +328,283 @@ const NewInvoice = () => {
           </div>
         </div>
 
-        {/* Bill To Section */}
+        {/* ── BILL TO SECTION (Database Linked) ─────────────────────────── */}
         <div className="mb-10">
           <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-3 border-b border-xeflow-border pb-2 inline-block">
             Billed To
           </h3>
-          <div className="max-w-sm space-y-2">
-            <input
-              type="text"
-              placeholder="Client Name"
-              className="w-full text-lg font-bold bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-            />
-            <input
-              type="text"
-              placeholder="Client Address"
-              className="w-full text-sm text-xeflow-text bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-            />
-            <input
-              type="text"
-              placeholder="Client Email"
-              className="w-full text-sm text-xeflow-text bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-            />
-            <div className="flex gap-4">
-              <input
-                type="text"
-                placeholder="Phone"
-                className="w-1/2 text-sm text-xeflow-text bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-              />
-              <input
-                type="text"
-                placeholder="Tax ID / GST"
-                className="w-1/2 text-sm text-xeflow-text bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-              />
-            </div>
+          <div className="max-w-md space-y-3">
+            <select
+              className="w-full text-lg font-bold bg-xeflow-bg border border-xeflow-border rounded-lg p-3 outline-none focus:border-xeflow-brand transition-colors cursor-pointer"
+              onChange={(e) => {
+                const customer = dbCustomers.find(
+                  (c) => c.id.toString() === e.target.value,
+                );
+                setSelectedCustomer(customer || null);
+              }}
+              value={selectedCustomer?.id || ""}
+            >
+              <option value="">-- Select a Customer --</option>
+              {dbCustomers.map((cust) => (
+                <option key={cust.id} value={cust.id}>
+                  {cust.company_name} ({cust.rep_name})
+                </option>
+              ))}
+            </select>
+
+            {selectedCustomer && (
+              <div className="p-4 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-muted space-y-1.5 shadow-sm">
+                <p>
+                  <span className="font-bold text-xeflow-text">Attn:</span>{" "}
+                  {selectedCustomer.rep_name}
+                </p>
+                <p>
+                  <span className="font-bold text-xeflow-text">Email:</span>{" "}
+                  {selectedCustomer.email}
+                </p>
+                <p>
+                  <span className="font-bold text-xeflow-text">Phone:</span>{" "}
+                  {selectedCustomer.phone}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Items Table */}
-        <div className="mb-10">
-          {/* Table Header */}
+        {/* ── ITEMS TABLE (Dynamic Rows) ────────────────────────────────── */}
+        <div className="mb-12">
           <div className="grid grid-cols-12 gap-4 pb-3 border-b-2 border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider">
-            <div className="col-span-6">Description</div>
+            <div className="col-span-6">Service / Description</div>
             <div className="col-span-2 text-right">Qty</div>
             <div className="col-span-2 text-right">Rate</div>
             <div className="col-span-2 text-right">Amount</div>
           </div>
 
-          {/* Table Rows (Static Examples) */}
           <div className="space-y-3 pt-4">
-            {/* Row 1 */}
-            <div className="grid grid-cols-12 gap-4 items-center group">
-              <div className="col-span-6">
-                <input
-                  type="text"
-                  placeholder="Item description..."
-                  defaultValue="Web Development Services"
-                  className="w-full text-sm font-medium bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-                />
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="number"
-                  placeholder="1"
-                  defaultValue="1"
-                  className="w-full text-right text-sm bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-                />
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  defaultValue="1500.00"
-                  className="w-full text-right text-sm bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-                />
-              </div>
-              <div className="col-span-2 text-right text-sm font-medium relative">
-                $1,500.00
-                <button className="absolute -right-8 top-1/2 -translate-y-1/2 text-xeflow-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <FiTrash2 size={16} />
-                </button>
-              </div>
-            </div>
+            {lineItems.map((item) => (
+              <div
+                key={item.id}
+                className="grid grid-cols-12 gap-4 items-center group bg-xeflow-bg/30 p-2 rounded-lg border border-transparent hover:border-xeflow-border transition-colors"
+              >
+                <div className="col-span-6 flex flex-col gap-1.5">
+                  <select
+                    value={item.service_id}
+                    onChange={(e) =>
+                      handleLineItemChange(
+                        item.id,
+                        "service_id",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full text-sm font-bold bg-transparent border-b border-xeflow-border outline-none focus:border-xeflow-brand pb-1 text-xeflow-text cursor-pointer"
+                  >
+                    <option value="">-- Custom Item --</option>
+                    {dbServices.map((srv) => (
+                      <option key={srv.id} value={srv.id}>
+                        {srv.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Additional details..."
+                    value={item.description}
+                    onChange={(e) =>
+                      handleLineItemChange(
+                        item.id,
+                        "description",
+                        e.target.value,
+                      )
+                    }
+                    className="w-full text-xs text-xeflow-muted bg-transparent outline-none pb-1"
+                  />
+                </div>
 
-            {/* Row 2 */}
-            <div className="grid grid-cols-12 gap-4 items-center group">
-              <div className="col-span-6">
-                <input
-                  type="text"
-                  placeholder="Item description..."
-                  defaultValue="Server Hosting (1 Year)"
-                  className="w-full text-sm font-medium bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-                />
+                <div className="col-span-2">
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      handleLineItemChange(item.id, "quantity", e.target.value)
+                    }
+                    className="w-full text-right text-sm bg-xeflow-bg border border-xeflow-border rounded p-2 outline-none focus:border-xeflow-brand transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={item.rate}
+                    onChange={(e) =>
+                      handleLineItemChange(item.id, "rate", e.target.value)
+                    }
+                    className="w-full text-right text-sm bg-xeflow-bg border border-xeflow-border rounded p-2 outline-none focus:border-xeflow-brand transition-colors"
+                  />
+                </div>
+
+                <div className="col-span-2 text-right text-sm font-bold relative flex items-center justify-end gap-3">
+                  {formatMoney(item.amount)}
+                  <button
+                    onClick={() => removeLineItem(item.id)}
+                    className="text-xeflow-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove Item"
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
+                </div>
               </div>
-              <div className="col-span-2">
-                <input
-                  type="number"
-                  placeholder="1"
-                  defaultValue="12"
-                  className="w-full text-right text-sm bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-                />
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  defaultValue="50.00"
-                  className="w-full text-right text-sm bg-transparent outline-none border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
-                />
-              </div>
-              <div className="col-span-2 text-right text-sm font-medium relative">
-                $600.00
-                <button className="absolute -right-8 top-1/2 -translate-y-1/2 text-xeflow-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <FiTrash2 size={16} />
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <button className="flex items-center gap-2 text-sm font-bold text-xeflow-brand hover:opacity-80 mt-6 transition-colors">
+          <button
+            onClick={addLineItem}
+            className="flex items-center gap-2 text-sm font-bold text-xeflow-brand hover:opacity-80 mt-4 transition-colors p-2 hover:bg-xeflow-brand/10 rounded-lg"
+          >
             <FiPlus size={16} /> Add Line Item
           </button>
         </div>
 
-        {/* Bottom Summary Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-10">
+        {/* ── BOTTOM SUMMARY SECTION (Fixed 50/50 Layout) ───────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-stretch">
           {/* Notes & Terms */}
-          <div className="w-full md:w-1/2 space-y-4">
-            <div>
+          <div className="flex flex-col gap-6">
+            <div className="flex-1 flex flex-col">
               <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-2">
                 Notes
               </h3>
               <textarea
-                placeholder="Thanks for your business..."
-                className="w-full bg-xeflow-bg border border-xeflow-border rounded-lg p-3 text-sm text-xeflow-text outline-none focus:border-xeflow-brand resize-none h-20 transition-colors"
+                value={invoiceMeta.notes}
+                onChange={(e) =>
+                  setInvoiceMeta({ ...invoiceMeta, notes: e.target.value })
+                }
+                className="w-full flex-1 bg-xeflow-bg border border-xeflow-border rounded-xl p-4 text-sm text-xeflow-text outline-none focus:border-xeflow-brand resize-none transition-colors custom-scrollbar min-h-[120px]"
               ></textarea>
             </div>
-            <div>
+            <div className="flex-1 flex flex-col">
               <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-2">
                 Terms & Conditions
               </h3>
               <textarea
-                placeholder="Payment is due within 15 days..."
-                className="w-full bg-xeflow-bg border border-xeflow-border rounded-lg p-3 text-sm text-xeflow-text outline-none focus:border-xeflow-brand resize-none h-20 transition-colors"
+                value={invoiceMeta.terms}
+                onChange={(e) =>
+                  setInvoiceMeta({ ...invoiceMeta, terms: e.target.value })
+                }
+                className="w-full flex-1 bg-xeflow-bg border border-xeflow-border rounded-xl p-4 text-sm text-xeflow-text outline-none focus:border-xeflow-brand resize-none transition-colors custom-scrollbar min-h-[120px]"
               ></textarea>
             </div>
           </div>
 
-          {/* Totals */}
-          <div className="w-full md:w-1/3 space-y-3">
+          {/* ── TOTALS ENGINE ── */}
+          <div className="w-full space-y-4 bg-xeflow-bg p-6 md:p-8 rounded-2xl border border-xeflow-border flex flex-col justify-center">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-xeflow-muted font-medium">Subtotal</span>
-              <span className="font-semibold">$2,100.00</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-xeflow-muted font-medium flex items-center gap-2">
-                Tax (%){" "}
-                <input
-                  type="number"
-                  placeholder="0"
-                  defaultValue="10"
-                  className="w-12 border-b border-xeflow-border text-center outline-none bg-transparent pb-1 focus:border-xeflow-brand transition-colors"
-                />
+              <span className="text-xeflow-muted font-bold uppercase tracking-wide">
+                Subtotal
               </span>
-              <span className="font-semibold">$210.00</span>
+              <span className="font-bold text-xeflow-text">
+                {formatMoney(subtotal)}
+              </span>
             </div>
+
             <div className="flex justify-between items-center text-sm">
-              <span className="text-xeflow-muted font-medium">Discount</span>
+              <span className="text-xeflow-muted font-bold uppercase tracking-wide flex items-center gap-2">
+                Discount
+                <button
+                  onClick={() =>
+                    setDiscountType(
+                      discountType === "percent" ? "amount" : "percent",
+                    )
+                  }
+                  className="text-[10px] font-bold uppercase bg-xeflow-brand/10 text-xeflow-brand px-1.5 py-0.5 rounded-md hover:bg-xeflow-brand/20 transition-colors"
+                >
+                  {discountType === "percent" ? "%" : "₹"}
+                </button>
+              </span>
               <input
                 type="number"
+                min="0"
                 placeholder="0.00"
-                className="w-24 text-right border-b border-xeflow-border outline-none bg-transparent font-semibold pb-1 focus:border-xeflow-brand transition-colors"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
+                className="w-24 bg-xeflow-surface text-right border border-xeflow-border rounded-md p-1.5 outline-none font-bold focus:border-xeflow-brand transition-colors text-xeflow-text"
               />
             </div>
 
-            <div className="flex justify-between items-center border-t-2 border-xeflow-border pt-3 mt-3">
-              <span className="text-lg font-black text-xeflow-text">Total</span>
-              <span className="text-lg font-black text-xeflow-text">
-                $2,310.00
+            {parseFloat(discount) > 0 && (
+              <div className="flex justify-between items-center text-sm text-xeflow-brand">
+                <span className="font-bold uppercase tracking-wide">
+                  Discount Applied
+                </span>
+                <span className="font-bold">
+                  -{formatMoney(discountAmount)}
+                </span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center text-sm pt-2">
+              <span className="text-xeflow-muted font-bold uppercase tracking-wide flex items-center gap-2">
+                CGST (%)
+                <input
+                  type="number"
+                  min="0"
+                  value={cgstRate}
+                  onChange={(e) => setCgstRate(e.target.value)}
+                  className="w-14 bg-xeflow-surface border border-xeflow-border rounded-md p-1.5 text-center outline-none focus:border-xeflow-brand transition-colors text-xeflow-text font-bold"
+                />
+              </span>
+              <span className="font-bold text-xeflow-text">
+                {formatMoney(cgstAmount)}
               </span>
             </div>
 
-            <div className="flex justify-between items-center text-sm pt-2 border-b border-xeflow-border pb-4">
-              <span className="text-xeflow-muted font-medium">Amount Paid</span>
+            <div className="flex justify-between items-center text-sm pb-3 border-b border-xeflow-border">
+              <span className="text-xeflow-muted font-bold uppercase tracking-wide flex items-center gap-2">
+                SGST (%)
+                <input
+                  type="number"
+                  min="0"
+                  value={sgstRate}
+                  onChange={(e) => setSgstRate(e.target.value)}
+                  className="w-14 bg-xeflow-surface border border-xeflow-border rounded-md p-1.5 text-center outline-none focus:border-xeflow-brand transition-colors text-xeflow-text font-bold"
+                />
+              </span>
+              <span className="font-bold text-xeflow-text">
+                {formatMoney(sgstAmount)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <span className="text-lg font-black text-xeflow-text uppercase tracking-wide">
+                Total
+              </span>
+              <span className="text-lg font-black text-xeflow-text">
+                {formatMoney(total)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center text-sm pt-4 border-b border-xeflow-border pb-5">
+              <span className="text-xeflow-muted font-bold uppercase tracking-wide">
+                Amount Paid
+              </span>
               <input
                 type="number"
+                min="0"
                 placeholder="0.00"
-                className="w-24 text-right border-b border-xeflow-border outline-none bg-transparent text-green-500 font-semibold pb-1 focus:border-xeflow-brand transition-colors"
+                value={amountPaid}
+                onChange={(e) => setAmountPaid(e.target.value)}
+                className="w-24 bg-xeflow-surface text-right border border-xeflow-border rounded-md p-1.5 outline-none text-green-500 font-bold focus:border-xeflow-brand transition-colors"
               />
             </div>
 
             <div className="flex justify-between items-center pt-2">
-              <span className="text-sm font-bold text-xeflow-text">
+              <span className="text-sm font-bold text-xeflow-text uppercase tracking-wide">
                 Balance Due
               </span>
               <span className="text-xl font-black text-xeflow-brand">
-                $2,310.00
+                {formatMoney(balanceDue)}
               </span>
             </div>
           </div>

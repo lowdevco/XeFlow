@@ -165,6 +165,7 @@ export default function StatWidget({
           </div>
 
           {/* Sparkline — top-right */}
+          
           <Sparkline trendUp={trendUp} data={sparkData} color={trendColor} />
         </div>
 

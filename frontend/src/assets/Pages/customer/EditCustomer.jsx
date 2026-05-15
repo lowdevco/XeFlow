@@ -14,21 +14,23 @@ import {
   FiChevronUp,
   FiChevronDown,
 } from "react-icons/fi";
+import toast from "react-hot-toast"; // <-- Imported toast
+
+// ─── IMPORT YOUR API WRAPPER ───
+import { fetchWithAuth } from "../../js/api";
 
 const EditCustomer = () => {
   const [customers, setCustomers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Data Table States
   const [sortConfig, setSortConfig] = useState({
     key: "created_at",
     direction: "desc",
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Change this to 10 if you want longer tables!
+  const itemsPerPage = 5;
 
-  // Modal States
   const [deletingId, setDeletingId] = useState(null);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,14 +43,15 @@ const EditCustomer = () => {
     newLogo: null,
   });
 
-  // ─── FETCH CUSTOMERS ────────────────────────────────────────────────────
+  // ─── FETCH CUSTOMERS (SECURED) ───
   const fetchCustomers = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/customers/");
+      const response = await fetchWithAuth("/customers/", { method: "GET" });
       const data = await response.json();
       setCustomers(data);
     } catch (err) {
       console.error("Error fetching:", err);
+      toast.error("Failed to load customers.");
     } finally {
       setIsLoading(false);
     }
@@ -58,9 +61,6 @@ const EditCustomer = () => {
     fetchCustomers();
   }, []);
 
-  // ─── DATA TABLE LOGIC: SEARCH -> SORT -> PAGINATE ───────────────────────
-
-  // 1. Search
   const filteredCustomers = useMemo(() => {
     const lower = searchTerm.toLowerCase();
     return customers.filter(
@@ -73,7 +73,6 @@ const EditCustomer = () => {
     );
   }, [customers, searchTerm]);
 
-  // 2. Sort
   const sortedCustomers = useMemo(() => {
     let sortable = [...filteredCustomers];
     if (sortConfig !== null) {
@@ -88,7 +87,6 @@ const EditCustomer = () => {
     return sortable;
   }, [filteredCustomers, sortConfig]);
 
-  // 3. Paginate
   const totalPages = Math.ceil(sortedCustomers.length / itemsPerPage);
   const paginatedCustomers = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -119,23 +117,27 @@ const EditCustomer = () => {
     );
   };
 
-  // ─── API ACTIONS (DELETE & EDIT) ────────────────────────────────────────
+  // ─── API ACTIONS (DELETE & EDIT SECURED) ───
   const handleDelete = async () => {
+    const loadingId = toast.loading("Deleting customer...");
     try {
       setIsSubmitting(true);
-      const res = await fetch(
-        `http://127.0.0.1:8000/api/customers/${deletingId}/`,
-        { method: "DELETE" },
-      );
+      const res = await fetchWithAuth(`/customers/${deletingId}/`, {
+        method: "DELETE",
+      });
+
       if (res.ok) {
         setCustomers(customers.filter((c) => c.id !== deletingId));
         setDeletingId(null);
-        // Go back a page if we delete the last item on the current page
         if (paginatedCustomers.length === 1 && currentPage > 1)
           setCurrentPage((p) => p - 1);
+        toast.success("Customer deleted successfully.", { id: loadingId });
+      } else {
+        toast.error("Failed to delete customer.", { id: loadingId });
       }
     } catch (err) {
       console.error("Error deleting:", err);
+      toast.error("Network error while deleting.", { id: loadingId });
     } finally {
       setIsSubmitting(false);
     }
@@ -152,32 +154,51 @@ const EditCustomer = () => {
     });
   };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+const handleEditSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  const loadingToast = toast.loading("Saving changes...");
 
-    const submitData = new FormData();
-    submitData.append("company_name", editForm.company_name);
-    submitData.append("rep_name", editForm.rep_name);
-    submitData.append("phone", editForm.phone);
-    submitData.append("email", editForm.email);
-    if (editForm.newLogo) submitData.append("logo", editForm.newLogo);
+  const submitData = new FormData();
+  submitData.append("company_name", editForm.company_name);
+  submitData.append("rep_name", editForm.rep_name);
+  submitData.append("phone", editForm.phone);
+  submitData.append("email", editForm.email);
+  if (editForm.newLogo) submitData.append("logo", editForm.newLogo);
 
-    try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/api/customers/${editingCustomer.id}/`,
-        { method: "PATCH", body: submitData },
-      );
-      if (res.ok) {
-        fetchCustomers();
-        setEditingCustomer(null);
+  try {
+    const res = await fetchWithAuth(`/customers/${editingCustomer.id}/`, {
+      method: "PATCH",
+      body: submitData,
+    });
+
+    if (res.ok) {
+      fetchCustomers();
+      setEditingCustomer(null);
+      toast.success("Customer updated successfully!", { id: loadingToast });
+    } else {
+      const errorData = await res.json();
+      console.error("Django 400 Error:", errorData);
+
+      try {
+        const firstErrorKey = Object.keys(errorData)[0];
+        const errorValue = errorData[firstErrorKey];
+        const firstErrorMessage = Array.isArray(errorValue)
+          ? errorValue[0]
+          : errorValue;
+
+        toast.error(`Error: ${firstErrorMessage}`, { id: loadingToast });
+      } catch (parseErr) {
+        toast.error("Failed to update: Invalid data.", { id: loadingToast });
       }
-    } catch (err) {
-      console.error("Error updating:", err);
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } catch (err) {
+    console.error("Error updating:", err);
+    toast.error("Network error while updating.", { id: loadingToast });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
@@ -213,7 +234,7 @@ const EditCustomer = () => {
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
-              }} // Reset page on search
+              }}
               className="w-full pl-10 pr-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted outline-none focus:border-xeflow-brand transition-all duration-200"
             />
           </div>
@@ -397,9 +418,8 @@ const EditCustomer = () => {
         </div>
       </div>
 
-      {/* ──────────────────────────────────────────────────────────────────────── */}
-      {/* DELETE MODAL (Kept the perfectly centered fixes) */}
-      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* DELETE MODAL  */}
+
       {deletingId && (
         <div className="absolute inset-0 z-40 bg-xeflow-bg/40 backdrop-blur-[2px] rounded-tl-2xl">
           <div className="sticky top-0 w-full h-[calc(100vh-100px)] flex items-center justify-center p-4 pb-32">
@@ -435,9 +455,8 @@ const EditCustomer = () => {
         </div>
       )}
 
-      {/* ──────────────────────────────────────────────────────────────────────── */}
-      {/* EDIT MODAL (Kept the perfectly centered fixes) */}
-      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* EDIT MODAL */}
+
       {editingCustomer && (
         <div className="absolute inset-0 z-40 bg-xeflow-bg/40 backdrop-blur-[2px] rounded-tl-2xl">
           <div className="sticky top-0 w-full h-[calc(100vh-100px)] flex items-center justify-center p-4 pb-32">

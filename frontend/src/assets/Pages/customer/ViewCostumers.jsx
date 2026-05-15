@@ -1,9 +1,7 @@
-import  { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   FiSearch,
   FiPlus,
-  FiEdit,
-  FiTrash2,
   FiMail,
   FiPhone,
   FiBriefcase,
@@ -11,6 +9,8 @@ import {
   FiChevronDown,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import { fetchWithAuth } from "../../js/api";
 
 const ViewCustomers = () => {
   const [customers, setCustomers] = useState([]);
@@ -18,7 +18,6 @@ const ViewCustomers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
 
-  // ─── DATA TABLE STATES ───
   const [sortConfig, setSortConfig] = useState({
     key: "created_at",
     direction: "desc",
@@ -26,34 +25,21 @@ const ViewCustomers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // ─── FETCH CUSTOMERS FROM DJANGO ──────────────────────────────────────────
-  
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-
-        const token = localStorage.getItem("accessToken");
-
-        const response = await fetch("http://127.0.0.1:8000/api/customers/", {
+        const response = await fetchWithAuth("/customers/", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`, 
-            "Content-Type": "application/json",
-          },
         });
 
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Session expired. Please log in again.");
-          }
-          throw new Error("Failed to fetch customers");
-        }
+        if (!response.ok) throw new Error("Failed to fetch customers");
 
         const data = await response.json();
         setCustomers(data);
       } catch (err) {
         console.error("Error fetching customers:", err);
         setError(err.message);
+        toast.error("Failed to load customers."); 
       } finally {
         setIsLoading(false);
       }
@@ -62,15 +48,11 @@ const ViewCustomers = () => {
     fetchCustomers();
   }, []);
 
-  // ─── DATA TABLE LOGIC: SEARCH -> SORT -> PAGINATE ───────\
-
-  // 1. Search
+  // ─── DATA TABLE LOGIC (Search -> Sort -> Paginate) ───
   const filteredCustomers = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase();
-
     return customers.filter((customer) => {
       const formattedId = `cst-${customer.id.toString().padStart(4, "0")}`;
-
       return (
         customer.company_name.toLowerCase().includes(lowerCaseSearch) ||
         customer.rep_name.toLowerCase().includes(lowerCaseSearch) ||
@@ -81,7 +63,6 @@ const ViewCustomers = () => {
     });
   }, [customers, searchTerm]);
 
-  // 2. Sort
   const sortedCustomers = useMemo(() => {
     let sortable = [...filteredCustomers];
     if (sortConfig !== null) {
@@ -96,14 +77,12 @@ const ViewCustomers = () => {
     return sortable;
   }, [filteredCustomers, sortConfig]);
 
-  // 3. Paginate
   const totalPages = Math.ceil(sortedCustomers.length / itemsPerPage);
   const paginatedCustomers = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return sortedCustomers.slice(start, start + itemsPerPage);
   }, [sortedCustomers, currentPage]);
 
-  // Handle Column Click
   const handleSort = (key) => {
     let direction = "asc";
     if (
@@ -116,7 +95,6 @@ const ViewCustomers = () => {
     setSortConfig({ key, direction });
   };
 
-  // Render Sort Icon
   const SortIcon = ({ columnKey }) => {
     if (sortConfig.key !== columnKey)
       return (
@@ -129,7 +107,6 @@ const ViewCustomers = () => {
     );
   };
 
-  // Helper to format the date from Django
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString("en-US", options);
@@ -138,7 +115,7 @@ const ViewCustomers = () => {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300 relative">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-xeflow-text">Customers</h1>
@@ -146,14 +123,14 @@ const ViewCustomers = () => {
               Manage your client database and contact information.
             </p>
           </div>
-          <Link to="/customers/new">
+          <Link to="/customer/add">
             <button className="flex items-center gap-2 px-4 py-2.5 bg-xeflow-brand text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-colors shadow-sm">
               <FiPlus size={16} /> Add Customer
             </button>
           </Link>
         </div>
 
-        {/* ── Toolbar (Search) ── */}
+        {/* Toolbar */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
           <div className="relative w-full sm:w-96">
             <FiSearch
@@ -166,7 +143,7 @@ const ViewCustomers = () => {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // Always reset to page 1 when searching
+                setCurrentPage(1);
               }}
               className="w-full pl-10 pr-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted outline-none focus:border-xeflow-brand transition-all duration-200"
             />
@@ -177,7 +154,7 @@ const ViewCustomers = () => {
           </div>
         </div>
 
-        {/* ── Data Table ── */}
+        {/* Data Table */}
         <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -216,7 +193,6 @@ const ViewCustomers = () => {
                       Joined Date <SortIcon columnKey="created_at" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-center">Actions</th>
                 </tr>
               </thead>
 
@@ -245,12 +221,10 @@ const ViewCustomers = () => {
                       key={customer.id}
                       className="hover:bg-xeflow-brand/5 transition-colors group"
                     >
-                      {/* ID Column */}
                       <td className="px-6 py-4 font-bold text-xeflow-text whitespace-nowrap">
                         CST-{customer.id.toString().padStart(4, "0")}
                       </td>
 
-                      {/* Company Info & Logo */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-lg bg-xeflow-bg border border-xeflow-border flex items-center justify-center overflow-hidden shrink-0">
@@ -282,12 +256,10 @@ const ViewCustomers = () => {
                         </div>
                       </td>
 
-                      {/* Representative */}
                       <td className="px-6 py-4 font-medium text-xeflow-text">
                         {customer.rep_name}
                       </td>
 
-                      {/* Contact Details */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2 mb-1">
                           <FiMail
@@ -305,30 +277,8 @@ const ViewCustomers = () => {
                         </div>
                       </td>
 
-                      {/* Joined Date */}
                       <td className="px-6 py-4 text-xeflow-muted font-medium">
                         {formatDate(customer.created_at)}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-3 text-xeflow-muted opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* Route to Edit page or add your view logic here */}
-                          <Link to="/customers/edit">
-                            <button
-                              className="p-2 hover:bg-xeflow-brand/10 hover:text-xeflow-brand rounded-lg transition-colors"
-                              title="Edit Customer"
-                            >
-                              <FiEdit size={16} />
-                            </button>
-                          </Link>
-                          <button
-                            className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors"
-                            title="Delete Customer"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                        </div>
                       </td>
                     </tr>
                   ))
@@ -344,7 +294,7 @@ const ViewCustomers = () => {
                           Your search for "{searchTerm}" didn't match any
                           records.
                         </p>
-                        <Link to="/customers/new">
+                        <Link to="/customer/add">
                           <button className="text-sm font-bold text-xeflow-brand hover:underline">
                             Add a new customer
                           </button>
@@ -357,7 +307,7 @@ const ViewCustomers = () => {
             </table>
           </div>
 
-          {/* ── PAGINATION FOOTER ── */}
+          {/* Pagination Footer */}
           {totalPages > 0 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
               <span className="text-xs text-xeflow-muted font-medium">
@@ -402,6 +352,6 @@ const ViewCustomers = () => {
       </div>
     </div>
   );
-};;
+};
 
 export default ViewCustomers;
