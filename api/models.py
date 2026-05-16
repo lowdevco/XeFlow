@@ -50,11 +50,9 @@ class Customer(models.Model):
 
 @receiver(post_delete, sender=Customer)
 def delete_customer_logo(sender, instance, **kwargs):
-    # Check if the customer actually had a logo
+
     if instance.logo:
-        # Check if the file physically exists on the hard drive
         if os.path.isfile(instance.logo.path):
-            # Delete it!
             os.remove(instance.logo.path)
 
 #---------------service Details-------------------#

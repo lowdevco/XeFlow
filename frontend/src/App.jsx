@@ -19,6 +19,7 @@ import Dashboard from "./assets/Pages/Dashboard";
 import Profile from "./assets/Pages/profile/Profile";
 import Login from "./assets/Pages/Login";
 import NewInvoice from "./assets/Pages/invoice/NewInvoice";
+import EditInvoice from "./assets/Pages/invoice/EditInvoice";
 import ViewInvoice from "./assets/Pages/invoice/ViewInvoice";
 import AddCustomer from "./assets/Pages/customer/AddCustomer";
 import EditCustomer from "./assets/Pages/customer/EditCustomer";
@@ -96,6 +97,7 @@ export default function App() {
             {/* invoice routes */}
 
             <Route path="/invoice/new" element={<NewInvoice />} />
+            <Route path="/invoice/edit" element={<EditInvoice />} />
             <Route path="/invoice/view" element={<ViewInvoice />} />
 
             {/* customer routes */}

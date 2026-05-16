@@ -1,14 +1,24 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo,  } from "react";
+import { useNavigate } from "react-router-dom";
 import { FiPlus, FiTrash2, FiDownload, FiSend, FiSave } from "react-icons/fi";
 import toast from "react-hot-toast";
-
-// ─── IMPORTS ─────────────────────────────────────────────────────────────
 import { fetchWithAuth } from "../../js/api";
+
+
+
+// Const Values
+
 import Xeventure_Logo from "../../image/Xeventure.png";
 const GSTIN = "32ABCDE1234F1Z5";
 
+//_______________________________
+
+
 const NewInvoice = () => {
-  // ─── STATE: DATA FETCHING ──────────────
+
+  const navigate = useNavigate();
+
+  //  State For Invoice Data Fetching From Database
   const [dbCustomers, setDbCustomers] = useState([]);
   const [dbServices, setDbServices] = useState([]);
 
@@ -23,7 +33,8 @@ const NewInvoice = () => {
     terms: "Payment is due within 15 days.",
   });
 
-  // ─── STATE: SELECTED RELATIONS ────────────────
+  //  States For Selected Data From Drop Down
+  
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const [lineItems, setLineItems] = useState([
@@ -37,17 +48,18 @@ const NewInvoice = () => {
     },
   ]);
 
-  // ─── STATE: FINANCIALS ─────────────────────────────────────────────────
+  //  Financial State
+  
   const [cgstRate, setCgstRate] = useState("9");
   const [sgstRate, setSgstRate] = useState("9");
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("percent");
   const [amountPaid, setAmountPaid] = useState("");
-
-  // ─── STATE: SUBMITTING ─────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ─── EFFECT: FETCH INITIAL DATA ────────────────────────────────────────
+  //  Initial Data Fetching From Data Base
+
+  
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -65,7 +77,8 @@ const NewInvoice = () => {
     loadInitialData();
   }, []);
 
-  // ─── HANDLERS: LINE ITEMS ──────────────────────────────────────────────
+  //  Line Item Handler
+
   const addLineItem = () => {
     setLineItems([
       ...lineItems,
@@ -91,7 +104,8 @@ const NewInvoice = () => {
       if (item.id === id) {
         let updatedItem = { ...item, [field]: value };
 
-        // Auto-fill from DB selection
+        // Autofill from Data Base
+
         if (field === "service_id") {
           const selectedService = dbServices.find(
             (s) => s.id.toString() === value,
@@ -103,6 +117,7 @@ const NewInvoice = () => {
         }
 
         // Safely calculate amount ignoring empty strings
+
         const safeQty = parseFloat(updatedItem.quantity) || 0;
         const safeRate = parseFloat(updatedItem.rate) || 0;
         updatedItem.amount = safeQty * safeRate;
@@ -114,7 +129,10 @@ const NewInvoice = () => {
     setLineItems(updatedItems);
   };
 
-  // ─── MATH ENGINE ───────────────────────────────────────────────────────
+
+  // Invoice Math Engine 
+
+  
   const {
     subtotal,
     discountAmount,
@@ -131,6 +149,8 @@ const NewInvoice = () => {
     const safeAmountPaid = parseFloat(amountPaid) || 0;
 
     // Calculate Discount
+
+
     let calcDiscount = 0;
     if (discountType === "percent") {
       calcDiscount = calcSubtotal * (safeDiscount / 100);
@@ -138,7 +158,8 @@ const NewInvoice = () => {
       calcDiscount = safeDiscount;
     }
 
-    // GST is calculated on the amount AFTER discount
+    // GST  calculated on the amount AFTER discount
+
     const taxableAmount = calcSubtotal - calcDiscount;
     const calcCgst = taxableAmount * (safeCgstRate / 100);
     const calcSgst = taxableAmount * (safeSgstRate / 100);
@@ -156,7 +177,8 @@ const NewInvoice = () => {
     };
   }, [lineItems, cgstRate, sgstRate, discount, discountType, amountPaid]);
 
-  // ─── FORMATTER (INR) ───────────────────────────────────────────────────
+  // Currency Formatterr 
+
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -164,22 +186,21 @@ const NewInvoice = () => {
     }).format(amount || 0);
   };
 
-  // ─── HANDLER: SAVE TO DATABASE ─────────────────────────────────────────
-  // ─── HANDLER: SAVE TO DATABASE ─────────────────────────────────────────
+
+  //  Invoice Save to Data basse Handler
+
+
   const handleSaveDraft = async () => {
-    // Basic validation
     if (!selectedCustomer) {
-      toast.error("Please select a customer before saving."); // <-- Updated
+      toast.error("Please select a customer before saving.");
       return;
     }
     if (lineItems.length === 0 || lineItems[0].description === "") {
-      toast.error("Please add at least one valid line item."); // <-- Updated
+      toast.error("Please add at least one valid line item.");
       return;
     }
 
-    // Optional: Show a loading toast
-    const loadingToastId = toast.loading("Saving invoice...");
-
+    const toastId = toast.loading("Saving invoice...");
     setIsSubmitting(true);
 
     const payload = {
@@ -196,7 +217,7 @@ const NewInvoice = () => {
       cgst_rate: parseFloat(cgstRate) || 0,
       sgst_rate: parseFloat(sgstRate) || 0,
       cgst_amount: cgstAmount,
-      sgst_amount: calcSgst,
+      sgst_amount: sgstAmount,
       total_amount: total,
       amount_paid: parseFloat(amountPaid) || 0,
       balance_due: balanceDue,
@@ -215,20 +236,19 @@ const NewInvoice = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to save");
+      if (response.ok) {
+        toast.success("Invoice created successfully!", { id: toastId });
+        navigate("/invoice/view"); 
+      } else {
+        const errorData = await response.json();
+        console.error("Django Error:", errorData);
+        toast.error("Failed to create invoice. Check console.", {
+          id: toastId,
+        });
       }
-
-      // Success! Dismiss the loading toast and show success.
-      toast.success("Invoice saved successfully!", { id: loadingToastId });
-
-      // Optional: navigate("/invoices/view");
     } catch (error) {
-      console.error("Save Error:", error);
-      // Show error toast
-      toast.error("Failed to save invoice. Please try again.", {
-        id: loadingToastId,
-      });
+      console.error("Network Error:", error);
+      toast.error("Network error occurred.", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -236,7 +256,9 @@ const NewInvoice = () => {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300">
-      {/* ── TOP ACTION BAR ──────────────────────────────────────────────── */}
+
+      {/* ── TOP ACTION BAR  */}
+
       <div className="max-w-5xl mx-auto flex flex-wrap justify-end gap-3 mb-8">
         <button
           onClick={handleSaveDraft}
@@ -253,11 +275,16 @@ const NewInvoice = () => {
         </button>
       </div>
 
-      {/* ── INVOICE PAPER FORM ──────────────────────────────────────────── */}
+      {/* ── INVOICE PAPER FORM  */}
+
       <div className="max-w-5xl mx-auto bg-xeflow-surface p-6 md:p-12 lg:p-16 rounded-2xl shadow-xl border border-xeflow-border text-xeflow-text transition-colors duration-300">
+
         {/* Header Section */}
+
         <div className="flex flex-col md:flex-row justify-between gap-10 border-b border-xeflow-border pb-10 mb-10">
+
           {/* Static From Details (Xeventure) */}
+
           <div className="w-full md:w-1/2 space-y-4">
             <img
               src={Xeventure_Logo}
@@ -274,6 +301,7 @@ const NewInvoice = () => {
           </div>
 
           {/* Invoice Meta Data */}
+
           <div className="w-full md:w-1/3 text-left md:text-right space-y-4">
             <h1 className="text-4xl md:text-5xl font-black text-xeflow-border uppercase tracking-widest">
               Invoice
@@ -328,7 +356,7 @@ const NewInvoice = () => {
           </div>
         </div>
 
-        {/* ── BILL TO SECTION (Database Linked) ─────────────────────────── */}
+        {/* BILL TO SECTION*/}
         <div className="mb-10">
           <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-3 border-b border-xeflow-border pb-2 inline-block">
             Billed To
@@ -371,7 +399,7 @@ const NewInvoice = () => {
           </div>
         </div>
 
-        {/* ── ITEMS TABLE (Dynamic Rows) ────────────────────────────────── */}
+        {/* ITEMS TABLE */}
         <div className="mb-12">
           <div className="grid grid-cols-12 gap-4 pb-3 border-b-2 border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider">
             <div className="col-span-6">Service / Description</div>
@@ -468,9 +496,12 @@ const NewInvoice = () => {
           </button>
         </div>
 
-        {/* ── BOTTOM SUMMARY SECTION (Fixed 50/50 Layout) ───────────────── */}
+        {/* ── BOTTOM SUMMARY SECTION ── */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-stretch">
-          {/* Notes & Terms */}
+
+          {/* Notes and  Terms Section  */}
+
           <div className="flex flex-col gap-6">
             <div className="flex-1 flex flex-col">
               <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-2">
@@ -499,6 +530,7 @@ const NewInvoice = () => {
           </div>
 
           {/* ── TOTALS ENGINE ── */}
+          
           <div className="w-full space-y-4 bg-xeflow-bg p-6 md:p-8 rounded-2xl border border-xeflow-border flex flex-col justify-center">
             <div className="flex justify-between items-center text-sm">
               <span className="text-xeflow-muted font-bold uppercase tracking-wide">

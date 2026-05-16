@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { LuIndianRupee } from "react-icons/lu";
 import {
@@ -11,10 +12,11 @@ import {
   FiCheck,
   FiChevronUp,
   FiChevronDown,
-  FiAlertCircle,
 } from "react-icons/fi";
 
-// ─── IMPORT YOUR API WRAPPER ───
+import toast from "react-hot-toast";
+
+//  IMPORT YOUR API WRAPPER
 import { fetchWithAuth } from "../../js/api";
 
 
@@ -25,6 +27,7 @@ const EditService = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Data Table States
+
   const [sortConfig, setSortConfig] = useState({
     key: "created_at",
     direction: "desc",
@@ -32,7 +35,7 @@ const EditService = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
 
-  // ─── MODAL STATES ───
+  // Modal States
   const [deletingId, setDeletingId] = useState(null);
   const [editingService, setEditingService] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +45,7 @@ const EditService = () => {
     price: "",
   });
 
-  // ─── FETCH SERVICES ───
+  //   Fetching Services from Database
   const fetchServices = async () => {
     try {
       const response = await fetchWithAuth("/services/", { method: "GET" });
@@ -51,7 +54,7 @@ const EditService = () => {
       const data = await response.json();
       setServices(data);
     } catch (err) {
-      console.error("Error fetching services:", err);
+      toast.error("Error fetching services:", err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -62,7 +65,10 @@ const EditService = () => {
     fetchServices();
   }, []);
 
-  // ─── DATA TABLE LOGIC ───
+
+  // ─── DATA TABLE LOGIC ──
+
+
   const filteredServices = useMemo(() => {
     const lower = searchTerm.toLowerCase();
     return services.filter(
@@ -117,23 +123,25 @@ const EditService = () => {
     );
   };
 
-  // ─── API ACTIONS (DELETE & EDIT) ───
+  //   API ACTIONS   DELETE and  EDIT
+  
   const handleDelete = async () => {
     try {
       setIsSubmitting(true);
       const res = await fetchWithAuth(`/services/${deletingId}/`, {
         method: "DELETE",
       });
-      if (res.ok) {
+      if (res.ok) { 
         setServices(services.filter((s) => s.id !== deletingId));
         setDeletingId(null);
         if (paginatedServices.length === 1 && currentPage > 1)
           setCurrentPage((p) => p - 1);
       }
     } catch (err) {
-      console.error("Error deleting:", err);
+     toast.error("Error deleting:", err);
     } finally {
       setIsSubmitting(false);
+      toast.success("Service deleted successfully!");
     }
   };
 
@@ -165,19 +173,22 @@ const EditService = () => {
         setEditingService(null);
       }
     } catch (err) {
-      console.error("Error updating:", err);
+      toast.error("Error updating:", err);
     } finally {
       setIsSubmitting(false);
+      toast.success("Service updated successfully!");
     }
   };
 
-  // ─── FORMATTERS ───
+  // ─── FORMATTERS ─── DSC and AMT
+   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
     }).format(amount);
   };
+
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
@@ -186,10 +197,13 @@ const EditService = () => {
       day: "numeric",
     });
 
+  
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300 relative">
       <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+
         {/* ── HEADER ── */}
+
         <div>
           <h1 className="text-2xl font-bold text-xeflow-text">
             Manage Services
@@ -200,6 +214,7 @@ const EditService = () => {
         </div>
 
         {/* ── TOOLBAR ── */}
+
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
           <div className="relative w-full sm:w-96">
             <FiSearch
@@ -220,14 +235,16 @@ const EditService = () => {
         </div>
 
         {/* ── ERROR ALERT ── */}
+
+
         {error && (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium">
-            <FiAlertCircle size={18} className="shrink-0" />
-            <p>{error}</p>
-          </div>
+          toast.error("Error: ", error)
         )}
 
+
         {/* ── DATA TABLE ── */}
+
+
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -344,6 +361,7 @@ const EditService = () => {
           </div>
 
           {/* ── PAGINATION FOOTER ── */}
+
           {totalPages > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg gap-4 transition-colors">
               <span className="text-xs text-xeflow-muted font-medium">
@@ -389,6 +407,7 @@ const EditService = () => {
       </div>
 
       {/* ── DELETE MODAL ── */}
+
       {deletingId && (
         <div className="absolute inset-0 z-50 bg-xeflow-bg/40 backdrop-blur-[2px] rounded-tl-2xl">
           <div className="sticky top-0 w-full h-[calc(100vh-100px)] flex items-center justify-center p-4 pb-32">
@@ -425,6 +444,7 @@ const EditService = () => {
       )}
 
       {/* ── EDIT MODAL ── */}
+
       {editingService && (
         <div className="absolute inset-0 z-50 bg-xeflow-bg/40 backdrop-blur-[2px] rounded-tl-2xl">
           <div className="sticky top-0 w-full h-[calc(100vh-100px)] flex items-center justify-center p-4 pb-32">

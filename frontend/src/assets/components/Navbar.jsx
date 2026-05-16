@@ -11,10 +11,13 @@ import {
   FiArrowRight,
 } from "react-icons/fi";
 
-// ─── IMPORT YOUR API WRAPPER ───
+// Fetch with auth wrapper
+
 import { fetchWithAuth } from "../js/api";
 
-/* ── Dark-mode toggle pill ──────────────────────────────────────────────── */
+
+// Dark Mode toggle Pill 
+
 function DarkModeToggle({ isDark, onToggle }) {
   return (
     <button
@@ -62,13 +65,13 @@ function DarkModeToggle({ isDark, onToggle }) {
 export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
   const navigate = useNavigate();
 
-  // Command Palette States
+  // CMD Palette States
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [modules, setModules] = useState([]);
   const searchInputRef = useRef(null);
 
-  // 1. Fetch modules for the search palette
+  // Fetch modules for the search 
   useEffect(() => {
     const fetchNavModules = async () => {
       try {
@@ -84,14 +87,12 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
     fetchNavModules();
   }, []);
 
-  // 2. Flatten modules so parent AND children are all individually searchable
   const searchableItems = useMemo(() => {
     let items = [];
     modules.forEach((m) => {
       if (!m.children || m.children.length === 0) {
         items.push({ name: m.name, url: m.url, type: "Module" });
       } else {
-        // If it has children, add the children to the search list
         m.children.forEach((c) => {
           items.push({
             name: `${m.name} > ${c.name}`,
@@ -104,12 +105,11 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
     return items;
   }, [modules]);
 
-  // 3. Filter items based on user input
+  
   const filteredItems = searchableItems.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // 4. Listen for Ctrl+K / Cmd+K to open the modal
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -124,12 +124,12 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Auto-focus input when modal opens
+
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       setTimeout(() => searchInputRef.current.focus(), 50);
     } else {
-      setSearchQuery(""); // Clear search when closed
+      setSearchQuery(""); 
     }
   }, [isSearchOpen]);
 
@@ -177,9 +177,9 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
           </div>
         </div>
 
-        {/* ── RIGHT: Controls ─────────────────────────────────── */}
+        {/*  Right Control */}
         <div className="flex items-center gap-3">
-          {/* Fake Search Input (Triggers Modal) */}
+          {/* Modal Trigger Search button   */}
           <button
             onClick={() => setIsSearchOpen(true)}
             className="
@@ -207,6 +207,7 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
           <div className="w-px h-6 bg-xeflow-border mx-1 shrink-0 hidden md:block" />
 
           {/* Notification bell */}
+
           <button
             aria-label="Notifications"
             className="
@@ -222,11 +223,13 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
           </button>
 
           {/* Dark mode toggle */}
+
           <DarkModeToggle isDark={isDark} onToggle={toggleDarkMode} />
 
           <div className="w-px h-6 bg-xeflow-border mx-1 shrink-0 hidden sm:block" />
 
           {/* Profile */}
+
           <button
             className="
               flex items-center gap-3 pl-1 pr-3 py-1 rounded-xl
@@ -251,18 +254,25 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
         </div>
       </header>
 
-      {/* ── COMMAND PALETTE MODAL ── */}
+      
+      {/* CMD modal */}
+
       {isSearchOpen && (
         <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] px-4">
+          
           {/* Blurred Backdrop */}
+
           <div
             className="absolute inset-0 bg-xeflow-bg/60 backdrop-blur-md transition-opacity"
             onClick={() => setIsSearchOpen(false)}
           />
 
           {/* Modal Container */}
+
           <div className="relative w-full max-w-2xl bg-xeflow-surface rounded-2xl shadow-2xl border border-xeflow-border overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
             {/* Search Input Area */}
+
             <div className="flex items-center px-4 py-4 border-b border-xeflow-border bg-xeflow-bg/50">
               <FiSearch size={22} className="text-xeflow-brand mr-3" />
               <input
@@ -279,6 +289,7 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
             </div>
 
             {/* Results Area */}
+
             <div className="max-h-[60vh] overflow-y-auto p-2 custom-scrollbar">
               {filteredItems.length > 0 ? (
                 filteredItems.map((item, index) => (
@@ -309,6 +320,7 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
             </div>
 
             {/* Modal Footer */}
+
             <div className="px-4 py-3 border-t border-xeflow-border bg-xeflow-bg/50 text-xs text-xeflow-muted flex items-center justify-between">
               <span>Search modules, pages, and settings.</span>
               <div className="flex gap-4">

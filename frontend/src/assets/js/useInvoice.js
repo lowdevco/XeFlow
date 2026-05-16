@@ -1,8 +1,12 @@
 
 import { useState, useRef } from "react";
 
+
+
 export function useInvoice() {
-  /* ── Header ─────────────────────────────────────────────────────── */
+
+  // Header 
+  
   const [logo, setLogoUrl] = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState("INV-001");
   const [from, setFrom] = useState("");
@@ -13,12 +17,15 @@ export function useInvoice() {
   const [dueDate, setDueDate] = useState("");
   const [poNumber, setPoNumber] = useState("");
 
-  /* ── Line items ─────────────────────────────────────────────────── */
+
+  // Line items
+  
   const [items, setItems] = useState([
     { id: 1, description: "", quantity: "", rate: "" },
   ]);
 
-  /* ── Adjustments ────────────────────────────────────────────────── */
+  // Adjustments 
+
   const [discount, setDiscount] = useState({
     show: false,
     type: "percent",
@@ -27,22 +34,29 @@ export function useInvoice() {
   const [tax, setTax] = useState({ show: false, type: "percent", value: "" });
   const [shipping, setShipping] = useState({ show: false, value: "" });
 
-  /* ── Footer ─────────────────────────────────────────────────────── */
+  // Footer
+  
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
 
-  /* ── UI state ───────────────────────────────────────────────────── */
+
+  // UI state
+
   const [showSend, setShowSend] = useState(false);
   const logoRef = useRef(null);
 
-  /* ── Logo upload ────────────────────────────────────────────────── */
+
+  // Logo upload
+  
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) setLogoUrl(URL.createObjectURL(file));
   };
 
-  /* ── Line item CRUD ─────────────────────────────────────────────── */
+
+  // Line item CRUD  Operattions 
+
   const addItem = () =>
     setItems((prev) => [
       ...prev,
@@ -57,7 +71,8 @@ export function useInvoice() {
       prev.map((i) => (i.id === id ? { ...i, [field]: val } : i)),
     );
 
-  /* ── Calculations ───────────────────────────────────────────────── */
+  // Calculations 
+
   const subtotal = items.reduce(
     (s, i) => s + (parseFloat(i.quantity) || 0) * (parseFloat(i.rate) || 0),
     0,
@@ -79,20 +94,27 @@ export function useInvoice() {
   const total = subtotal - discountAmt + taxAmt + shippingAmt;
   const balanceDue = total - (parseFloat(amountPaid) || 0);
 
-  /* ── Format helper ──────────────────────────────────────────────── */
+  // Format helper 
+  
   const fmt = (n) =>
     `₹ ${Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  /* ── Actions ────────────────────────────────────────────────────── */
+  // Actions 
+
   const handleDownload = () => window.print();
 
   return {
-    /* refs */
+    // refs 
+
     logoRef,
-    /* logo */
+
+    // logo 
+    
     logo,
     handleLogoUpload,
-    /* header fields */
+    
+    // header fields
+    
     invoiceNumber,
     setInvoiceNumber,
     from,
@@ -109,26 +131,34 @@ export function useInvoice() {
     setDueDate,
     poNumber,
     setPoNumber,
-    /* items */
+
+    // items 
+    
     items,
     addItem,
     removeItem,
     updateItem,
-    /* adjustments */
+
+    // adjustments 
+    
     discount,
     setDiscount,
     tax,
     setTax,
     shipping,
     setShipping,
-    /* footer */
+
+    // footer
+    
     notes,
     setNotes,
     terms,
     setTerms,
     amountPaid,
     setAmountPaid,
-    /* totals */
+
+    // totals 
+
     subtotal,
     discountAmt,
     taxAmt,
@@ -136,7 +166,9 @@ export function useInvoice() {
     total,
     balanceDue,
     fmt,
-    /* ui */
+
+    // UI  
+    
     showSend,
     setShowSend,
     handleDownload,

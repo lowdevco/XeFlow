@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+
 import {
   FiSearch,
   FiEdit,
@@ -14,9 +15,12 @@ import {
   FiChevronUp,
   FiChevronDown,
 } from "react-icons/fi";
-import toast from "react-hot-toast"; // <-- Imported toast
+import toast from "react-hot-toast";
 
-// ─── IMPORT YOUR API WRAPPER ───
+
+// Import API
+
+
 import { fetchWithAuth } from "../../js/api";
 
 const EditCustomer = () => {
@@ -43,7 +47,8 @@ const EditCustomer = () => {
     newLogo: null,
   });
 
-  // ─── FETCH CUSTOMERS (SECURED) ───
+  // Customer Fetching 
+
   const fetchCustomers = async () => {
     try {
       const response = await fetchWithAuth("/customers/", { method: "GET" });
@@ -117,7 +122,8 @@ const EditCustomer = () => {
     );
   };
 
-  // ─── API ACTIONS (DELETE & EDIT SECURED) ───
+  // Edit and Delete API 
+
   const handleDelete = async () => {
     const loadingId = toast.loading("Deleting customer...");
     try {
@@ -210,7 +216,9 @@ const handleEditSubmit = async (e) => {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300 relative">
       <div className="max-w-6xl mx-auto space-y-6">
+
         {/* Header */}
+
         <div>
           <h1 className="text-2xl font-bold text-xeflow-text">
             Manage Customers
@@ -221,6 +229,7 @@ const handleEditSubmit = async (e) => {
         </div>
 
         {/* Toolbar */}
+
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
           <div className="relative w-full sm:w-96">
             <FiSearch
@@ -240,7 +249,8 @@ const handleEditSubmit = async (e) => {
           </div>
         </div>
 
-        {/* ── DATA TABLE ── */}
+        {/* Data Table */}
+
         <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -374,7 +384,8 @@ const handleEditSubmit = async (e) => {
             </table>
           </div>
 
-          {/* ── PAGINATION FOOTER ── */}
+          {/* Pagination Footer */}
+
           {totalPages > 0 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
               <span className="text-xs text-xeflow-muted font-medium">

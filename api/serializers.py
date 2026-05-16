@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Menu_Module , Menu_Child, Customer, Service, Invoice, InvoiceItem
 
 
+
+
 #--------------Module Serializer---------------#
 
 class ChildSerializer(serializers.ModelSerializer):
@@ -36,7 +38,8 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceItem
         fields = ['service', 'description', 'quantity', 'rate', 'amount']
-        # Note: Doesnt include 'invoice' here because don't know the invoice ID until the parent is created!
+
+        # Note: Doesnt include 'invoice' here because  it Doesn't know the invoice ID until the parent is created!
 
 class InvoiceSerializer(serializers.ModelSerializer):
     items = InvoiceItemSerializer(many=True) 
@@ -51,6 +54,19 @@ class InvoiceSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             InvoiceItem.objects.create(invoice=invoice, **item_data)
         return invoice
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if items_data is not None:
+            instance.items.all().delete()
+            for item_data in items_data:
+                InvoiceItem.objects.create(invoice=instance, **item_data)
+                
+        return instance
 
     def to_representation(self, instance):
         response = super().to_representation(instance)

@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   FiUpload,
   FiBriefcase,
@@ -13,6 +14,8 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast"; 
 import { fetchWithAuth } from "../../js/api";
 
+
+
 const AddCustomer = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,6 +27,8 @@ const AddCustomer = () => {
     email: "",
     logo: null,
   });
+
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -122,7 +127,9 @@ const AddCustomer = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* ── NEW READ-ONLY ID FIELD ── */}
+
+            {/* Customer ID */}
+
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                 Customer ID
@@ -142,6 +149,7 @@ const AddCustomer = () => {
             </div>
 
             {/* Company Name */}
+
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                 Company Name
@@ -164,6 +172,7 @@ const AddCustomer = () => {
             </div>
 
             {/* Representative Name */}
+
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                 Representative Name
@@ -186,6 +195,7 @@ const AddCustomer = () => {
             </div>
 
             {/* Contact Number */}
+
             <div>
               <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                 Contact Number
@@ -208,6 +218,7 @@ const AddCustomer = () => {
             </div>
 
             {/* Email Address */}
+
             <div>
               <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                 Email Address
@@ -231,6 +242,7 @@ const AddCustomer = () => {
           </div>
 
           {/* Action Buttons Inside Form */}
+
           <div className="flex items-center justify-end gap-3 mt-8">
             <Link to="/customer/view">
               <button

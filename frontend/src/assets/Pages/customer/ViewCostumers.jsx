@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+
 import {
   FiSearch,
   FiPlus,
@@ -11,6 +12,8 @@ import {
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
+
+
 
 const ViewCustomers = () => {
   const [customers, setCustomers] = useState([]);
@@ -48,7 +51,8 @@ const ViewCustomers = () => {
     fetchCustomers();
   }, []);
 
-  // ─── DATA TABLE LOGIC (Search -> Sort -> Paginate) ───
+    // Data Table Logic
+    
   const filteredCustomers = useMemo(() => {
     const lowerCaseSearch = searchTerm.toLowerCase();
     return customers.filter((customer) => {
@@ -115,7 +119,9 @@ const ViewCustomers = () => {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300 relative">
       <div className="max-w-6xl mx-auto space-y-6">
+
         {/* Header */}
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-xeflow-text">Customers</h1>
@@ -131,6 +137,7 @@ const ViewCustomers = () => {
         </div>
 
         {/* Toolbar */}
+
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
           <div className="relative w-full sm:w-96">
             <FiSearch
@@ -155,6 +162,7 @@ const ViewCustomers = () => {
         </div>
 
         {/* Data Table */}
+
         <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -308,6 +316,7 @@ const ViewCustomers = () => {
           </div>
 
           {/* Pagination Footer */}
+
           {totalPages > 0 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
               <span className="text-xs text-xeflow-muted font-medium">

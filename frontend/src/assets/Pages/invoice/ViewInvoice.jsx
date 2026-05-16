@@ -12,9 +12,12 @@ import {
   FiPrinter,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-
 import { fetchWithAuth } from "../../js/api";
+
+// Const Values 
+
 import Xeventure_Logo from "../../image/Xeventure.png";
+
 const GSTIN = "32ABCDE1234F1Z5";
 
 const ViewInvoice = () => {
@@ -143,7 +146,7 @@ const ViewInvoice = () => {
   const handleMail = (invoice) => {
     const email = invoice.customer?.email || "";
     const subject = encodeURIComponent(
-      `Invoice ${invoice.invoice_number} from Xeventure Technologies`,
+      `Invoice ${invoice.invoice_number} from Xeventure IT Solutions`,
     );
     const body = encodeURIComponent(
       `Hi ${invoice.customer?.rep_name || "there"},\n\n` +
@@ -156,8 +159,41 @@ const ViewInvoice = () => {
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   };
 
-  const handleDownload = (invoiceId) => {
-    toast.success(`Triggering PDF download for Invoice ID: ${invoiceId}`); 
+  const handleDownload = async (invoiceId) => {
+    const loadingToast = toast.loading("Generating PDF...");
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/invoices/${invoiceId}/pdf/`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to generate PDF");
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Invoice_${invoiceId}.pdf`);
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Download started!", { id: loadingToast });
+    } catch (error) {
+      console.error("PDF Download Error:", error);
+      toast.error("Failed to download PDF. Is the backend running?", {
+        id: loadingToast,
+      });
+    }
   };
 
   return (

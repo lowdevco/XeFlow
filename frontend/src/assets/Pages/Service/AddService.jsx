@@ -6,10 +6,12 @@ import {
   FiAlignLeft,
   FiCheck,
   FiArrowLeft,
-  FiAlertCircle,
 } from "react-icons/fi";
+import toast from "react-hot-toast";
 
-// ─── IMPORT YOUR API WRAPPER ───
+
+// API  wrapper Fetching
+
 import { fetchWithAuth } from "../../js/api";
 
 const AddService = () => {
@@ -26,7 +28,7 @@ const AddService = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(null); // Clear errors when typing
+    if (error) setError(null); 
   };
 
   const handleSubmit = async (e) => {
@@ -35,13 +37,12 @@ const AddService = () => {
     setError(null);
 
     try {
-      // Sending the data securely to your Django backend
       const response = await fetchWithAuth("/services/", {
         method: "POST",
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
-          // Convert price to a float before sending
+          
           price: parseFloat(formData.price),
         }),
       });
@@ -49,14 +50,14 @@ const AddService = () => {
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(
-          errData.detail || "Failed to add service. Please try again.",
+          toast.error(errData.detail || "Failed to add service. Please try again."),
         );
       }
 
 
       navigate("/service/all");
     } catch (err) {
-      console.error("Error adding service:", err);
+      toast.error("Error adding service:", err);
       setError(err.message);
     } finally {
       setIsSubmitting(false);
@@ -66,7 +67,9 @@ const AddService = () => {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300">
       <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+
         {/* Header Section */}
+        
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
@@ -85,18 +88,17 @@ const AddService = () => {
         </div>
 
         {/* Form Container */}
+
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300">
           <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
-            {/* Error Message */}
             {error && (
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium">
-                <FiAlertCircle size={18} className="shrink-0" />
-                <p>{error}</p>
-              </div>
+              toast.error({error})
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
               {/* ── SERVICE NAME ── */}
+              
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                   Service Name
@@ -119,9 +121,11 @@ const AddService = () => {
               </div>
 
               {/* ── PRICE ── */}
+
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                   Base Price
+
                 </label>
                 <div className="relative">
                   <LuIndianRupee
@@ -133,7 +137,7 @@ const AddService = () => {
                     type="number"
                     name="price"
                     min="0"
-                    step="0.01" // Allows decimals for cents
+                    step="0.01" 
                     value={formData.price}
                     onChange={handleChange}
                     placeholder="0.00"
@@ -143,6 +147,7 @@ const AddService = () => {
               </div>
 
               {/* ── DESCRIPTION ── */}
+
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                   Description
@@ -166,6 +171,7 @@ const AddService = () => {
             </div>
 
             {/* ── SUBMIT FOOTER ── */}
+
             <div className="pt-6 mt-6 border-t border-xeflow-border flex flex-col sm:flex-row gap-3 justify-end items-center">
               <button
                 type="button"

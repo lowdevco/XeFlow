@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { fetchWithAuth } from "../js/api";
+
 import {
   FiHelpCircle,
   FiLogOut,
@@ -14,7 +16,8 @@ export default function Sidebar({ isOpen }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ─── 1. SECURE FETCH WITH JWT & SAFE ARRAY CHECK ───
+  // Secure Fetch With JWT 
+
 useEffect(() => {
   const fetchSidebar = async () => {
     try {
@@ -40,10 +43,11 @@ useEffect(() => {
   fetchSidebar();
 }, []);
 
-  // ─── 2. FIXED TOGGLE LOGIC ───
+  // Drawer Toggle Logic
+
   const toggleDrawer = (e, moduleName) => {
-    e.preventDefault(); // Stops the button from acting weird
-    e.stopPropagation(); // Stops clicks from bleeding through
+    e.preventDefault(); 
+    e.stopPropagation(); 
     setOpenDrawerId(openDrawerId === moduleName ? null : moduleName);
   };
 
@@ -64,7 +68,6 @@ useEffect(() => {
       `}
     >
       <div className="w-[310px] flex flex-col h-full overflow-hidden">
-        {/* Logo */}
         <div className="flex items-center gap-3 h-[72px] px-6 border-b border-xeflow-border shrink-0">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-xeflow-brand to-xeflow-electric shadow-md shadow-xeflow-brand/30">
             <svg width="16" height="16" viewBox="0 0 20 20" fill="white">
@@ -86,10 +89,11 @@ useEffect(() => {
         </div>
 
         {/* Dynamic Navigation */}
+
         <nav className="flex-1 px-3 pt-4 pb-2 overflow-y-auto space-y-1 custom-scrollbar">
           {modules.map((module) => {
             const hasChildren = module.children && module.children.length > 0;
-            const isDrawerOpen = openDrawerId === module.name; // Using name instead of ID
+            const isDrawerOpen = openDrawerId === module.name; 
             const isActive =
               location.pathname === module.url ||
               (hasChildren &&
@@ -151,10 +155,10 @@ useEffect(() => {
                   </Link>
                 )}
 
-                {/* Sub-Tabs (Children Drawer) */}
+                {/* Sub-Tabs Child */}
+
                 {hasChildren && (
                   <div
-                    /* ─── 4. INCREASED MAX-HEIGHT ─── */
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isDrawerOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"}`}
                   >
                     <ul className="pl-[3.20rem] pr-3 space-y-0.5 flex flex-col relative before:absolute before:left-[1.8rem] before:top-2 before:bottom-2 before:w-[1px] before:bg-xeflow-border">
@@ -183,6 +187,7 @@ useEffect(() => {
         </nav>
 
         {/* Bottom section */}
+
         <div className="px-3 pb-5 shrink-0 space-y-2 border-t border-xeflow-border pt-3">
           <div className="flex gap-1.5">
             <button
