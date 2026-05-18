@@ -72,6 +72,7 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
   const searchInputRef = useRef(null);
 
   // Fetch modules for the search 
+  
   useEffect(() => {
     const fetchNavModules = async () => {
       try {

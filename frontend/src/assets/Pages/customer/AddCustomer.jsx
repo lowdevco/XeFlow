@@ -7,6 +7,7 @@ import {
   FiPhone,
   FiMail,
   FiCheck,
+  FiMapPin,
   FiX,
   FiHash,
 } from "react-icons/fi";
@@ -25,6 +26,7 @@ const AddCustomer = () => {
     repName: "",
     phone: "",
     email: "",
+    customerAddress: "",
     logo: null,
   });
 
@@ -50,6 +52,7 @@ const AddCustomer = () => {
     submitData.append("rep_name", formData.repName);
     submitData.append("phone", formData.phone);
     submitData.append("email", formData.email);
+    submitData.append("address", formData.customerAddress);
 
     if (formData.logo) {
       submitData.append("logo", formData.logo);
@@ -239,7 +242,31 @@ const AddCustomer = () => {
                 />
               </div>
             </div>
+
+            {/* Customer Address Input Bar */}
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
+                Customer Address
+              </label>
+              <div className="relative">
+                <FiMapPin
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                  size={18}
+                />
+                <input 
+                  required
+                  type="text"
+                  name="customerAddress"
+                  value={formData.customerAddress}
+                  onChange={handleChange}
+                  placeholder="e.g. 123 Main St, Anytown"
+                  className="w-full pl-11 pr-4 py-10 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted/50 outline-none focus:border-xeflow-brand transition-all duration-200"
+                />
+              </div>
+            </div>
           </div>
+
 
           {/* Action Buttons Inside Form */}
 

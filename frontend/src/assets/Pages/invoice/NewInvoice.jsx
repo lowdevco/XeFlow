@@ -292,10 +292,10 @@ const NewInvoice = () => {
               className="w-auto h-24 pl-13 md:h-32 scale-500"
             />
             <div className="text-sm text-xeflow-muted space-y-1 mt-2">
-              <p>123 Tech Park, Cyber Hub</p>
-              <p>Kerala, India 673592</p>
-              <p>Email: billing@xeventure.com</p>
-              <p>Phone: +91 98765 43210</p>
+              <p>Xeventure IT Soltions,near SBI Bank</p>
+              <p>Sulthan Bathery, Wayanad Kerala 673592 </p>
+              <p>Email: Xeventure@acme.com </p>
+              <p>Phone: +91 8018573446</p>
               <p className="font-bold text-xeflow-text pt-2">GSTIN: {GSTIN}</p>
             </div>
           </div>

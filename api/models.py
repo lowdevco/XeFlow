@@ -41,6 +41,7 @@ class Customer(models.Model):
     rep_name = models.CharField(max_length=200)
     phone = models.CharField(max_length=20)
     email = models.EmailField()
+    address = models.TextField(blank=True, null=True)
     logo = models.ImageField(upload_to='logos/', blank=True, null=True) 
     created_at = models.DateTimeField(auto_now_add=True)
 

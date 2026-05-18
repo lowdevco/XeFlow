@@ -14,6 +14,7 @@ import {
   FiUser,
   FiChevronUp,
   FiChevronDown,
+  FiMapPin,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
@@ -40,10 +41,11 @@ const EditCustomer = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [editForm, setEditForm] = useState({
-    company_name: "",
+    company_name: " ",
     rep_name: "",
     phone: "",
-    email: "",
+    email: " ",
+    address: " ",
     newLogo: null,
   });
 
@@ -156,6 +158,7 @@ const EditCustomer = () => {
       rep_name: customer.rep_name,
       phone: customer.phone,
       email: customer.email,
+      address: customer.address || "",
       newLogo: null,
     });
   };
@@ -170,6 +173,7 @@ const handleEditSubmit = async (e) => {
   submitData.append("rep_name", editForm.rep_name);
   submitData.append("phone", editForm.phone);
   submitData.append("email", editForm.email);
+  submitData.append("address", editForm.address);
   if (editForm.newLogo) submitData.append("logo", editForm.newLogo);
 
   try {
@@ -341,9 +345,13 @@ const handleEditSubmit = async (e) => {
                           <FiMail className="text-xeflow-muted" size={14} />
                           <span>{customer.email}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center gap-2 text-xs mb-1">
                           <FiPhone className="text-xeflow-muted" size={14} />
                           <span>{customer.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <FiMapPin className="text-xeflow-muted" size={14} />
+                          <span className="truncate max-w-[200px]" title={customer.address}>{customer.address || "N/A"}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-xeflow-muted font-medium">
@@ -601,6 +609,24 @@ const handleEditSubmit = async (e) => {
                         onChange={(e) =>
                           setEditForm({ ...editForm, email: e.target.value })
                         }
+                        className="w-full pl-10 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand"
+                      />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-xeflow-muted uppercase mb-2">
+                      Customer Address
+                    </label>
+                    <div className="relative">
+                      <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted" />
+                      <input
+                        required
+                        type="text"
+                        value={editForm.address}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, address: e.target.value })
+                        }
+                        placeholder="e.g. 123 Main St, Anytown"
                         className="w-full pl-10 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand"
                       />
                     </div>

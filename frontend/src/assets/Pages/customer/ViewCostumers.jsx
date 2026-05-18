@@ -8,6 +8,7 @@ import {
   FiBriefcase,
   FiChevronUp,
   FiChevronDown,
+  FiMapPin,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -276,12 +277,19 @@ const ViewCustomers = () => {
                           />
                           <span className="truncate">{customer.email}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xeflow-text text-xs">
+                        <div className="flex items-center gap-2 text-xeflow-text text-xs mb-1">
                           <FiPhone
                             className="text-xeflow-muted shrink-0"
                             size={14}
                           />
                           <span>{customer.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xeflow-text text-xs">
+                          <FiMapPin
+                            className="text-xeflow-muted shrink-0"
+                            size={14}
+                          />
+                          <span className="truncate max-w-[200px]" title={customer.address}>{customer.address || "N/A"}</span>
                         </div>
                       </td>
 
