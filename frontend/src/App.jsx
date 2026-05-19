@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, } from "react";
 import { Route, Routes, Outlet, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "./context/AuthContext";
 
 // Dark Mode Import
 
@@ -27,6 +28,12 @@ import ViewCostumers from "./assets/Pages/customer/ViewCostumers";
 import AddService from "./assets/Pages/Service/AddService";
 import EditService from "./assets/Pages/Service/EditService";
 import AllService from "./assets/Pages/Service/AllService";
+import AddUser from "./assets/Pages/users/AddUser";
+import EditUser from "./assets/Pages/users/EditUser";
+import ViewUser from "./assets/Pages/users/ViewUser";
+import AddUserGroup from "./assets/Pages/user-group/AddUserGroup";
+import EditUserGroup from "./assets/Pages/user-group/EditUserGroup";
+import ViewUserGroup from "./assets/Pages/user-group/ViewUserGroup";
 
 // ----------------------------------- //
 
@@ -59,8 +66,9 @@ export default function App() {
         }}
       />
 
-      <Routes>
-        {/*  Public routes  */}
+      <AuthProvider>
+        <Routes>
+          {/*  Public routes  */}
 
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
@@ -80,7 +88,9 @@ export default function App() {
                     toggleDarkMode={toggle}
                   />
 
-                  <Outlet />
+                  <div className="flex-1 overflow-y-auto">
+                    <Outlet />
+                  </div>
                 </main>
               </div>
             }
@@ -111,9 +121,23 @@ export default function App() {
             <Route path="/service/add" element={<AddService />} />
             <Route path="/service/edit" element={<EditService />} />
             <Route path="/service/all" element={<AllService />} />
+
+            {/* User routes  */}
+
+            <Route path="/user/add" element={<AddUser />} />
+            <Route path="/user/edit" element={<EditUser />} />
+            <Route path="/user/view" element={<ViewUser />} />
+
+            {/* User group routes  */}
+
+            <Route path="/user-group/add" element={<AddUserGroup />} />
+            <Route path="/user-group/edit" element={<EditUserGroup />} />
+            <Route path="/user-group/view" element={<ViewUserGroup />} />
+            
           </Route>
         </Route>
       </Routes>
+      </AuthProvider>
     </>
   );
 }

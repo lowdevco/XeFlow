@@ -1,4 +1,4 @@
-import  { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { fetchWithAuth } from "../js/api";
 import {
@@ -194,8 +194,20 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-
   useEffect(() => {
+    const isAuthenticated = !!localStorage.getItem("accessToken");
+    const onDashboard = window.location.pathname === "/dashboard";
+
+    if (isAuthenticated && onDashboard) {
+      const lastRefresh = sessionStorage.getItem("dashboard_last_refresh");
+      const now = Date.now();
+      if (!lastRefresh || now - parseInt(lastRefresh, 10) > 2000) {
+        sessionStorage.setItem("dashboard_last_refresh", now.toString());
+        window.location.reload();
+        return;
+      }
+    }
+
     const fetchDashboardData = async () => {
       try {
         const [invRes, custRes, servRes] = await Promise.all([
@@ -279,8 +291,6 @@ export default function Dashboard() {
     return monthlyData;
   }, [invoices]);
 
-
-
   const sortedInvoices = useMemo(() => {
     let sortable = [...invoices];
     if (sortConfig !== null) {
@@ -362,7 +372,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Dynamic Stat Widgets Grid ── */}
-  
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
         <StatWidget
           icon={<FiBarChart2 />}
@@ -401,10 +411,10 @@ export default function Dashboard() {
       </div>
 
       {/* ── Main grid ── */}
-  
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Recharts Panel */}
-  
+
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl p-6 shadow-sm xl:col-span-1 flex flex-col">
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -589,7 +599,7 @@ export default function Dashboard() {
           </div>
 
           {/* Simple Pagination */}
-  
+
           {totalPages > 0 && (
             <div className="flex items-center justify-between px-6 py-5 border-t border-xeflow-border bg-xeflow-bg">
               <span className="text-sm text-xeflow-muted font-medium">

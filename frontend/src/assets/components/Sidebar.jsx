@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { fetchWithAuth } from "../js/api";
+import { useAuth } from "../../context/AuthContext";
 
 import {
   FiHelpCircle,
@@ -15,6 +16,7 @@ export default function Sidebar({ isOpen }) {
   const [openDrawerId, setOpenDrawerId] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Secure Fetch With JWT 
 
@@ -236,17 +238,25 @@ useEffect(() => {
                   flex items-center justify-center
                   text-white text-xs font-extrabold
                   ring-2 ring-xeflow-brand/20
-                  shadow-sm
+                  shadow-sm overflow-hidden
                 "
               >
-                IR
+              {user?.profile?.profile_picture ? (
+                <img 
+                  src={user.profile.profile_picture.startsWith("http") ? user.profile.profile_picture : `http://127.0.0.1:8000${user.profile.profile_picture}`} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                user?.first_name ? user.first_name[0].toUpperCase() : "U"
+              )}
               </div>
               <div className="flex-1 min-w-0 leading-tight">
                 <p className="text-sm font-bold text-xeflow-text truncate">
-                  Irfan
+                  {user?.first_name} {user?.last_name}
                 </p>
                 <p className="text-[10px] text-xeflow-muted font-medium truncate">
-                  irfan@xeflow.com
+                  {user?.email}
                 </p>
               </div>
               <span className="w-2 h-2 rounded-full bg-xeflow-success shrink-0 ring-2 ring-xeflow-bg" />

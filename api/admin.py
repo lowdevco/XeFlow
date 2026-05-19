@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Menu_Module, Menu_Child, Customer, Service, Invoice, InvoiceItem
+from .models import Menu_Module, Menu_Child, Customer, Service, Invoice, InvoiceItem, UserProfile
 from django.utils.html import format_html
 
 #---------------------------------#
@@ -65,3 +65,9 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_filter = ('status', 'issue_date')
     search_fields = ('invoice_number', 'customer__company_name')
     inlines = [InvoiceItemInline]
+
+
+#---------- User Profile----------#   
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'profile_picture')

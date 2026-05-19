@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import SidebarMenuView, CustomerListCreateView, CustomerDetailView, ServiceListCreateView, ServiceDetailView, InvoiceListCreateView, InvoiceDetailView, download_invoice_pdf
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView   
+from .views import UserRegistrationView, GroupCreateView, GroupListView, PermissionListView,GroupUpdateDeleteView, CurrentUserView, UserListView
 
 urlpatterns = [
     path('sidebar/', SidebarMenuView.as_view(), name='api-sidebar'),
@@ -11,5 +12,12 @@ urlpatterns = [
     path('invoices/', InvoiceListCreateView.as_view(), name='invoice-list-create'),
     path('invoices/<int:pk>/', InvoiceDetailView.as_view(), name='invoice-detail'),
     path('invoices/<int:pk>/pdf/', download_invoice_pdf, name='invoice-pdf'),
-
+    path('users/register/', UserRegistrationView.as_view(), name='user-register'),
+    path('users/me/', CurrentUserView.as_view(), name='current-user'),
+    path('users/', UserListView.as_view(), name='user-list'),
+    path('groups/', GroupListView.as_view(), name='group-list'),
+    path('groups/create/', GroupCreateView.as_view(), name='group-create'),
+    path('permissions/', PermissionListView.as_view(), name='permission-list'),
+    path('groups/', GroupListView.as_view(), name='group-list'),
+    path('groups/<int:pk>/',GroupUpdateDeleteView.as_view(), name='group-detail'),
 ]

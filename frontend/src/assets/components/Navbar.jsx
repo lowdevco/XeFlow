@@ -14,6 +14,7 @@ import {
 // Fetch with auth wrapper
 
 import { fetchWithAuth } from "../js/api";
+import { useAuth } from "../../context/AuthContext";
 
 
 // Dark Mode toggle Pill 
@@ -64,6 +65,7 @@ function DarkModeToggle({ isDark, onToggle }) {
 
 export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // CMD Palette States
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -232,19 +234,28 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
           {/* Profile */}
 
           <button
+            onClick={() => navigate("/profile")}
             className="
               flex items-center gap-3 pl-1 pr-3 py-1 rounded-xl
               hover:bg-xeflow-bg border border-transparent hover:border-xeflow-border
               active:scale-95 transition-all duration-200 cursor-pointer
             "
           >
-            <div className="w-9 h-9 rounded-full shrink-0 bg-gradient-to-br from-xeflow-brand to-xeflow-electric flex items-center justify-center text-white text-xs font-extrabold ring-2 ring-xeflow-brand/20 shadow-md">
-              IR
+            <div className="w-9 h-9 rounded-full shrink-0 bg-gradient-to-br from-xeflow-brand to-xeflow-electric flex items-center justify-center text-white text-xs font-extrabold ring-2 ring-xeflow-brand/20 shadow-md overflow-hidden">
+              {user?.profile?.profile_picture ? (
+                <img 
+                  src={user.profile.profile_picture.startsWith("http") ? user.profile.profile_picture : `http://127.0.0.1:8000${user.profile.profile_picture}`} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                user?.first_name ? user.first_name[0].toUpperCase() : "U"
+              )}
             </div>
             <div className="hidden lg:block text-left leading-tight">
-              <p className="text-sm font-bold text-xeflow-text">Irfan</p>
+              <p className="text-sm font-bold text-xeflow-text">{user?.first_name || "User"}</p>
               <p className="text-[10px] text-xeflow-brand font-bold uppercase tracking-wider">
-                Admin
+                {user?.role || "Role"}
               </p>
             </div>
             <FiChevronDown

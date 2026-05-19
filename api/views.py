@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Menu_Module, Customer, Service, Invoice
-from .serializers import ModuleSerializer, CustomerSerializer, ServiceSerializer, InvoiceSerializer
-from rest_framework import generics 
+from django.contrib.auth.models import User, Group, Permission
+from .serializers import ModuleSerializer, CustomerSerializer, ServiceSerializer, InvoiceSerializer, UserRegistrationSerializer, GroupSerializer, PermissionSerializer, CurrentUserSerializer
+from rest_framework import generics , permissions
 from rest_framework.permissions import IsAuthenticated
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
@@ -61,6 +62,48 @@ class InvoiceListCreateView(generics.ListCreateAPIView):
 class InvoiceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
+    permission_classes = [IsAuthenticated]
+
+#--------------User Group Views--------------#
+
+
+class GroupCreateView(generics.CreateAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]
+
+class GroupListView(generics.ListAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+class GroupUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+class PermissionListView(generics.ListAPIView):
+    queryset = Permission.objects.all()
+    serializer_class = PermissionSerializer
+    permission_classes = [IsAuthenticated]
+
+#---------------User View ------------------------#
+
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [IsAuthenticated]
+
+class CurrentUserView(generics.RetrieveUpdateAPIView):
+    serializer_class = CurrentUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = CurrentUserSerializer
     permission_classes = [IsAuthenticated]
 
 

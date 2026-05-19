@@ -62,5 +62,7 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
 const forceLogout = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
-  window.location.href = "/login";
+  if (window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
 };
