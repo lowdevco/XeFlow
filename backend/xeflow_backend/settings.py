@@ -26,7 +26,11 @@ SECRET_KEY = 'django-insecure-$f^!zmn+8(btr99k2(c=7+m*el7$wqht)^i4dyyx(2u7$u%35c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "xeflow-backend.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
