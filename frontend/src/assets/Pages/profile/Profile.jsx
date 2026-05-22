@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { FiUser, FiMail, FiCamera, FiCheck, FiLock } from "react-icons/fi";
+import {
+  FiUser,
+  FiMail,
+  FiCamera,
+  FiCheck,
+  FiLock
+} from "react-icons/fi";
+
+import { CiAt } from "react-icons/ci";
 import { useAuth } from "../../../context/AuthContext";
 import { fetchWithAuth } from "../../js/api";
 import toast from "react-hot-toast";
@@ -108,11 +116,12 @@ const Profile = () => {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300">
       <div className="max-w-4xl mx-auto space-y-6">
-
         {/* ── Header ── */}
-        
+
         <div>
-          <h1 className="text-2xl font-bold text-xeflow-text">Account Settings</h1>
+          <h1 className="text-2xl font-bold text-xeflow-text">
+            Account Settings
+          </h1>
           <p className="text-sm text-xeflow-muted mt-1">
             Manage your profile, preferences, and account security.
           </p>
@@ -127,7 +136,11 @@ const Profile = () => {
             <div className="relative group shrink-0">
               <div className="w-24 h-24 bg-xeflow-bg rounded-full p-1 border-4 border-xeflow-surface shadow-md overflow-hidden">
                 {avatarSrc ? (
-                  <img src={avatarSrc} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                  <img
+                    src={avatarSrc}
+                    alt="Avatar"
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-xeflow-brand to-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-black">
                     {user.first_name ? user.first_name[0].toUpperCase() : "U"}
@@ -149,17 +162,17 @@ const Profile = () => {
                 accept="image/*"
               />
             </div>
-            
+
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-xl font-bold text-xeflow-text">
                 Profile Picture
               </h2>
               <p className="text-sm text-xeflow-muted mt-1 max-w-sm">
-                Upload a new avatar. Larger images will be resized automatically.
-                Maximum upload size is 2 MB.
+                Upload a new avatar. Larger images will be resized
+                automatically. Maximum upload size is 2 MB.
               </p>
             </div>
-            
+
             <div className="shrink-0">
               <button
                 type="button"
@@ -172,19 +185,41 @@ const Profile = () => {
           </div>
 
           <div className="p-6 md:p-8 space-y-8">
-            
             {/* Personal Information */}
             <section>
               <h3 className="text-lg font-bold text-xeflow-text mb-4">
                 Personal Information
               </h3>
+
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
+                  Username
+                </label>
+                <div className="relative">
+                  <CiAt
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                    size={16}
+                  />
+                  <input
+                    disabled
+                    name="username"
+                    value={user?.username}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand focus:ring-2 focus:ring-xeflow-brand/20 transition-all"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                     First Name
                   </label>
                   <div className="relative">
-                    <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted" size={16} />
+                    <FiUser
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                      size={16}
+                    />
                     <input
                       type="text"
                       name="firstName"
@@ -200,7 +235,10 @@ const Profile = () => {
                     Last Name
                   </label>
                   <div className="relative">
-                    <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted" size={16} />
+                    <FiUser
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                      size={16}
+                    />
                     <input
                       type="text"
                       name="lastName"
@@ -216,7 +254,10 @@ const Profile = () => {
                     Email Address
                   </label>
                   <div className="relative">
-                    <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted" size={16} />
+                    <FiMail
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                      size={16}
+                    />
                     <input
                       type="email"
                       name="email"
@@ -239,14 +280,17 @@ const Profile = () => {
               <p className="text-sm text-xeflow-muted mb-5">
                 Update your password to keep your account secure.
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
                     Current Password
                   </label>
                   <div className="relative">
-                    <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted" size={16} />
+                    <FiLock
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                      size={16}
+                    />
                     <input
                       type="password"
                       name="oldPassword"
@@ -263,7 +307,10 @@ const Profile = () => {
                     New Password
                   </label>
                   <div className="relative">
-                    <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted" size={16} />
+                    <FiLock
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                      size={16}
+                    />
                     <input
                       type="password"
                       name="password"

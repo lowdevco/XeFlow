@@ -19,7 +19,7 @@ import {
   FiBriefcase,
 } from "react-icons/fi";
 
-/* ── Trend arrow icons ── */
+/*  Trend arrow icons  */
 
 const TrendUp = () => (
   <svg
@@ -229,6 +229,7 @@ export default function Dashboard() {
   }, []);
 
   // Format Currency
+  
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",

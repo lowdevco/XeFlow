@@ -13,8 +13,6 @@
     "@tailwindcss/vite": "^4.3.0",
     "datatables.net-dt": "^2.3.8",
     "datatables.net-react": "^1.0.2",
-    "install": "^0.13.0",
-    "npm": "^11.14.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hot-toast": "^2.6.0",

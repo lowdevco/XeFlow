@@ -34,6 +34,8 @@ import ViewUser from "./assets/Pages/users/ViewUser";
 import AddUserGroup from "./assets/Pages/user-group/AddUserGroup";
 import EditUserGroup from "./assets/Pages/user-group/EditUserGroup";
 import ViewUserGroup from "./assets/Pages/user-group/ViewUserGroup";
+import Overview from "./assets/Pages/Analytics/Overview";
+import Revenue from "./assets/Pages/Analytics/Revenue";
 
 // ----------------------------------- //
 
@@ -46,7 +48,7 @@ export default function App() {
       <Toaster
         position="top-right"
         containerStyle={{
-          top: 100, 
+          top: 100,
           right: 30,
         }}
         toastOptions={{
@@ -70,73 +72,77 @@ export default function App() {
         <Routes>
           {/*  Public routes  */}
 
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<Login />} />
-        </Route>
-
-        {/*  Protected routes  */}
-
-        <Route element={<ProtectedRoute />}>
-          <Route
-            element={
-              <div className="flex h-screen w-full bg-xeflow-bg font-sans overflow-hidden">
-                <Sidebar isOpen={isSidebarOpen} />
-                <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-                  <Navbar
-                    toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-                    isDark={isDark}
-                    toggleDarkMode={toggle}
-                  />
-
-                  <div className="flex-1 overflow-y-auto">
-                    <Outlet />
-                  </div>
-                </main>
-              </div>
-            }
-          >
-            {/* dashboard routes */}
-
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-
-            {/* Profile routes  */}
-
-            <Route path="/profile" element={<Profile />} />
-
-            {/* invoice routes */}
-
-            <Route path="/invoice/new" element={<NewInvoice />} />
-            <Route path="/invoice/edit" element={<EditInvoice />} />
-            <Route path="/invoice/view" element={<ViewInvoice />} />
-
-            {/* customer routes */}
-
-            <Route path="/customer/add" element={<AddCustomer />} />
-            <Route path="/customer/edit" element={<EditCustomer />} />
-            <Route path="/customer/view" element={<ViewCostumers />} />
-
-            {/* Service routes  */}
-
-            <Route path="/service/add" element={<AddService />} />
-            <Route path="/service/edit" element={<EditService />} />
-            <Route path="/service/all" element={<AllService />} />
-
-            {/* User routes  */}
-
-            <Route path="/user/add" element={<AddUser />} />
-            <Route path="/user/edit" element={<EditUser />} />
-            <Route path="/user/view" element={<ViewUser />} />
-
-            {/* User group routes  */}
-
-            <Route path="/user-group/add" element={<AddUserGroup />} />
-            <Route path="/user-group/edit" element={<EditUserGroup />} />
-            <Route path="/user-group/view" element={<ViewUserGroup />} />
-            
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
           </Route>
-        </Route>
-      </Routes>
+
+          {/*  Protected routes  */}
+
+          <Route element={<ProtectedRoute />}>
+            <Route
+              element={
+                <div className="flex h-screen w-full bg-xeflow-bg font-sans overflow-hidden">
+                  <Sidebar isOpen={isSidebarOpen} />
+                  <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+                    <Navbar
+                      toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                      isDark={isDark}
+                      toggleDarkMode={toggle}
+                    />
+
+                    <div className="flex-1 overflow-y-auto">
+                      <Outlet />
+                    </div>
+                  </main>
+                </div>
+              }
+            >
+              {/* dashboard routes */}
+
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+
+              {/* Profile routes  */}
+
+              <Route path="/profile" element={<Profile />} />
+
+              {/* invoice routes */}
+
+              <Route path="/invoice/new" element={<NewInvoice />} />
+              <Route path="/invoice/edit" element={<EditInvoice />} />
+              <Route path="/invoice/view" element={<ViewInvoice />} />
+
+              {/* customer routes */}
+
+              <Route path="/customer/add" element={<AddCustomer />} />
+              <Route path="/customer/edit" element={<EditCustomer />} />
+              <Route path="/customer/view" element={<ViewCostumers />} />
+
+              {/* Service routes  */}
+
+              <Route path="/service/add" element={<AddService />} />
+              <Route path="/service/edit" element={<EditService />} />
+              <Route path="/service/all" element={<AllService />} />
+
+              {/* User routes  */}
+
+              <Route path="/user/add" element={<AddUser />} />
+              <Route path="/user/edit" element={<EditUser />} />
+              <Route path="/user/view" element={<ViewUser />} />
+
+              {/* User group routes  */}
+
+              <Route path="/user-group/add" element={<AddUserGroup />} />
+              <Route path="/user-group/edit" element={<EditUserGroup />} />
+              <Route path="/user-group/view" element={<ViewUserGroup />} />
+
+              {/* Analytics routes  */}
+
+              <Route path="/analytics/overview/" element={<Overview />} />
+              <Route path="/analytics/revenue/" element={<Revenue />} />
+            </Route>
+          </Route>
+        </Routes>
       </AuthProvider>
     </>
   );

@@ -6,7 +6,9 @@ import {
   FiChevronRight,
   FiShield,
   FiUser,
+  FiChevronsRight,
 } from "react-icons/fi";
+import { RiVipCrownFill } from "react-icons/ri";
 import { Link } from "react-router-dom";
 
 const ViewUser = () => {
@@ -14,6 +16,7 @@ const ViewUser = () => {
   const [loading, setLoading] = useState(true);
 
   // Pagination & Search States
+
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -54,14 +57,13 @@ const ViewUser = () => {
   }, [users, searchQuery]);
 
   // Pagination logic
-  
+
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
 
-  // Helper to format avatar URL
   const getAvatarUrl = (profilePicture) => {
     if (!profilePicture) return null;
     return profilePicture.startsWith("http")
@@ -73,6 +75,7 @@ const ViewUser = () => {
     <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-xeflow-bg transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-xeflow-text">Users</h1>
@@ -89,8 +92,11 @@ const ViewUser = () => {
         </div>
 
         {/* Data Table Card */}
+
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden flex flex-col transition-colors duration-300">
+          
           {/* Toolbar */}
+
           <div className="p-4 md:px-6 border-b border-xeflow-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-xeflow-bg/30">
             <div className="relative w-full sm:w-80">
               <FiSearch
@@ -129,7 +135,7 @@ const ViewUser = () => {
                   No users found
                 </p>
                 <p className="text-sm">
-                    Adjust your search query or add a new user.
+                  Adjust your search query or add a new user.
                 </p>
               </div>
             ) : (
@@ -167,8 +173,19 @@ const ViewUser = () => {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-bold text-xeflow-text text-sm truncate">
+                              <p className="font-bold text-xeflow-text text-sm truncate flex items-center gap-1.5">
                                 {u.first_name} {u.last_name}
+                                {u.is_superuser ? (
+                                  <RiVipCrownFill
+                                    className="text-amber-500"
+                                    size={16}
+                                  />
+                                ) : u.is_staff ? (
+                                  <FiShield
+                                    className="text-blue-500"
+                                    size={15}
+                                  />
+                                ) : null}
                               </p>
                               <p className="text-xs text-xeflow-muted truncate">
                                 @{u.username}
@@ -237,7 +254,7 @@ const ViewUser = () => {
                   disabled={currentPage === totalPages}
                   className="p-1.5 rounded-lg border border-xeflow-border text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <FiChevronRight size={16} />
+                  <FiChevronRight size={16}/>
                 </button>
               </div>
             </div>
