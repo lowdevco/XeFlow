@@ -4,7 +4,7 @@ from django.db.models.signals import post_delete
 from django.utils import timezone
 from django.dispatch import receiver 
 from django.utils import timezone  
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group, Permission
 
 
 #-------------------------------------# 
@@ -57,6 +57,7 @@ def delete_customer_logo(sender, instance, **kwargs):
     if instance.logo:
         if os.path.isfile(instance.logo.path):
             os.remove(instance.logo.path)
+
 
 #---------------service Details-------------------#
 
@@ -161,5 +162,28 @@ def delete_user_profile_picture(sender, instance, **kwargs):
     if instance.profile_picture:
         if os.path.isfile(instance.profile_picture.path):
             os.remove(instance.profile_picture.path)
+
+
+#-------------Group and Permissions--------------#
+
+class GroupProfile(models.Model):
+
+    group = models.OneToOneField(
+        Group,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
+
+    is_superuser = models.BooleanField(
+        default=False
+    )
+
+    is_staff = models.BooleanField(
+        default=False
+    )
+
+    def __str__(self):
+        return self.group.name
+
 
 #------------------------------------------------#

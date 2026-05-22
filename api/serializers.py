@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Menu_Module , Menu_Child, Customer, Service, Invoice, InvoiceItem, UserProfile
+from .models import Menu_Module , Menu_Child, Customer, Service, Invoice, InvoiceItem, UserProfile, GroupProfile
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User, Group, Permission
 
@@ -83,20 +83,103 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 #--------------- User Group Serializer-------------#
 
+
 class GroupSerializer(serializers.ModelSerializer):
     permissions = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Permission.objects.all(), required=False
+        many=True,
+        queryset=Permission.objects.all(),
+        required=False
     )
     users = serializers.SerializerMethodField()
+    is_superuser = serializers.BooleanField(
+        write_only=True,
+        required=False,
+        default=False
+    )
+    is_staff = serializers.BooleanField(
+        write_only=True,
+        required=False,
+        default=False
+    )
 
     class Meta:
+
         model = Group
-        fields = ['id', 'name', 'permissions', 'users']
+
+        fields = [
+            'id',
+            'name',
+            'permissions',
+            'users',
+            'is_superuser',
+            'is_staff'
+        ]
 
     def get_users(self, obj):
-        return [{"id": user.id, "username": user.username, "email": user.email} for user in obj.user_set.all()]
+        return [
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email
+            }
+            for user in obj.user_set.all()
+        ]
 
+    def create(self, validated_data):
+        permissions = validated_data.pop(
+            'permissions',
+            []
+        )
+        is_superuser = validated_data.pop(
+            'is_superuser',
+            False
+        )
+        is_staff = validated_data.pop(
+            'is_staff',
+            False
+        )
+        group = Group.objects.create(**validated_data)
+        group.permissions.set(permissions)
+        GroupProfile.objects.create(
+            group=group,
+            is_superuser=is_superuser,
+            is_staff=is_staff
+        )
+        return group
+
+    def update(self, instance, validated_data):
+        permissions = validated_data.pop(
+            'permissions',
+            []
+        )
+        is_superuser = validated_data.pop(
+            'is_superuser',
+            False
+        )
+        is_staff = validated_data.pop(
+            'is_staff',
+            False
+        )
+        instance.name = validated_data.get(
+            'name',
+            instance.name
+        )
+        instance.save()
+
+        instance.permissions.set(permissions)
+        profile, created = GroupProfile.objects.get_or_create(
+            group=instance
+        )
+        profile.is_superuser = is_superuser
+        profile.is_staff = is_staff
+
+        profile.save()
+
+        return instance
+    
+    
         # Group permission Serializer
+
 
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -143,7 +226,19 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'profile']
+        fields = [
+
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'role', 
+            'profile',
+            'is_superuser',
+            'is_staff',
+
+            ]
 
     def get_role(self, obj):
         group = obj.groups.first()

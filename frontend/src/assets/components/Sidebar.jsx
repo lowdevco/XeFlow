@@ -4,11 +4,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { fetchWithAuth } from "../js/api";
 import { useAuth } from "../../context/AuthContext";
 
+import { RiVipCrownFill } from "react-icons/ri";
 import {
   FiHelpCircle,
   FiLogOut,
   FiLayout,
   FiChevronDown,
+  FiShield,
 } from "react-icons/fi";
 
 export default function Sidebar({ isOpen }) {
@@ -18,38 +20,38 @@ export default function Sidebar({ isOpen }) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Secure Fetch With JWT 
+  // Secure Fetch With JWT
 
-useEffect(() => {
-  const fetchSidebar = async () => {
-    try {
-      const res = await fetchWithAuth("/sidebar/", { method: "GET" });
+  useEffect(() => {
+    const fetchSidebar = async () => {
+      try {
+        const res = await fetchWithAuth("/sidebar/", { method: "GET" });
 
-      if (!res.ok) throw new Error("Failed to fetch sidebar");
+        if (!res.ok) throw new Error("Failed to fetch sidebar");
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (Array.isArray(data)) {
-        setModules(data);
-      } else if (data && Array.isArray(data.modules)) {
-        setModules(data.modules);
-      } else {
+        if (Array.isArray(data)) {
+          setModules(data);
+        } else if (data && Array.isArray(data.modules)) {
+          setModules(data.modules);
+        } else {
+          setModules([]);
+        }
+      } catch (err) {
+        console.error("Error fetching sidebar data:", err);
         setModules([]);
       }
-    } catch (err) {
-      console.error("Error fetching sidebar data:", err);
-      setModules([]);
-    }
-  };
+    };
 
-  fetchSidebar();
-}, []);
+    fetchSidebar();
+  }, []);
 
   // Drawer Toggle Logic
 
   const toggleDrawer = (e, moduleName) => {
-    e.preventDefault(); 
-    e.stopPropagation(); 
+    e.preventDefault();
+    e.stopPropagation();
     setOpenDrawerId(openDrawerId === moduleName ? null : moduleName);
   };
 
@@ -95,7 +97,7 @@ useEffect(() => {
         <nav className="flex-1 px-3 pt-4 pb-2 overflow-y-auto space-y-1 custom-scrollbar">
           {modules.map((module) => {
             const hasChildren = module.children && module.children.length > 0;
-            const isDrawerOpen = openDrawerId === module.name; 
+            const isDrawerOpen = openDrawerId === module.name;
             const isActive =
               location.pathname === module.url ||
               (hasChildren &&
@@ -241,20 +243,36 @@ useEffect(() => {
                   shadow-sm overflow-hidden
                 "
               >
-              {user?.profile?.profile_picture ? (
-                <img 
-                  src={user.profile.profile_picture.startsWith("http") ? user.profile.profile_picture : `http://127.0.0.1:8000${user.profile.profile_picture}`} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover" 
-                />
-              ) : (
-                user?.first_name ? user.first_name[0].toUpperCase() : "U"
-              )}
+                {user?.profile?.profile_picture ? (
+                  <img
+                    src={
+                      user.profile.profile_picture.startsWith("http")
+                        ? user.profile.profile_picture
+                        : `http://127.0.0.1:8000${user.profile.profile_picture}`
+                    }
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : user?.first_name ? (
+                  user.first_name[0].toUpperCase()
+                ) : (
+                  "U"
+                )}
               </div>
               <div className="flex-1 min-w-0 leading-tight">
-                <p className="text-sm font-bold text-xeflow-text truncate">
-                  {user?.first_name} {user?.last_name}
-                </p>
+                <span className="flex gap-2">
+                  <p className="text-sm font-bold text-xeflow-text truncate">
+                    {user?.first_name || user?.last_name
+                      ? `${user.first_name} ${user.last_name}`
+                      : user?.username}
+                  </p>
+
+                  {user?.is_superuser ? (
+                    <RiVipCrownFill className="text-amber-500" size={16} />
+                  ) : user?.is_staff ? (
+                    <FiShield className="text-blue-500" size={15} />
+                  ) : null}
+                </span>
                 <p className="text-[10px] text-xeflow-muted font-medium truncate">
                   {user?.email}
                 </p>

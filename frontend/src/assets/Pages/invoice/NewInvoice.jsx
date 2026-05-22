@@ -289,7 +289,7 @@ const NewInvoice = () => {
             <img
               src={Xeventure_Logo}
               alt="Xeventure Logo"
-              className="w-auto h-24 pl-13 md:h-32 scale-500"
+              className="w-auto h-24 pl-13 md:h-32 lg:scale-500 scale-300 sm:scale-320 md:scale-300 object-contain "
             />
             <div className="text-sm text-xeflow-muted space-y-1 mt-2">
               <p>Xeventure IT Soltions,near SBI Bank</p>

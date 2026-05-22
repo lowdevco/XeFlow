@@ -74,7 +74,7 @@ const handleSubmit = async (e) => {
 
     if (response.ok) {
       toast.success("User created successfully!", { id: toastId });
-      navigate("/users");
+      navigate("/user/view");
     } else {
       const errorData = await response.json();
 

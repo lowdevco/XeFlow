@@ -48,6 +48,7 @@ const EditUserGroup = () => {
   const [error, setError] = useState(null);
 
   // Pagination & Sorting
+
   const [sortConfig, setSortConfig] = useState({
     key: "name",
     direction: "asc",
@@ -56,14 +57,17 @@ const EditUserGroup = () => {
   const itemsPerPage = 8;
 
   // Modal States
+  
   const [activeModal, setActiveModal] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
 
   // Edit Name State
+
   const [editNameValue, setEditNameValue] = useState("");
   const [isSubmittingName, setIsSubmittingName] = useState(false);
 
   // Edit Permissions State
+
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [permSearchTerm, setPermSearchTerm] = useState("");
   const [isSubmittingPerms, setIsSubmittingPerms] = useState(false);
@@ -98,6 +102,7 @@ const EditUserGroup = () => {
   };
 
 
+
   const filteredGroups = useMemo(() => {
     const lower = searchTerm.toLowerCase();
     return groups.filter((g) => g.name.toLowerCase().includes(lower));
@@ -123,6 +128,7 @@ const EditUserGroup = () => {
         return 0;
       });
     }
+    
     return sortable;
   }, [filteredGroups, sortConfig]);
 
@@ -157,6 +163,7 @@ const EditUserGroup = () => {
   };
 
 
+
   const groupedPermissions = useMemo(() => {
     const groups = {};
     availablePermissions
@@ -184,6 +191,7 @@ const EditUserGroup = () => {
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
     );
   };
+
 
   const toggleCategory = (perms) => {
     const ids = perms.map((p) => p.id);
@@ -290,15 +298,15 @@ const EditUserGroup = () => {
               Manage permission sets and user roles across the platform.
             </p>
           </div>
-          <Link to="/users/groups/create">
+          <Link to="/user-group/add">
             <button className="flex items-center gap-2 px-4 py-2.5 bg-xeflow-brand text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-colors shadow-sm">
               <FiPlus size={16} /> Add New Group
             </button>
           </Link>
         </div>
 
-              {/* ── Toolbar  */}
-              
+        {/* ── Toolbar  */}
+
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
           <div className="relative w-full sm:w-96">
             <FiSearch
@@ -322,21 +330,13 @@ const EditUserGroup = () => {
           </div>
         </div>
 
-              {/* ── Data Table  */}
-              
+        {/* ── Data Table  */}
+
         <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-xeflow-bg border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider transition-colors duration-300 select-none">
-                  <th
-                    className="px-6 py-4 cursor-pointer group"
-                    onClick={() => handleSort("id")}
-                  >
-                    <div className="flex items-center">
-                      ID <SortIcon columnKey="id" />
-                    </div>
-                  </th>
                   <th
                     className="px-6 py-4 cursor-pointer group"
                     onClick={() => handleSort("name")}
@@ -382,9 +382,6 @@ const EditUserGroup = () => {
                       key={group.id}
                       className="hover:bg-xeflow-brand/5 transition-colors group/row"
                     >
-                      <td className="px-6 py-4 font-bold text-xeflow-muted whitespace-nowrap">
-                        #{group.id}
-                      </td>
                       <td className="px-6 py-4 font-bold text-xeflow-text">
                         {group.name}
                       </td>
@@ -444,8 +441,8 @@ const EditUserGroup = () => {
             </table>
           </div>
 
-                  {/* ── Pagination  */}
-                  
+          {/* ── Pagination  */}
+
           {totalPages > 0 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
               <span className="text-xs text-xeflow-muted font-medium">
@@ -492,8 +489,8 @@ const EditUserGroup = () => {
 
       {/* ── Modals  */}
 
-          {/* Edit Name Modal*/}
-          
+      {/* Edit Name Modal*/}
+
       <Modal
         isOpen={activeModal === "editName"}
         onClose={() => setActiveModal(null)}
@@ -553,8 +550,8 @@ const EditUserGroup = () => {
             Configure access controls for users in this group.
           </p>
 
-                  {/* Toolbar */}
-                  
+          {/* Toolbar */}
+
           <div className="flex flex-wrap gap-3 items-center justify-between">
             <div className="relative flex-1 min-w-[200px]">
               <FiSearch
@@ -598,8 +595,8 @@ const EditUserGroup = () => {
 
           <div className="border-t border-xeflow-border" />
 
-                  {/* Permissions Grid */}
-                  
+          {/* Permissions Grid */}
+
           <div className="space-y-7 pb-4">
             {Object.keys(groupedPermissions).length === 0 ? (
               <div className="py-12 text-center">

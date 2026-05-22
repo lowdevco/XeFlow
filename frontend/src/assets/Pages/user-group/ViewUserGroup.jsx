@@ -177,14 +177,6 @@ const ViewUserGroup = () => {
                 <tr className="bg-xeflow-bg border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider transition-colors duration-300 select-none">
                   <th
                     className="px-6 py-4 cursor-pointer group"
-                    onClick={() => handleSort("id")}
-                  >
-                    <div className="flex items-center">
-                      ID <SortIcon columnKey="id" />
-                    </div>
-                  </th>
-                  <th
-                    className="px-6 py-4 cursor-pointer group"
                     onClick={() => handleSort("name")}
                   >
                     <div className="flex items-center">
@@ -243,9 +235,6 @@ const ViewUserGroup = () => {
                             isExpanded ? "bg-xeflow-brand/5" : ""
                           }`}
                         >
-                          <td className="px-6 py-4 font-bold text-xeflow-muted whitespace-nowrap">
-                            #{group.id}
-                          </td>
                           <td className="px-6 py-4 font-bold text-xeflow-text">
                             {group.name}
                           </td>

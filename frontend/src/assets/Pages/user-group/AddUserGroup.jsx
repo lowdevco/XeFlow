@@ -7,6 +7,8 @@ import { fetchWithAuth } from "../../js/api";
 const AddUserGroup = () => {
   const navigate = useNavigate();
   const [groupName, setGroupName] = useState("");
+  const [isSuperuser, setIsSuperuser] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
   const [availablePermissions, setAvailablePermissions] = useState([]);
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [search, setSearch] = useState("");
@@ -71,11 +73,16 @@ const AddUserGroup = () => {
     try {
       const response = await fetchWithAuth("/groups/create/", {
         method: "POST",
-        body: JSON.stringify({ name: groupName, permissions: selectedPermissions }),
+        body: JSON.stringify({
+          name: groupName,
+          permissions: selectedPermissions,
+          is_superuser: isSuperuser,
+          is_staff: isStaff,
+        }),
       });
       if (response.ok) {
         toast.success("Group created!", { id: toastId });
-        navigate("/users/groups");
+        navigate("/user-group/view");
       } else {
         throw new Error("Failed to save.");
       }
@@ -86,18 +93,20 @@ const AddUserGroup = () => {
     }
   };
 
+
   return (
     <div className="max-w-4xl mx-auto p-6 lg:p-10 space-y-6">
+      {/* ── Header  */}
 
-          {/* ── Header  */}
-          
       <div className="flex flex-wrap gap-4 justify-between items-center">
         <div className="flex items-center gap-4">
           <div className="w-11 h-11 rounded-2xl bg-xeflow-brand/10 flex items-center justify-center shrink-0">
             <FiShield className="text-xeflow-brand" size={20} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-xeflow-text">Create User Group</h1>
+            <h1 className="text-2xl font-black text-xeflow-text">
+              Create User Group
+            </h1>
             <p className="text-sm text-xeflow-muted mt-0.5">
               Define a permission set for your team.
             </p>
@@ -106,7 +115,7 @@ const AddUserGroup = () => {
 
         <div className="flex gap-3">
           <Link
-            to="/users/groups"
+            to="/user-group/view"
             className="px-5 py-2.5 rounded-xl border border-xeflow-border text-xeflow-text font-semibold text-sm hover:bg-xeflow-surface transition-all"
           >
             Cancel
@@ -122,8 +131,8 @@ const AddUserGroup = () => {
         </div>
       </div>
 
-          {/* ── Group Name  */}
-          
+      {/* ── Group Name  */}
+
       <div className="bg-xeflow-surface rounded-2xl border border-xeflow-border shadow-sm p-6">
         <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
           Group Name
@@ -136,15 +145,60 @@ const AddUserGroup = () => {
         />
       </div>
 
-          {/* ── Permissions Panel  */}
-          
-      <div className="bg-xeflow-surface rounded-2xl border border-xeflow-border shadow-sm p-6 space-y-5">
+      <div className="bg-xeflow-surface rounded-2xl border border-xeflow-border shadow-sm p-6 space-y-4">
+        <h3 className="text-sm font-bold text-xeflow-text">Group Privileges</h3>
 
-              {/* Toolbar: search + counters + global select-all */}
-              
+        {/* Superuser */}
+
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isSuperuser}
+            onChange={(e) => setIsSuperuser(e.target.checked)}
+            className=" appearance-none w-5 h-5 border rounded-2xl lg:rounded-3xl border-xeflow-border bg-white  checked:bg-blue-600 "
+          />
+
+          <div>
+            <p className="font-semibold text-sm text-xeflow-text">
+              Superuser Access
+            </p>
+
+            <p className="text-xs text-xeflow-muted">
+              Full unrestricted system access
+            </p>
+          </div>
+        </label>
+
+        {/* Staff */}
+
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isStaff}
+            onChange={(e) => setIsStaff(e.target.checked)}
+            className=" appearance-none w-5 h-5 border-1 rounded-3xl border-xeflow-border bg-white  checked:bg-blue-600  checked:border-xeflow-surface"
+          />
+
+          <div>
+            <p className="font-semibold text-sm text-xeflow-text">
+              Staff Access
+            </p>
+
+            <p className="text-xs text-xeflow-muted">
+              Allows access to Django admin/staff features
+            </p>
+          </div>
+        </label>
+      </div>
+
+      {/* ── Permissions Panel  */}
+
+      <div className="bg-xeflow-surface rounded-2xl border border-xeflow-border shadow-sm p-6 space-y-5">
+        {/* Toolbar: search + counters + global select-all */}
+
         <div className="flex flex-wrap gap-3 items-center justify-between">
-                  {/* Search */}
-                  
+          {/* Search */}
+
           <div className="relative flex-1 min-w-[200px]">
             <FiSearch
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xeflow-muted"
@@ -157,18 +211,20 @@ const AddUserGroup = () => {
             />
           </div>
 
-                  {/* Counter badge */}
-                  
+          {/* Counter badge */}
+
           <div className="flex items-center gap-2 text-sm text-xeflow-muted font-medium shrink-0">
             <span>
-              <span className="font-bold text-xeflow-brand">{selectedPermissions.length}</span>
+              <span className="font-bold text-xeflow-brand">
+                {selectedPermissions.length}
+              </span>
               {" / "}
               {availablePermissions.length} selected
             </span>
           </div>
 
-                  {/* Global select-all button */}
-                  
+          {/* Global select-all button */}
+
           <button
             type="button"
             onClick={toggleSelectAll}
@@ -179,19 +235,15 @@ const AddUserGroup = () => {
                 : "bg-xeflow-bg border-xeflow-border text-xeflow-text hover:border-xeflow-brand/40"
             }`}
           >
-            {allSelected ? (
-              <FiCheckSquare size={15} />
-            ) : (
-              <FiSquare size={15} />
-            )}
+            {allSelected ? <FiCheckSquare size={15} /> : <FiSquare size={15} />}
             {allSelected ? "Deselect All" : "Select All"}
           </button>
         </div>
 
         <div className="border-t border-xeflow-border" />
 
-              {/* Permission groups */}
-              
+        {/* Permission groups */}
+
         {isLoading ? (
           <div className="space-y-8 animate-pulse">
             {[1, 2, 3].map((i) => (
@@ -199,7 +251,10 @@ const AddUserGroup = () => {
                 <div className="h-4 w-28 bg-xeflow-border rounded-lg" />
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[1, 2, 3, 4, 5, 6].map((j) => (
-                    <div key={j} className="h-12 bg-xeflow-bg rounded-xl border border-xeflow-border" />
+                    <div
+                      key={j}
+                      className="h-12 bg-xeflow-bg rounded-xl border border-xeflow-border"
+                    />
                   ))}
                 </div>
               </div>
@@ -207,16 +262,20 @@ const AddUserGroup = () => {
           </div>
         ) : Object.keys(groupedPermissions).length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-xeflow-muted text-sm">No permissions match your search.</p>
+            <p className="text-xeflow-muted text-sm">
+              No permissions match your search.
+            </p>
           </div>
         ) : (
           <div className="space-y-7">
             {Object.entries(groupedPermissions).map(([category, perms]) => {
-              const allCatSelected = perms.every((p) => selectedPermissions.includes(p.id));
+              const allCatSelected = perms.every((p) =>
+                selectedPermissions.includes(p.id),
+              );
               return (
                 <div key={category}>
-                      {/* Category header */}
-                      
+                  {/* Category header */}
+
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="flex items-center gap-1.5 text-xs font-bold text-xeflow-brand uppercase tracking-widest">
                       {category}
@@ -231,8 +290,8 @@ const AddUserGroup = () => {
                     </button>
                   </div>
 
-                      {/* Permission cards */}
-                      
+                  {/* Permission cards */}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {perms.map((p) => {
                       const enabled = selectedPermissions.includes(p.id);
@@ -254,8 +313,9 @@ const AddUserGroup = () => {
                           >
                             {p.name}
                           </span>
-                              {/* Toggle pill */}
-                              
+
+                          {/* Toggle pill */}
+
                           <div
                             className={`flex-shrink-0 ml-3 w-9 h-[18px] rounded-full p-0.5 flex items-center transition-all ${
                               enabled

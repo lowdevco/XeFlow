@@ -71,3 +71,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'profile_picture')
+
+
+#--------------Permissions----------#
+

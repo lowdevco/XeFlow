@@ -38,6 +38,7 @@ const ViewUser = () => {
   }, []);
 
   // Filter and Sort users
+
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       const q = searchQuery.toLowerCase();
@@ -53,6 +54,7 @@ const ViewUser = () => {
   }, [users, searchQuery]);
 
   // Pagination logic
+  
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
@@ -127,7 +129,7 @@ const ViewUser = () => {
                   No users found
                 </p>
                 <p className="text-sm">
-                  Adjust your search query or add a new user.
+                    Adjust your search query or add a new user.
                 </p>
               </div>
             ) : (

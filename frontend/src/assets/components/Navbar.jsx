@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   FiMenu,
   FiSearch,
-  FiBell,
-  FiChevronDown,
   FiSun,
   FiMoon,
   FiCommand,
@@ -182,13 +180,15 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
 
         {/*  Right Control */}
         <div className="flex items-center gap-3">
+
           {/* Modal Trigger Search button   */}
+
           <button
             onClick={() => setIsSearchOpen(true)}
             className="
               flex items-center justify-between gap-3
               bg-xeflow-bg border border-xeflow-border
-              rounded-xl px-3 py-2 w-40 md:w-64
+              rounded-xl px-3 py-2 w-full sm:w-full !md:w-full lg:w-64
               text-xeflow-muted hover:border-xeflow-brand/50 hover:bg-xeflow-surface
               transition-all duration-200 group shadow-inner cursor-text
             "
@@ -208,22 +208,6 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
           </button>
 
           <div className="w-px h-6 bg-xeflow-border mx-1 shrink-0 hidden md:block" />
-
-          {/* Notification bell */}
-
-          <button
-            aria-label="Notifications"
-            className="
-              relative shrink-0 w-10 h-10
-              flex items-center justify-center rounded-xl
-              text-xeflow-muted bg-xeflow-bg border border-transparent
-              hover:text-xeflow-text hover:border-xeflow-border hover:shadow-sm
-              active:scale-95 transition-all duration-200
-            "
-          >
-            <FiBell size={18} />
-            <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-xeflow-bg" />
-          </button>
 
           {/* Dark mode toggle */}
 
@@ -253,15 +237,11 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
               )}
             </div>
             <div className="hidden lg:block text-left leading-tight">
-              <p className="text-sm font-bold text-xeflow-text">{user?.first_name || "User"}</p>
+              <p className="text-sm font-bold text-xeflow-text">{user?.first_name || user?.username}</p>
               <p className="text-[10px] text-xeflow-brand font-bold uppercase tracking-wider">
                 {user?.role || "Role"}
               </p>
             </div>
-            <FiChevronDown
-              size={16}
-              className="hidden lg:block text-xeflow-muted opacity-60"
-            />
           </button>
         </div>
       </header>
