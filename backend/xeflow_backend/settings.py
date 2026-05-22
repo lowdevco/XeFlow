@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -134,6 +135,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://xeflow.vercel.app",
 ]
 
 # Media

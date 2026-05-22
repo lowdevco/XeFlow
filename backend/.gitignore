@@ -1,0 +1,30 @@
+# Python
+env/
+venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build files
+dist/
+build/
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# Environment variables
+.env
+
+# VSCode
+.vscode/
+
+#tailwind
+.django_tailwind_cli/
+
+# OS
+.DS_Store
