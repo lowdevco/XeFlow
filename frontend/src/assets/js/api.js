@@ -1,12 +1,13 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+const API_ROOT = `${API_BASE_URL}/api`;
+
 export const fetchWithAuth = async (endpoint, options = {}) => {
   let token = localStorage.getItem("accessToken");
 
   const headers = {
     ...options.headers,
   };
-
 
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
@@ -21,14 +22,14 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
     headers,
   };
 
-  let response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  let response = await fetch(`${API_ROOT}${endpoint}`, config);
 
   if (response.status === 401) {
     const refreshToken = localStorage.getItem("refreshToken");
 
     if (refreshToken) {
       try {
-        const refreshRes = await fetch(`${API_BASE_URL}/token/refresh/`, {
+        const refreshRes = await fetch(`${API_ROOT}/token/refresh/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refresh: refreshToken }),
@@ -41,7 +42,7 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
 
           headers["Authorization"] = `Bearer ${data.access}`;
 
-          response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          response = await fetch(`${API_ROOT}${endpoint}`, {
             ...config,
             headers,
           });
@@ -57,12 +58,4 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
   }
 
   return response;
-};
-
-const forceLogout = () => {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  if (window.location.pathname !== "/login") {
-    window.location.href = "/login";
-  }
 };
