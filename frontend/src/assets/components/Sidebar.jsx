@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { fetchWithAuth } from "../js/api";
+import { API_BASE_URL, fetchWithAuth } from "../js/api";
 import { useAuth } from "../../context/AuthContext";
 
 import { RiVipCrownFill } from "react-icons/ri";
@@ -248,7 +248,7 @@ export default function Sidebar({ isOpen }) {
                     src={
                       user.profile.profile_picture.startsWith("http")
                         ? user.profile.profile_picture
-                        : `http://127.0.0.1:8000${user.profile.profile_picture}`
+                        : `${API_BASE_URL}${user.profile.profile_picture}`
                     }
                     alt="Profile"
                     className="w-full h-full object-cover"

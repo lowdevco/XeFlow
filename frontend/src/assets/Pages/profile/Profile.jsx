@@ -9,7 +9,7 @@ import {
 
 import { CiAt } from "react-icons/ci";
 import { useAuth } from "../../../context/AuthContext";
-import { fetchWithAuth } from "../../js/api";
+import { fetchWithAuth, API_BASE_URL } from "../../js/api";
 import toast from "react-hot-toast";
 
 const Profile = () => {
@@ -110,7 +110,7 @@ const Profile = () => {
     avatarSrc = previewUrl;
   } else if (user?.profile?.profile_picture) {
     const pfp = user.profile.profile_picture;
-    avatarSrc = pfp.startsWith("http") ? pfp : `http://127.0.0.1:8000${pfp}`;
+    avatarSrc = pfp.startsWith("http") ? pfp : `${ API_BASE_URL }${pfp}`;
   }
 
   return (

@@ -165,7 +165,7 @@ const ViewInvoice = () => {
       const token = localStorage.getItem("accessToken");
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/invoices/${invoiceId}/pdf/`,
+        `${ API_BASE_URL }/api/invoices/${invoiceId}/pdf/`,
         {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },

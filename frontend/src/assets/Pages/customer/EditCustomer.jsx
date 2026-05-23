@@ -22,7 +22,7 @@ import toast from "react-hot-toast";
 // Import API
 
 
-import { fetchWithAuth } from "../../js/api";
+import { API_BASE_URL, fetchWithAuth } from "../../js/api";
 
 const EditCustomer = () => {
   const [customers, setCustomers] = useState([]);
@@ -312,7 +312,7 @@ const handleEditSubmit = async (e) => {
                                 src={
                                   customer.logo.startsWith("http")
                                     ? customer.logo
-                                    : `http://127.0.0.1:8000${customer.logo.startsWith("/") ? "" : "/"}${customer.logo}`
+                                    : `${API_BASE_URL}${customer.logo.startsWith("/") ? "" : "/"}${customer.logo}`
                                 }
                                 alt="logo"
                                 className="w-full h-full object-cover"
@@ -510,7 +510,7 @@ const handleEditSubmit = async (e) => {
                           src={
                             editingCustomer.logo.startsWith("http")
                               ? editingCustomer.logo
-                              : `http://127.0.0.1:8000${editingCustomer.logo.startsWith("/") ? "" : "/"}${editingCustomer.logo}`
+                              : `${API_BASE_URL}${editingCustomer.logo.startsWith("/") ? "" : "/"}${editingCustomer.logo}`
                           }
                           alt="old logo"
                           className="w-full h-full object-cover"

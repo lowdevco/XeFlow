@@ -8,6 +8,8 @@ import {
   FiCommand,
   FiArrowRight,
 } from "react-icons/fi";
+import { API_BASE_URL } from "../js/api"
+
 
 // Fetch with auth wrapper
 
@@ -228,7 +230,7 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
             <div className="w-9 h-9 rounded-full shrink-0 bg-gradient-to-br from-xeflow-brand to-xeflow-electric flex items-center justify-center text-white text-xs font-extrabold ring-2 ring-xeflow-brand/20 shadow-md overflow-hidden">
               {user?.profile?.profile_picture ? (
                 <img 
-                  src={user.profile.profile_picture.startsWith("http") ? user.profile.profile_picture : `http://127.0.0.1:8000${user.profile.profile_picture}`} 
+                  src={user.profile.profile_picture.startsWith("http") ? user.profile.profile_picture : `${API_BASE_URL}${user.profile.profile_picture}`} 
                   alt="Profile" 
                   className="w-full h-full object-cover" 
                 />

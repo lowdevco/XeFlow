@@ -12,7 +12,7 @@ import {
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { fetchWithAuth } from "../../js/api";
+import { API_BASE_URL, fetchWithAuth } from "../../js/api";
 
 
 
@@ -242,7 +242,7 @@ const ViewCustomers = () => {
                                 src={
                                   customer.logo.startsWith("http")
                                     ? customer.logo
-                                    : `http://127.0.0.1:8000${customer.logo.startsWith("/") ? "" : "/"}${customer.logo}`
+                                    : `${API_BASE_URL}${customer.logo.startsWith("/") ? "" : "/"}${customer.logo}`
                                 }
                                 alt={customer.company_name}
                                 className="w-full h-full object-cover"

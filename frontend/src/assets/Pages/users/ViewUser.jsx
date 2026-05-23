@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { fetchWithAuth } from "../../js/api";
+import { API_BASE_URL, fetchWithAuth } from "../../js/api";
 import {
   FiSearch,
   FiChevronLeft,
@@ -68,7 +68,7 @@ const ViewUser = () => {
     if (!profilePicture) return null;
     return profilePicture.startsWith("http")
       ? profilePicture
-      : `http://127.0.0.1:8000${profilePicture}`;
+      : `${ API_BASE_URL }${profilePicture}`;
   };
 
   return (
