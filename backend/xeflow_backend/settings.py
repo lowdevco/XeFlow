@@ -2,8 +2,10 @@
 from decouple import config
 from pathlib import Path
 import os
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 import pymysql
-
 
 # TiDB ( Database )
 
@@ -44,6 +46,8 @@ INSTALLED_APPS = [
     'django_tailwind_cli',
     "corsheaders",
     'rest_framework',
+    'cloudinary',
+    'cloudinary_storage',
     'rest_framework_simplejwt',
     'xeflow',
     'api',
@@ -144,13 +148,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Dynamic CORS Allowed Orgins
 
@@ -162,8 +166,6 @@ CORS_ALLOWED_ORIGINS = config(
 # Media
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 
 
 # Rest Framework 
@@ -180,3 +182,34 @@ CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
+
+# Cloudinary image and Vedio ( Media )
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+}
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+
+# Securee Production Settings ( Security )
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
