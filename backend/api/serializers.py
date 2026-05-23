@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Menu_Module , Menu_Child, Customer, Service, Invoice, InvoiceItem, UserProfile, GroupProfile
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User, Group, Permission
+from decimal import Decimal
 
 
 
@@ -50,21 +51,151 @@ class InvoiceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        items_data = validated_data.pop('items')
+        items_data = validated_data.pop('items', [])
+        
+        discount_percentage = Decimal(str(validated_data.get('discount_percentage', '0.00')))
+        discount_amount = Decimal(str(validated_data.get('discount_amount', '0.00')))
+        cgst_rate = Decimal(str(validated_data.get('cgst_rate', '0.00')))
+        sgst_rate = Decimal(str(validated_data.get('sgst_rate', '0.00')))
+        igst_rate = Decimal(str(validated_data.get('igst_rate', '0.00')))
+        amount_paid = Decimal(str(validated_data.get('amount_paid', '0.00')))
+        tax_type = validated_data.get('tax_type', 'GST')
+        
+        subtotal = Decimal('0.00')
+        calculated_items = []
+        for item in items_data:
+            qty = Decimal(str(item.get('quantity', '1.00')))
+            rate = Decimal(str(item.get('rate', '0.00')))
+            amount = qty * rate
+            item['amount'] = amount
+            subtotal += amount
+            calculated_items.append(item)
+            
+        if discount_percentage > 0:
+            discount_amount = subtotal * (discount_percentage / Decimal('100.00'))
+        else:
+            if subtotal > 0:
+                discount_percentage = (discount_amount / subtotal) * Decimal('100.00')
+            else:
+                discount_percentage = Decimal('0.00')
+                
+        taxable_amount = subtotal - discount_amount
+        
+        cgst_amount = Decimal('0.00')
+        sgst_amount = Decimal('0.00')
+        igst_amount = Decimal('0.00')
+        
+        if tax_type == 'GST':
+            cgst_amount = taxable_amount * (cgst_rate / Decimal('100.00'))
+            sgst_amount = taxable_amount * (sgst_rate / Decimal('100.00'))
+            igst_rate = Decimal('0.00')
+        elif tax_type == 'IGST':
+            igst_amount = taxable_amount * (igst_rate / Decimal('100.00'))
+            cgst_rate = Decimal('0.00')
+            sgst_rate = Decimal('0.00')
+        elif tax_type == 'No GST':
+            cgst_rate = Decimal('0.00')
+            sgst_rate = Decimal('0.00')
+            igst_rate = Decimal('0.00')
+            
+        total_amount = taxable_amount + cgst_amount + sgst_amount + igst_amount
+        balance_due = total_amount - amount_paid
+        
+        # Update validated_data with calculated values
+
+        validated_data['subtotal'] = subtotal
+        validated_data['discount_percentage'] = discount_percentage
+        validated_data['discount_amount'] = discount_amount
+        validated_data['cgst_rate'] = cgst_rate
+        validated_data['sgst_rate'] = sgst_rate
+        validated_data['igst_rate'] = igst_rate
+        validated_data['cgst_amount'] = cgst_amount
+        validated_data['sgst_amount'] = sgst_amount
+        validated_data['igst_amount'] = igst_amount
+        validated_data['total_amount'] = total_amount
+        validated_data['balance_due'] = balance_due
+        
         invoice = Invoice.objects.create(**validated_data)
-        for item_data in items_data:
+        for item_data in calculated_items:
             InvoiceItem.objects.create(invoice=invoice, **item_data)
         return invoice
 
     def update(self, instance, validated_data):
         items_data = validated_data.pop('items', None)
+        
+        tax_type = validated_data.get('tax_type', instance.tax_type)
+        discount_percentage = Decimal(str(validated_data.get('discount_percentage', instance.discount_percentage)))
+        discount_amount = Decimal(str(validated_data.get('discount_amount', instance.discount_amount)))
+        cgst_rate = Decimal(str(validated_data.get('cgst_rate', instance.cgst_rate)))
+        sgst_rate = Decimal(str(validated_data.get('sgst_rate', instance.sgst_rate)))
+        igst_rate = Decimal(str(validated_data.get('igst_rate', instance.igst_rate)))
+        amount_paid = Decimal(str(validated_data.get('amount_paid', instance.amount_paid)))
+        
+        subtotal = Decimal('0.00')
+        calculated_items = []
+        if items_data is not None:
+            for item in items_data:
+                qty = Decimal(str(item.get('quantity', '1.00')))
+                rate = Decimal(str(item.get('rate', '0.00')))
+                amount = qty * rate
+                item['amount'] = amount
+                subtotal += amount
+                calculated_items.append(item)
+        else:
+            # Recompute subtotal from existing database items
 
+            for db_item in instance.items.all():
+                subtotal += Decimal(str(db_item.quantity)) * Decimal(str(db_item.rate))
+                
+        if discount_percentage > 0:
+            discount_amount = subtotal * (discount_percentage / Decimal('100.00'))
+        else:
+            if subtotal > 0:
+                discount_percentage = (discount_amount / subtotal) * Decimal('100.00')
+            else:
+                discount_percentage = Decimal('0.00')
+                
+        taxable_amount = subtotal - discount_amount
+        
+        cgst_amount = Decimal('0.00')
+        sgst_amount = Decimal('0.00')
+        igst_amount = Decimal('0.00')
+        
+        if tax_type == 'GST':
+            cgst_amount = taxable_amount * (cgst_rate / Decimal('100.00'))
+            sgst_amount = taxable_amount * (sgst_rate / Decimal('100.00'))
+            igst_rate = Decimal('0.00')
+        elif tax_type == 'IGST':
+            igst_amount = taxable_amount * (igst_rate / Decimal('100.00'))
+            cgst_rate = Decimal('0.00')
+            sgst_rate = Decimal('0.00')
+        elif tax_type == 'No GST':
+            cgst_rate = Decimal('0.00')
+            sgst_rate = Decimal('0.00')
+            igst_rate = Decimal('0.00')
+            
+        total_amount = taxable_amount + cgst_amount + sgst_amount + igst_amount
+        balance_due = total_amount - amount_paid
+        
+        validated_data['subtotal'] = subtotal
+        validated_data['discount_percentage'] = discount_percentage
+        validated_data['discount_amount'] = discount_amount
+        validated_data['cgst_rate'] = cgst_rate
+        validated_data['sgst_rate'] = sgst_rate
+        validated_data['igst_rate'] = igst_rate
+        validated_data['cgst_amount'] = cgst_amount
+        validated_data['sgst_amount'] = sgst_amount
+        validated_data['igst_amount'] = igst_amount
+        validated_data['total_amount'] = total_amount
+        validated_data['balance_due'] = balance_due
+        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+        
         if items_data is not None:
             instance.items.all().delete()
-            for item_data in items_data:
+            for item_data in calculated_items:
                 InvoiceItem.objects.create(invoice=instance, **item_data)
                 
         return instance
@@ -80,6 +211,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
                 'phone': instance.customer.phone
             }
         return response
+    
+    
 
 #--------------- User Group Serializer-------------#
 
@@ -329,4 +462,4 @@ class UserAdminSerializer(serializers.ModelSerializer):
         if password:
             instance.set_password(password)
 
-        return super().update(instance, validated_data)
+        return super().update(instance, validated_data)

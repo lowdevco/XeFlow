@@ -45,6 +45,8 @@ const EditInvoice = () => {
   });
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [lineItems, setLineItems] = useState([]);
+  const [taxType, setTaxType] = useState("GST");
+  const [igstRate, setIgstRate] = useState("18");
   const [cgstRate, setCgstRate] = useState("9");
   const [sgstRate, setSgstRate] = useState("9");
   const [discount, setDiscount] = useState("");
@@ -239,9 +241,17 @@ const EditInvoice = () => {
       ]);
     }
 
+    setTaxType(invoice.tax_type || "GST");
+    setIgstRate(invoice.igst_rate?.toString() || "0");
     setCgstRate(invoice.cgst_rate?.toString() || "0");
     setSgstRate(invoice.sgst_rate?.toString() || "0");
-    setDiscount(invoice.discount_amount?.toString() || "0");
+    if (invoice.discount_percentage && parseFloat(invoice.discount_percentage) > 0) {
+      setDiscountType("percent");
+      setDiscount(invoice.discount_percentage.toString());
+    } else {
+      setDiscountType("amount");
+      setDiscount(invoice.discount_amount?.toString() || "0");
+    }
     setAmountPaid(invoice.amount_paid?.toString() || "0");
   };
 
@@ -293,6 +303,7 @@ const EditInvoice = () => {
     discountAmount,
     cgstAmount,
     sgstAmount,
+    igstAmount,
     total,
     balanceDue,
   } = useMemo(() => {
@@ -300,6 +311,7 @@ const EditInvoice = () => {
     const safeDiscount = parseFloat(discount) || 0;
     const safeCgstRate = parseFloat(cgstRate) || 0;
     const safeSgstRate = parseFloat(sgstRate) || 0;
+    const safeIgstRate = parseFloat(igstRate) || 0;
     const safeAmountPaid = parseFloat(amountPaid) || 0;
 
     let calcDiscount =
@@ -307,9 +319,19 @@ const EditInvoice = () => {
         ? calcSubtotal * (safeDiscount / 100)
         : safeDiscount;
     const taxableAmount = calcSubtotal - calcDiscount;
-    const calcCgst = taxableAmount * (safeCgstRate / 100);
-    const calcSgst = taxableAmount * (safeSgstRate / 100);
-    const calcTotal = taxableAmount + calcCgst + calcSgst;
+    
+    let calcCgst = 0;
+    let calcSgst = 0;
+    let calcIgst = 0;
+    
+    if (taxType === "GST") {
+      calcCgst = taxableAmount * (safeCgstRate / 100);
+      calcSgst = taxableAmount * (safeSgstRate / 100);
+    } else if (taxType === "IGST") {
+      calcIgst = taxableAmount * (safeIgstRate / 100);
+    }
+
+    const calcTotal = taxableAmount + calcCgst + calcSgst + calcIgst;
     const calcBalance = calcTotal - safeAmountPaid;
 
     return {
@@ -317,10 +339,11 @@ const EditInvoice = () => {
       discountAmount: calcDiscount,
       cgstAmount: calcCgst,
       sgstAmount: calcSgst,
+      igstAmount: calcIgst,
       total: calcTotal,
       balanceDue: calcBalance,
     };
-  }, [lineItems, cgstRate, sgstRate, discount, discountType, amountPaid]);
+  }, [lineItems, taxType, cgstRate, sgstRate, igstRate, discount, discountType, amountPaid]);
 
   const handleUpdateInvoice = async () => {
     if (!selectedCustomer) {
@@ -338,21 +361,18 @@ const EditInvoice = () => {
       status: invoiceMeta.status,
       notes: invoiceMeta.notes,
       terms: invoiceMeta.terms,
-      subtotal: subtotal,
-      discount_amount: discountAmount,
-      cgst_rate: parseFloat(cgstRate) || 0,
-      sgst_rate: parseFloat(sgstRate) || 0,
-      cgst_amount: cgstAmount,
-      sgst_amount: sgstAmount,
-      total_amount: total,
+      tax_type: taxType,
+      discount_percentage: discountType === "percent" ? (parseFloat(discount) || 0) : 0,
+      discount_amount: discountType === "amount" ? (parseFloat(discount) || 0) : 0,
+      cgst_rate: taxType === "GST" ? (parseFloat(cgstRate) || 0) : 0,
+      sgst_rate: taxType === "GST" ? (parseFloat(sgstRate) || 0) : 0,
+      igst_rate: taxType === "IGST" ? (parseFloat(igstRate) || 0) : 0,
       amount_paid: parseFloat(amountPaid) || 0,
-      balance_due: balanceDue,
       items: lineItems.map((item) => ({
         service: item.service_id ? parseInt(item.service_id) : null,
         description: item.description,
         quantity: parseFloat(item.quantity) || 0,
         rate: parseFloat(item.rate) || 0,
-        amount: item.amount,
       })),
     };
 
@@ -966,36 +986,73 @@ const EditInvoice = () => {
                   )}
 
                   <div className="flex justify-between items-center text-sm pt-1">
-                    <span className="text-xeflow-muted font-bold uppercase tracking-wide flex items-center gap-2">
-                      CGST (%)
-                      <input
-                        type="number"
-                        min="0"
-                        value={cgstRate}
-                        onChange={(e) => setCgstRate(e.target.value)}
-                        className="w-14 bg-xeflow-surface border border-xeflow-border rounded-md p-1 text-center outline-none focus:border-xeflow-brand transition-colors text-xeflow-text font-bold"
-                      />
+                    <span className="text-xeflow-muted font-bold uppercase tracking-wide">
+                      Tax Type
                     </span>
-                    <span className="font-bold text-xeflow-text">
-                      {formatMoney(cgstAmount)}
-                    </span>
+                    <select
+                      value={taxType}
+                      onChange={(e) => setTaxType(e.target.value)}
+                      className="w-32 bg-xeflow-surface border border-xeflow-border rounded-md p-1.5 outline-none font-bold focus:border-xeflow-brand transition-colors text-xeflow-text cursor-pointer text-xs"
+                    >
+                      <option value="GST">GST (CGST/SGST)</option>
+                      <option value="IGST">IGST</option>
+                      <option value="No GST">No GST</option>
+                    </select>
                   </div>
 
-                  <div className="flex justify-between items-center text-sm pb-2 border-b border-xeflow-border">
-                    <span className="text-xeflow-muted font-bold uppercase tracking-wide flex items-center gap-2">
-                      SGST (%)
-                      <input
-                        type="number"
-                        min="0"
-                        value={sgstRate}
-                        onChange={(e) => setSgstRate(e.target.value)}
-                        className="w-14 bg-xeflow-surface border border-xeflow-border rounded-md p-1 text-center outline-none focus:border-xeflow-brand transition-colors text-xeflow-text font-bold"
-                      />
-                    </span>
-                    <span className="font-bold text-xeflow-text">
-                      {formatMoney(sgstAmount)}
-                    </span>
-                  </div>
+                  {taxType === "GST" && (
+                    <>
+                      <div className="flex justify-between items-center text-sm pt-1">
+                        <span className="text-xeflow-muted font-bold uppercase tracking-wide flex items-center gap-2">
+                          CGST (%)
+                          <input
+                            type="number"
+                            min="0"
+                            value={cgstRate}
+                            onChange={(e) => setCgstRate(e.target.value)}
+                            className="w-14 bg-xeflow-surface border border-xeflow-border rounded-md p-1 text-center outline-none focus:border-xeflow-brand transition-colors text-xeflow-text font-bold"
+                          />
+                        </span>
+                        <span className="font-bold text-xeflow-text">
+                          {formatMoney(cgstAmount)}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-sm pb-2 border-b border-xeflow-border">
+                        <span className="text-xeflow-muted font-bold uppercase tracking-wide flex items-center gap-2">
+                          SGST (%)
+                          <input
+                            type="number"
+                            min="0"
+                            value={sgstRate}
+                            onChange={(e) => setSgstRate(e.target.value)}
+                            className="w-14 bg-xeflow-surface border border-xeflow-border rounded-md p-1 text-center outline-none focus:border-xeflow-brand transition-colors text-xeflow-text font-bold"
+                          />
+                        </span>
+                        <span className="font-bold text-xeflow-text">
+                          {formatMoney(sgstAmount)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {taxType === "IGST" && (
+                    <div className="flex justify-between items-center text-sm pb-2 border-b border-xeflow-border">
+                      <span className="text-xeflow-muted font-bold uppercase tracking-wide flex items-center gap-2">
+                        IGST (%)
+                        <input
+                          type="number"
+                          min="0"
+                          value={igstRate}
+                          onChange={(e) => setIgstRate(e.target.value)}
+                          className="w-14 bg-xeflow-surface border border-xeflow-border rounded-md p-1 text-center outline-none focus:border-xeflow-brand transition-colors text-xeflow-text font-bold"
+                        />
+                      </span>
+                      <span className="font-bold text-xeflow-text">
+                        {formatMoney(igstAmount)}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between items-center pt-1">
                     <span className="text-lg font-black text-xeflow-text uppercase tracking-wide">

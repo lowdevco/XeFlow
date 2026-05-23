@@ -174,7 +174,10 @@ const ViewUser = () => {
                             </div>
                             <div className="min-w-0">
                               <p className="font-bold text-xeflow-text text-sm truncate flex items-center gap-1.5">
-                                {u.first_name} {u.last_name}
+                                {u.first_name || u.last_name
+                                  ? `${u.first_name || ""} ${u.last_name || ""}`.trim()
+                                  : u.username}
+
                                 {u.is_superuser ? (
                                   <RiVipCrownFill
                                     className="text-amber-500"

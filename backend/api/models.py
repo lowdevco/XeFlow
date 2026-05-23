@@ -111,6 +111,15 @@ class Invoice(models.Model):
     cgst_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     sgst_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     
+    #  Tax Fields 
+    tax_type = models.CharField(
+        max_length=20,
+        choices=[('GST', 'GST'), ('No GST', 'No GST'), ('IGST', 'IGST')],
+        default='GST'
+    )
+    igst_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    igst_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    
     # Totals
 
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
