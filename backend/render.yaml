@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: xeflow-backend
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn xeflow_backend.wsgi:application"
