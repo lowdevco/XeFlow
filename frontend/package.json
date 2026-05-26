@@ -14,6 +14,7 @@
     "@vercel/analytics": "^2.0.1",
     "datatables.net-dt": "^2.3.8",
     "datatables.net-react": "^1.0.2",
+    "html2pdf.js": "^0.14.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hot-toast": "^2.6.0",

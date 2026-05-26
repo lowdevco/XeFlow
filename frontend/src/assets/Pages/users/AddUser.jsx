@@ -210,6 +210,7 @@ const handleSubmit = async (e) => {
                       <option value="" disabled>
                         Select a role...
                       </option>
+                      <option value="0">User (Default)</option>
                       {isLoadingRoles ? (
                         <option disabled>Loading...</option>
                       ) : (

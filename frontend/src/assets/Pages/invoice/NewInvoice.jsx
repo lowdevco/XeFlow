@@ -1,10 +1,8 @@
-import { useState, useEffect, useMemo,  } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPlus, FiTrash2, FiDownload, FiSend, FiSave } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
-
-
 
 // Const Values
 
@@ -13,9 +11,7 @@ const GSTIN = "32ABCDE1234F1Z5";
 
 //_______________________________
 
-
 const NewInvoice = () => {
-
   const navigate = useNavigate();
 
   //  State For Invoice Data Fetching From Database
@@ -34,7 +30,7 @@ const NewInvoice = () => {
   });
 
   //  States For Selected Data From Drop Down
-  
+
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const [lineItems, setLineItems] = useState([
@@ -49,7 +45,7 @@ const NewInvoice = () => {
   ]);
 
   //  Financial State
-  
+
   const [taxType, setTaxType] = useState("GST");
   const [igstRate, setIgstRate] = useState("18");
   const [cgstRate, setCgstRate] = useState("9");
@@ -61,7 +57,6 @@ const NewInvoice = () => {
 
   //  Initial Data Fetching From Data Base
 
-  
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -131,10 +126,8 @@ const NewInvoice = () => {
     setLineItems(updatedItems);
   };
 
+  // Invoice Math Engine
 
-  // Invoice Math Engine 
-
-  
   const {
     subtotal,
     discountAmount,
@@ -154,7 +147,6 @@ const NewInvoice = () => {
 
     // Calculate Discount
 
-
     let calcDiscount = 0;
     if (discountType === "percent") {
       calcDiscount = calcSubtotal * (safeDiscount / 100);
@@ -165,11 +157,11 @@ const NewInvoice = () => {
     // GST/IGST calculated on the amount AFTER discount
 
     const taxableAmount = calcSubtotal - calcDiscount;
-    
+
     let calcCgst = 0;
     let calcSgst = 0;
     let calcIgst = 0;
-    
+
     if (taxType === "GST") {
       calcCgst = taxableAmount * (safeCgstRate / 100);
       calcSgst = taxableAmount * (safeSgstRate / 100);
@@ -189,9 +181,18 @@ const NewInvoice = () => {
       total: calcTotal,
       balanceDue: calcBalance,
     };
-  }, [lineItems, taxType, cgstRate, sgstRate, igstRate, discount, discountType, amountPaid]);
+  }, [
+    lineItems,
+    taxType,
+    cgstRate,
+    sgstRate,
+    igstRate,
+    discount,
+    discountType,
+    amountPaid,
+  ]);
 
-  // Currency Formatterr 
+  // Currency Formatterr
 
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -200,9 +201,7 @@ const NewInvoice = () => {
     }).format(amount || 0);
   };
 
-
   //  Invoice Save to Data basse Handler
-
 
   const handleSaveDraft = async () => {
     if (!selectedCustomer) {
@@ -227,11 +226,13 @@ const NewInvoice = () => {
       terms: invoiceMeta.terms,
 
       tax_type: taxType,
-      discount_percentage: discountType === "percent" ? (parseFloat(discount) || 0) : 0,
-      discount_amount: discountType === "amount" ? (parseFloat(discount) || 0) : 0,
-      cgst_rate: taxType === "GST" ? (parseFloat(cgstRate) || 0) : 0,
-      sgst_rate: taxType === "GST" ? (parseFloat(sgstRate) || 0) : 0,
-      igst_rate: taxType === "IGST" ? (parseFloat(igstRate) || 0) : 0,
+      discount_percentage:
+        discountType === "percent" ? parseFloat(discount) || 0 : 0,
+      discount_amount:
+        discountType === "amount" ? parseFloat(discount) || 0 : 0,
+      cgst_rate: taxType === "GST" ? parseFloat(cgstRate) || 0 : 0,
+      sgst_rate: taxType === "GST" ? parseFloat(sgstRate) || 0 : 0,
+      igst_rate: taxType === "IGST" ? parseFloat(igstRate) || 0 : 0,
       amount_paid: parseFloat(amountPaid) || 0,
       items: lineItems.map((item) => ({
         service: item.service_id ? parseInt(item.service_id) : null,
@@ -249,7 +250,7 @@ const NewInvoice = () => {
 
       if (response.ok) {
         toast.success("Invoice created successfully!", { id: toastId });
-        navigate("/invoice/view"); 
+        navigate("/invoice/view");
       } else {
         const errorData = await response.json();
         console.error("Django Error:", errorData);
@@ -267,8 +268,7 @@ const NewInvoice = () => {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300">
-
-      {/* ── TOP ACTION BAR  */}
+      {/* TOP ACTION BAR  */}
 
       <div className="max-w-5xl mx-auto flex flex-wrap justify-end gap-3 mb-8">
         <button
@@ -286,14 +286,12 @@ const NewInvoice = () => {
         </button>
       </div>
 
-      {/* ── INVOICE PAPER FORM  */}
+      {/*  INVOICE PAPER FORM  */}
 
       <div className="max-w-5xl mx-auto bg-xeflow-surface p-6 md:p-12 lg:p-16 rounded-2xl shadow-xl border border-xeflow-border text-xeflow-text transition-colors duration-300">
-
         {/* Header Section */}
 
         <div className="flex flex-col md:flex-row justify-between gap-10 border-b border-xeflow-border pb-10 mb-10">
-
           {/* Static From Details (Xeventure) */}
 
           <div className="w-full md:w-1/2 space-y-4">
@@ -368,6 +366,7 @@ const NewInvoice = () => {
         </div>
 
         {/* BILL TO SECTION*/}
+
         <div className="mb-10">
           <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-3 border-b border-xeflow-border pb-2 inline-block">
             Billed To
@@ -405,12 +404,19 @@ const NewInvoice = () => {
                   <span className="font-bold text-xeflow-text">Phone:</span>{" "}
                   {selectedCustomer.phone}
                 </p>
+                {selectedCustomer.address && (
+                  <p>
+                    <span className="font-bold text-xeflow-text">Address:</span>{" "}
+                    {selectedCustomer.address}
+                  </p>
+                )}
               </div>
             )}
           </div>
         </div>
 
         {/* ITEMS TABLE */}
+
         <div className="mb-12">
           <div className="grid grid-cols-12 gap-4 pb-3 border-b-2 border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider">
             <div className="col-span-6">Service / Description</div>
@@ -507,10 +513,10 @@ const NewInvoice = () => {
           </button>
         </div>
 
-        {/* ── BOTTOM SUMMARY SECTION ── */}
+        {/*  BOTTOM SUMMARY SECTION  */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-stretch">
-
+         
           {/* Notes and  Terms Section  */}
 
           <div className="flex flex-col gap-6">
@@ -540,8 +546,8 @@ const NewInvoice = () => {
             </div>
           </div>
 
-          {/* ── TOTALS ENGINE ── */}
-          
+          {/*  TOTALS ENGINE  */}
+
           <div className="w-full space-y-4 bg-xeflow-bg p-6 md:p-8 rounded-2xl border border-xeflow-border flex flex-col justify-center">
             <div className="flex justify-between items-center text-sm">
               <span className="text-xeflow-muted font-bold uppercase tracking-wide">
@@ -693,5 +699,6 @@ const NewInvoice = () => {
     </div>
   );
 };
+
 
 export default NewInvoice;

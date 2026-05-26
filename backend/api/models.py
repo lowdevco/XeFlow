@@ -3,8 +3,8 @@ import os
 from django.db.models.signals import post_delete
 from django.utils import timezone
 from django.dispatch import receiver 
-from django.utils import timezone  
 from django.contrib.auth.models import User, Group, Permission
+from django.core.exceptions import ValidationError
 
 
 #-------------------------------------# 
@@ -128,6 +128,31 @@ class Invoice(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        super().clean()
+        from decimal import Decimal
+        total = Decimal(str(self.total_amount))
+        paid = Decimal(str(self.amount_paid))
+        if paid > total:
+            raise ValidationError({
+                'amount_paid': f"Amount paid ({paid}) cannot exceed the total amount ({total})."
+            })
+
+    def save(self, *args, **kwargs):
+        from decimal import Decimal
+        self.balance_due = Decimal(str(self.total_amount)) - Decimal(str(self.amount_paid))
+        
+     
+        if self.total_amount > 0 and self.amount_paid >= self.total_amount:
+            self.status = 'Paid'
+        elif self.due_date and timezone.now().date() > self.due_date:
+            self.status = 'Overdue'
+        elif self.amount_paid > 0 and self.amount_paid < self.total_amount:
+            self.status = 'Partially Paid'
+
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.invoice_number} - {self.customer.company_name if self.customer else 'Unknown'}"

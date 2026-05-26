@@ -288,7 +288,7 @@ const EditUserGroup = () => {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300 relative">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* ── Header ─────────────────────────────────────────── */}
+        {/* ── Header  */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-xeflow-text flex items-center gap-2">
@@ -305,7 +305,7 @@ const EditUserGroup = () => {
           </Link>
         </div>
 
-        {/* ── Toolbar  */}
+        {/*  Toolbar  */}
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
           <div className="relative w-full sm:w-96">
@@ -330,7 +330,7 @@ const EditUserGroup = () => {
           </div>
         </div>
 
-        {/* ── Data Table  */}
+        {/*  Data Table  */}
 
         <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
@@ -406,13 +406,7 @@ const EditUserGroup = () => {
                           >
                             <FiShield size={16} />
                           </button>
-                          <button
-                            onClick={() => openDelete(group)}
-                            className="p-2 bg-xeflow-bg hover:bg-red-100 text-red-600 border border-xeflow-border hover:border-red-200 rounded-lg transition-colors tooltip-trigger"
-                            title="Delete Group"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
+
                         </div>
                       </td>
                     </tr>
@@ -441,7 +435,7 @@ const EditUserGroup = () => {
             </table>
           </div>
 
-          {/* ── Pagination  */}
+          {/*  Pagination  */}
 
           {totalPages > 0 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
@@ -487,7 +481,7 @@ const EditUserGroup = () => {
         </div>
       </div>
 
-      {/* ── Modals  */}
+      {/*  Modals  */}
 
       {/* Edit Name Modal*/}
 
@@ -678,8 +672,9 @@ const EditUserGroup = () => {
           </div>
         </div>
       </Modal>
-
-      {/* 3. Delete Modal */}
+  
+      {/* Delete Modal */}
+    
       <Modal
         isOpen={activeModal === "delete"}
         onClose={() => setActiveModal(null)}

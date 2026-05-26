@@ -114,7 +114,9 @@ function Sparkline({ trendUp, data, color }) {
   );
 }
 
-/* ── Enlarged StatWidget ── */
+
+/*  Enlarged StatWidget  */
+
 
 function StatWidget({
   icon,
@@ -128,6 +130,7 @@ function StatWidget({
   const upColor = "#1b4fd8";
   const downColor = "#DC2626";
   const trendColor = trendUp ? upColor : downColor;
+
 
   return (
     <div className="relative bg-xeflow-surface border border-xeflow-border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
@@ -180,7 +183,7 @@ function StatWidget({
   );
 }
 
-/* ── Main Dashboard Component ── */
+/*  Main Dashboard Component  */
 
 export default function Dashboard() {
   const [invoices, setInvoices] = useState([]);
@@ -247,7 +250,8 @@ export default function Dashboard() {
         totalRev += parseFloat(inv.total_amount) || 0;
         gstCollected +=
           (parseFloat(inv.cgst_amount) || 0) +
-          (parseFloat(inv.sgst_amount) || 0);
+          (parseFloat(inv.sgst_amount) || 0) +
+          (parseFloat(inv.igst_amount) || 0);
         sentCount++;
       }
     });
@@ -355,7 +359,9 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg">
+      
       {/* ── Page header ── */}
+
       <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
           <p className="text-xs font-semibold text-xeflow-muted uppercase tracking-widest mb-1">
@@ -414,6 +420,7 @@ export default function Dashboard() {
       {/* ── Main grid ── */}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        
         {/* Recharts Panel */}
 
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl p-6 shadow-sm xl:col-span-1 flex flex-col">

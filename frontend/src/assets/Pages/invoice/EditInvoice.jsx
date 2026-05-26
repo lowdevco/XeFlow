@@ -1,4 +1,4 @@
-import  { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   FiSearch,
   FiEdit,
@@ -35,6 +35,61 @@ const EditInvoice = () => {
     const [editingInvoice, setEditingInvoice] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Paymt Accordian 
+  
+    const [expandedInvoiceId, setExpandedInvoiceId] = useState(null);
+    const [paymentInvoice, setPaymentInvoice] = useState(null);
+    const [paymentAmount, setPaymentAmount] = useState("");
+    const [isRecordingPayment, setIsRecordingPayment] = useState(false);
+
+    const handleRecordPayment = async (e) => {
+      e.preventDefault();
+      if (!paymentInvoice) return;
+
+      const amt = parseFloat(paymentAmount);
+      if (isNaN(amt) || amt <= 0) {
+        toast.error("Please enter a valid payment amount.");
+        return;
+      }
+
+      if (amt > parseFloat(paymentInvoice.balance_due)) {
+        toast.error(`Payment cannot exceed outstanding balance of ${formatMoney(paymentInvoice.balance_due)}`);
+        return;
+      }
+
+      const toastId = toast.loading("Recording payment...");
+      setIsRecordingPayment(true);
+
+      try {
+        const response = await fetchWithAuth(`/invoices/${paymentInvoice.id}/payment/`, {
+          method: "POST",
+          body: JSON.stringify({ amount: amt }),
+        });
+
+        if (response.ok) {
+          const updatedInvoice = await response.json();
+          
+          setInvoices((prevInvoices) =>
+            prevInvoices.map((inv) =>
+              inv.id === updatedInvoice.id ? updatedInvoice : inv
+            )
+          );
+
+          toast.success("Payment recorded successfully!", { id: toastId });
+          setPaymentInvoice(null);
+          setPaymentAmount("");
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.error || "Failed to record payment.", { id: toastId });
+        }
+      } catch (error) {
+        console.error("Payment error:", error);
+        toast.error("Network error while recording payment.", { id: toastId });
+      } finally {
+        setIsRecordingPayment(false);
+      }
+    };
+
   const [invoiceMeta, setInvoiceMeta] = useState({
     invoiceNumber: "",
     issueDate: "",
@@ -53,7 +108,7 @@ const EditInvoice = () => {
   const [discountType, setDiscountType] = useState("percent");
   const [amountPaid, setAmountPaid] = useState("");
 
-  //  Initial Fetch 
+
 
   const loadInitialData = async () => {
     try {
@@ -78,7 +133,7 @@ const EditInvoice = () => {
     loadInitialData();
   }, []);
 
-    // Table Logic 
+
     
   const filteredInvoices = useMemo(() => {
     const lower = searchTerm.toLowerCase();
@@ -197,7 +252,7 @@ const EditInvoice = () => {
     }
   };
 
-  // ─── EDIT MODAL LOGIC ───
+  //  EDIT MODAL LOGIC 
   const openEditModal = (invoice) => {
     setEditingInvoice(invoice);
     setInvoiceMeta({
@@ -496,55 +551,98 @@ const EditInvoice = () => {
                     </td>
                   </tr>
                 ) : paginatedInvoices.length > 0 ? (
-                  paginatedInvoices.map((invoice) => (
-                    <tr
-                      key={invoice.id}
-                      className="hover:bg-xeflow-brand/5 transition-colors group"
-                    >
-                      <td className="px-6 py-4 font-bold text-xeflow-text">
-                        {invoice.invoice_number}
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-bold">
-                          {invoice.customer?.company_name || "Unknown Client"}
-                        </p>
-                        <p className="text-xs text-xeflow-muted">
-                          {invoice.customer?.email}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4 text-xeflow-muted font-medium">
-                        {formatDate(invoice.issue_date)}
-                      </td>
-                      <td className="px-6 py-4 font-bold text-xeflow-text">
-                        {formatMoney(invoice.total_amount)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-md text-xs font-bold border ${getStatusColor(invoice.status)}`}
+                  paginatedInvoices.map((invoice) => {
+                    const isExpanded = expandedInvoiceId === invoice.id;
+                    return (
+                      <React.Fragment key={invoice.id}>
+                        <tr
+                          className="hover:bg-xeflow-brand/5 cursor-pointer transition-colors group"
+                          onClick={() => setExpandedInvoiceId(isExpanded ? null : invoice.id)}
                         >
-                          {invoice.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => openEditModal(invoice)}
-                            className="p-2 bg-xeflow-bg border border-xeflow-border hover:border-green-500 hover:text-green-500 rounded-lg transition-colors"
-                            title="Edit Invoice"
-                          >
-                            <FiEdit size={16} />
-                          </button>
-                          <button
-                            onClick={() => setDeletingId(invoice.id)}
-                            className="p-2 bg-xeflow-bg border border-xeflow-border hover:border-red-500 hover:text-red-500 rounded-lg transition-colors"
-                            title="Delete Invoice"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                          <td className="px-6 py-4 font-bold text-xeflow-text">
+                            {invoice.invoice_number}
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="font-bold">
+                              {invoice.customer?.company_name || "Unknown Client"}
+                            </p>
+                            <p className="text-xs text-xeflow-muted">
+                              {invoice.customer?.email}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4 text-xeflow-muted font-medium">
+                            {formatDate(invoice.issue_date)}
+                          </td>
+                          <td className="px-6 py-4 font-bold text-xeflow-text">
+                            {formatMoney(invoice.total_amount)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`px-3 py-1 rounded-md text-xs font-bold border ${getStatusColor(invoice.status)}`}
+                            >
+                              {invoice.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => openEditModal(invoice)}
+                                className="p-2 bg-xeflow-bg border border-xeflow-border hover:border-green-500 hover:text-green-500 rounded-lg transition-colors"
+                                title="Edit Invoice"
+                              >
+                                <FiEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => setDeletingId(invoice.id)}
+                                className="p-2 bg-xeflow-bg border border-xeflow-border hover:border-red-500 hover:text-red-500 rounded-lg transition-colors"
+                                title="Delete Invoice"
+                              >
+                                <FiTrash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        {isExpanded && (
+                          <tr className="bg-xeflow-bg/30">
+                            <td colSpan="6" className="px-6 py-4">
+                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-inner animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex flex-col bg-xeflow-bg/40 p-3 rounded-lg border border-xeflow-border">
+                                  <span className="text-xs font-bold text-xeflow-muted uppercase tracking-wider">Total Amount</span>
+                                  <span className="text-base font-black text-xeflow-text mt-1">{formatMoney(invoice.total_amount)}</span>
+                                </div>
+                                <div className="flex flex-col bg-xeflow-bg/40 p-3 rounded-lg border border-xeflow-border">
+                                  <span className="text-xs font-bold text-xeflow-muted uppercase tracking-wider">Amount Paid</span>
+                                  <span className="text-base font-black text-green-500 mt-1">{formatMoney(invoice.amount_paid)}</span>
+                                </div>
+                                <div className="flex flex-col bg-xeflow-bg/40 p-3 rounded-lg border border-xeflow-border">
+                                  <span className="text-xs font-bold text-xeflow-muted uppercase tracking-wider">Outstanding Amount</span>
+                                  <span className="text-base font-black text-xeflow-brand mt-1">{formatMoney(invoice.balance_due)}</span>
+                                </div>
+                                <div className="flex items-center justify-center md:justify-end">
+                                  {parseFloat(invoice.balance_due) > 0 ? (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setPaymentInvoice(invoice);
+                                        setPaymentAmount("");
+                                      }}
+                                      className="w-full md:w-auto px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
+                                    >
+                                      Add Payment
+                                    </button>
+                                  ) : (
+                                    <span className="px-4 py-2.5 text-xs font-bold text-green-500 bg-green-500/10 rounded-xl border border-green-500/20 text-center w-full md:w-auto">
+                                      Fully Paid
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td
@@ -796,6 +894,14 @@ const EditInvoice = () => {
                         </span>{" "}
                         {selectedCustomer.phone}
                       </p>
+                      {selectedCustomer.address && (
+                        <p>
+                          <span className="font-bold text-xeflow-text">
+                            Address:
+                          </span>{" "}
+                          {selectedCustomer.address}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1088,6 +1194,76 @@ const EditInvoice = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {paymentInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-xeflow-bg/80 backdrop-blur-sm">
+          <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200 text-xeflow-text">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-xeflow-border bg-xeflow-bg/50">
+              <h3 className="text-lg font-bold">
+                Record Payment
+              </h3>
+              <button
+                onClick={() => setPaymentInvoice(null)}
+                className="p-1.5 hover:text-red-500 transition-colors bg-xeflow-bg rounded-full border border-xeflow-border"
+              >
+                <FiX size={16} />
+              </button>
+            </div>
+            <form onSubmit={handleRecordPayment} className="p-6 space-y-4">
+              <div className="bg-xeflow-bg/50 border border-xeflow-border p-4 rounded-xl space-y-2">
+                <p className="text-xs text-xeflow-muted uppercase font-bold tracking-wide">Invoice details</p>
+                <div className="flex justify-between text-sm">
+                  <span>Invoice Number:</span>
+                  <span className="font-bold">{paymentInvoice.invoice_number}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Client:</span>
+                  <span className="font-bold">{paymentInvoice.customer?.company_name || "Unknown"}</span>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t border-xeflow-border/50 mt-2">
+                  <span>Outstanding Balance:</span>
+                  <span className="font-bold text-xeflow-brand">{formatMoney(paymentInvoice.balance_due)}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Payment Amount (INR)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max={paymentInvoice.balance_due}
+                  placeholder={`Max: ${parseFloat(paymentInvoice.balance_due)}`}
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  className="w-full px-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-bold text-xeflow-text transition-all"
+                  required
+                />
+                <span className="text-[10px] text-xeflow-muted block">
+                  * Dynamic limit matches the current outstanding balance.
+                </span>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentInvoice(null)}
+                  className="flex-1 py-3 rounded-xl border border-xeflow-border text-xeflow-text hover:bg-xeflow-brand/5 font-semibold text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isRecordingPayment}
+                  className="flex-1 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-sm transition-colors shadow-md disabled:opacity-50"
+                >
+                  {isRecordingPayment ? "Recording..." : "Record Payment"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

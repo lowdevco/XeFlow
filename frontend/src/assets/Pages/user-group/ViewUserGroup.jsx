@@ -21,6 +21,7 @@ const ViewUserGroup = () => {
   const [expandedGroupId, setExpandedGroupId] = useState(null);
 
   // Pagination & Sorting
+  
   const [sortConfig, setSortConfig] = useState({
     key: "name",
     direction: "asc",
@@ -35,21 +36,35 @@ const ViewUserGroup = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [groupsRes, permsRes] = await Promise.all([
+      const [groupsRes, permsRes, usersRes] = await Promise.all([
         fetchWithAuth("/groups/"),
         fetchWithAuth("/permissions/"),
+        fetchWithAuth("/users/"),
       ]);
 
-      if (!groupsRes.ok || !permsRes.ok) throw new Error("Failed to load data");
+      if (!groupsRes.ok || !permsRes.ok || !usersRes.ok) throw new Error("Failed to load data");
 
-      const [groupsData, permsData] = await Promise.all([
+      const [groupsData, permsData, usersData] = await Promise.all([
         groupsRes.json(),
         permsRes.json(),
+        usersRes.json(),
       ]);
 
-      setGroups(groupsData);
+      // Filter users with the default User role
 
-     
+      const defaultUsers = usersData.filter(
+        (u) => u.role === "User" || !u.role
+      );
+
+      const userGroup = {
+        id: "default-user",
+        name: "User",
+        users: defaultUsers,
+        permissions: [],
+      };
+
+      setGroups([userGroup, ...groupsData]);
+
       const pMap = {};
       permsData.forEach((p) => {
         pMap[p.id] = p;
@@ -68,7 +83,6 @@ const ViewUserGroup = () => {
     setExpandedGroupId(expandedGroupId === groupId ? null : groupId);
   };
 
-    // Data Table Logic
 
   const filteredGroups = useMemo(() => {
     const lower = searchTerm.toLowerCase();
@@ -130,7 +144,8 @@ const ViewUserGroup = () => {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg transition-colors duration-300 relative">
       <div className="max-w-6xl mx-auto space-y-6">
-              {/* ── Header  */}
+           
+        {/* ── Header  */}
               
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -228,6 +243,7 @@ const ViewUserGroup = () => {
 
                     return (
                       <Fragment key={group.id}>
+                       
                         {/* Main Row */}
                         <tr
                           onClick={() => toggleAccordion(group.id)}
@@ -267,7 +283,8 @@ const ViewUserGroup = () => {
                           <tr className="bg-xeflow-bg/50 border-b-2 border-b-xeflow-brand/20">
                             <td colSpan="5" className="p-0">
                               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-200">
-                                            {/* Users List */}
+                                          
+                                {/* Users List */}
                                             
                                 <div className="space-y-4">
                                   <h4 className="text-sm font-bold text-xeflow-text uppercase tracking-wider flex items-center gap-2 border-b border-xeflow-border pb-2">
@@ -303,6 +320,7 @@ const ViewUserGroup = () => {
                                 </div>
 
                                 {/* Permissions List */}
+                                
                                 <div className="space-y-4">
                                   <h4 className="text-sm font-bold text-xeflow-text uppercase tracking-wider flex items-center gap-2 border-b border-xeflow-border pb-2">
                                     <FiShield className="text-xeflow-brand" />

@@ -60,11 +60,17 @@ class InvoiceItemInline(admin.TabularInline):
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('invoice_number', 'customer', 'issue_date', 'status')
-    readonly_fields = ('total_amount', 'balance_due', 'created_at', 'updated_at')   
+    list_display = ('invoice_number', 'customer', 'issue_date', 'total_amount', 'amount_paid', 'balance_due', 'status')
+    readonly_fields = ('customer_address', 'total_amount', 'balance_due', 'created_at', 'updated_at')   
     list_filter = ('status', 'issue_date')
     search_fields = ('invoice_number', 'customer__company_name')
     inlines = [InvoiceItemInline]
+
+    def customer_address(self, obj):
+        if obj.customer and obj.customer.address:
+            return obj.customer.address
+        return "-"
+    customer_address.short_description = "Billed To Address"
 
 
 #---------- User Profile----------#   

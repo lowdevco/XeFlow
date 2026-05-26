@@ -202,13 +202,29 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
+        from django.utils import timezone
+        current_date = timezone.now().date()
+        status = response.get('status')
+        total_amount = Decimal(str(response.get('total_amount', '0.00')))
+        amount_paid = Decimal(str(response.get('amount_paid', '0.00')))
+        
+        if total_amount > 0 and amount_paid >= total_amount:
+            status = 'Paid'
+        elif instance.due_date and current_date > instance.due_date:
+            status = 'Overdue'
+        elif amount_paid > 0 and amount_paid < total_amount:
+            status = 'Partially Paid'
+            
+        response['status'] = status
+        
         if instance.customer:
             response['customer'] = {
                 'id': instance.customer.id,
                 'company_name': instance.customer.company_name,
                 'rep_name': instance.customer.rep_name,
                 'email': instance.customer.email,
-                'phone': instance.customer.phone
+                'phone': instance.customer.phone,
+                'address': instance.customer.address
             }
         return response
     

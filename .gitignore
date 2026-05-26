@@ -5,4 +5,5 @@ venv/
 dist/
 __pycache__/
 *.pyc
-.vscode
+*.vscode
+*vscode/
