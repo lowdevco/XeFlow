@@ -11,14 +11,21 @@ import {
   FiLayout,
   FiChevronDown,
   FiShield,
+  FiX,
 } from "react-icons/fi";
 
-export default function Sidebar({ isOpen }) {
+export default function Sidebar({ isOpen, onClose }) {
   const [modules, setModules] = useState([]);
   const [openDrawerId, setOpenDrawerId] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768 && onClose) {
+      onClose();
+    }
+  };
 
   // Secure Fetch With JWT
 
@@ -66,30 +73,51 @@ export default function Sidebar({ isOpen }) {
       className={`
         flex flex-col bg-xeflow-surface
         transition-all duration-300 ease-in-out
-        relative z-[9999] 
-        overflow-hidden flex-shrink-0
-        ${isOpen ? "w-[310px] border-r border-xeflow-border" : "w-0 border-r-0"}
+        z-[9999] overflow-hidden flex-shrink-0
+        fixed inset-y-0 left-0 md:relative
+        ${isOpen 
+          ? "w-[310px] border-r border-xeflow-border shadow-2xl translate-x-0" 
+          : "w-0 border-r-0 -translate-x-full md:translate-x-0 md:w-0 md:border-r-0"
+        }
+        md:shadow-none
       `}
     >
       <div className="w-[310px] flex flex-col h-full overflow-hidden">
-        <div className="flex items-center gap-3 h-[72px] px-6 border-b border-xeflow-border shrink-0">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-xeflow-brand to-xeflow-electric shadow-md shadow-xeflow-brand/30">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="white">
-              <path
-                d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5M2 10l8 5 8-5"
-                stroke="white"
-                strokeWidth="1.5"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+        <div className="flex items-center justify-between h-[72px] px-6 border-b border-xeflow-border shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-xeflow-brand to-xeflow-electric shadow-md shadow-xeflow-brand/30">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="white">
+                <path
+                  d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5M2 10l8 5 8-5"
+                  stroke="white"
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <div className="leading-tight">
+              <h1 className="text-[1.8rem] font-black tracking-tight text-xeflow-text uppercase leading-none">
+                Xe<span className="text-xeflow-brand">Flow</span>
+              </h1>
+            </div>
           </div>
-          <div className="leading-tight">
-            <h1 className="text-[1.8rem] font-black tracking-tight text-xeflow-text uppercase leading-none">
-              Xe<span className="text-xeflow-brand">Flow</span>
-            </h1>
-          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="
+              md:hidden flex items-center justify-center
+              w-9 h-9 rounded-xl
+              bg-xeflow-bg border border-xeflow-border
+              text-xeflow-muted hover:text-red-500 hover:border-red-500/30
+              transition-all duration-200 cursor-pointer active:scale-95
+            "
+            aria-label="Close sidebar"
+          >
+            <FiX size={18} />
+          </button>
         </div>
 
         {/* Dynamic Navigation */}
@@ -138,7 +166,10 @@ export default function Sidebar({ isOpen }) {
                 ) : (
                   <Link
                     to={module.url || "#"}
-                    onClick={() => setOpenDrawerId(null)}
+                    onClick={() => {
+                      setOpenDrawerId(null);
+                      handleLinkClick();
+                    }}
                     className={`group w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${isActive ? "bg-xeflow-brand text-white shadow-md shadow-xeflow-brand/25" : "text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-brand/6"}`}
                   >
                     <span className="flex items-center gap-3">
@@ -172,6 +203,7 @@ export default function Sidebar({ isOpen }) {
                           <li key={child.id || child.name}>
                             <Link
                               to={child.url || "#"}
+                              onClick={handleLinkClick}
                               className={`relative block text-sm py-2 font-semibold transition-colors hover:text-xeflow-brand ${isChildActive ? "text-xeflow-brand" : "text-xeflow-muted"}`}
                             >
                               {isChildActive && (
@@ -223,7 +255,7 @@ export default function Sidebar({ isOpen }) {
             </button>
           </div>
 
-          <Link to="/profile">
+          <Link to="/profile" onClick={handleLinkClick}>
             <div
               className="
                 flex items-center gap-3 p-3 rounded-xl

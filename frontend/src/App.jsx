@@ -1,4 +1,4 @@
-import { useState, } from "react";
+import { useState, useEffect } from "react";
 import { Route, Routes, Outlet, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
@@ -40,8 +40,20 @@ import Revenue from "./assets/Pages/Analytics/Revenue";
 // ----------------------------------- //
 
 export default function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768);
   const { isDark, toggle } = useDarkMode();
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <>
@@ -82,7 +94,14 @@ export default function App() {
             <Route
               element={
                 <div className="flex h-screen w-full bg-xeflow-bg font-sans overflow-hidden">
-                  <Sidebar isOpen={isSidebarOpen} />
+                  {isSidebarOpen && (
+                    <div 
+                      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998] md:hidden transition-all duration-300"
+                      onClick={() => setIsSidebarOpen(false)}
+                    />
+                  )}
+
+                  <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                   <main className="flex-1 flex flex-col h-full overflow-hidden relative">
                     <Navbar
                       toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}

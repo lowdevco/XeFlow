@@ -21,7 +21,9 @@ import {
   FiTrendingDown,
 } from "react-icons/fi";
 
-/* ── Custom SVGs for Trend Arrows ── */
+/* ──  SVG for Trend Arrows ── */
+
+
 const TrendUp = () => (
   <svg
     className="w-3.5 h-3.5 shrink-0"
@@ -51,6 +53,34 @@ const TrendDown = () => (
     <polyline points="9 12 13 12 13 8" />
   </svg>
 );
+const getServiceColor = (name) => {
+  const predefined = {
+    "Consultation": "#3B82F6",
+    "Design": "#EF4444",
+    "Development": "#EAB308",
+    "Marketing": "#22C55E",
+    "Support": "#F97316",
+    "Writing": "#A855F7",
+    "SEO": "#06B6D4",
+  };
+
+  const normalized = name ? name.trim() : "Other";
+  if (predefined[normalized]) {
+    return predefined[normalized];
+  }
+  if (normalized === "Other") {
+    return "#64748B";
+  }
+
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const colors = ["#3B82F6", "#EF4444", "#EAB308", "#22C55E", "#A855F7", "#F97316", "#06B6D4", "#EC4899"];
+  const idx = Math.abs(hash) % colors.length;
+  return colors[idx];
+};
 
 export default function Overview() {
   const [invoices, setInvoices] = useState([]);
@@ -58,12 +88,21 @@ export default function Overview() {
   const [services, setServices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  /* ── Filter State ── */
-  const [filterType, setFilterType] = useState("fy"); // 'month', 'last_month', 'fy', 'last_fy', 'custom'
+  const [filterType, setFilterType] = useState("fy");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  const handleMonthRangeSelect = (year, monthNum) => {
+    const start = new Date(year, monthNum, 1);
+    const end = new Date(year, monthNum + 1, 0);
+    const startStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+    const endStr = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+    setCustomStart(startStr);
+    setCustomEnd(endStr);
+    setFilterType("custom");
+  };
 
   /* ── Click Outside Dropdown Handler ── */
   useEffect(() => {
@@ -98,7 +137,8 @@ export default function Overview() {
     fetchAnalyticsData();
   }, []);
 
-  /* ── Currency Formatting ── */
+  /*  Currency Formatting  */
+
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -107,11 +147,12 @@ export default function Overview() {
     }).format(amount || 0);
   };
 
-  /* ── Date Ranges Solver ── */
+  /*  Date Ranges Solver  */
+
   const activeRange = useMemo(() => {
     const today = new Date();
     const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth(); // 0-indexed
+    const currentMonth = today.getMonth(); 
 
     let start = new Date();
     let end = new Date();
@@ -138,7 +179,8 @@ export default function Overview() {
 
       case "fy": {
         // Indian Financial Year: April 1st to March 31st
-        const isFYStart = currentMonth >= 3; // April or later
+
+        const isFYStart = currentMonth >= 3; 
         const fyStartYear = isFYStart ? currentYear : currentYear - 1;
         start = new Date(fyStartYear, 3, 1);
         end = new Date(fyStartYear + 1, 2, 31);
@@ -173,6 +215,7 @@ export default function Overview() {
     }
 
     // Ensure midnight limits for matching
+
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
 
@@ -205,7 +248,8 @@ export default function Overview() {
     });
   }, [invoices, priorRange]);
 
-  /* ── Calculations & Metrics Engine ── */
+  /* Calculations & Metrics Engine  */
+  
   const metrics = useMemo(() => {
     const calc = (invList) => {
       let totalRev = 0;
@@ -231,6 +275,7 @@ export default function Overview() {
         }
       });
 
+
       const avgInvoiceValue = nonDraftCount > 0 ? totalRev / nonDraftCount : 0;
       const collectionRate = totalRev > 0 ? (collected / totalRev) * 100 : 0;
 
@@ -243,6 +288,7 @@ export default function Overview() {
         invoicesSent: nonDraftCount,
       };
     };
+
 
     const currentMetrics = calc(activeInvoices);
     const prevMetrics = calc(priorInvoices);
@@ -288,11 +334,60 @@ export default function Overview() {
       ),
     };
 
+
     return { current: currentMetrics, trends };
   }, [activeInvoices, priorInvoices]);
 
   const areaChartData = useMemo(() => {
+    const durationMs = activeRange.end.getTime() - activeRange.start.getTime();
+    const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+
+    if (durationDays <= 31) {
+      const results = [];
+      const current = new Date(activeRange.start);
+      const limit = new Date(activeRange.end);
+
+
+      while (current <= limit) {
+        results.push({
+          name: current.getDate().toString(),
+          dateLabel: current.toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+          year: current.getFullYear(),
+          monthNum: current.getMonth(),
+          dayNum: current.getDate(),
+          revenue: 0,
+          collected: 0,
+        });
+        current.setDate(current.getDate() + 1);
+      }
+
+
+      invoices.forEach((inv) => {
+        if (inv.status !== "Draft" && inv.issue_date) {
+          const issue = new Date(inv.issue_date);
+          const match = results.find(
+            (r) =>
+              r.dayNum === issue.getDate() &&
+              r.monthNum === issue.getMonth() &&
+              r.year === issue.getFullYear()
+          );
+          if (match) {
+            match.revenue += parseFloat(inv.total_amount) || 0;
+            if (inv.status === "Paid") {
+              match.collected += parseFloat(inv.total_amount) || 0;
+            } else {
+              match.collected += parseFloat(inv.amount_paid) || 0;
+            }
+          }
+        }
+      });
+
+
+      return results;
+    }
+
     const monthNames = [
+
       "Jan",
       "Feb",
       "Mar",
@@ -305,6 +400,7 @@ export default function Overview() {
       "Oct",
       "Nov",
       "Dec",
+
     ];
     const results = [];
 
@@ -423,6 +519,7 @@ export default function Overview() {
     return sorted.map((s) => ({
       ...s,
       percentage: (s.revenue / maxRev) * 100,
+      color: getServiceColor(s.name),
     }));
   }, [activeInvoices]);
 
@@ -467,6 +564,7 @@ export default function Overview() {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 bg-xeflow-bg font-sans">
+
       {/*  Title bar and Filter Controls  */}
 
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -482,6 +580,7 @@ export default function Overview() {
         {/* Filters Group */}
 
         <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+
           {/* Dropdown Selector */}
 
           <div className="relative" ref={dropdownRef}>
@@ -602,6 +701,7 @@ export default function Overview() {
       {/*  6 Widgets Grid  */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5 mb-8">
+
         {/* Widget 1: Total Revenue */}
 
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
@@ -758,6 +858,7 @@ export default function Overview() {
       {/* ── Middle Row: 2 Charts Grid ── */}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+
         {/* Chart 1: Revenue Trend (AreaChart) */}
 
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl p-6 shadow-sm xl:col-span-2 flex flex-col justify-between">
@@ -774,9 +875,16 @@ export default function Overview() {
             <ResponsiveContainer width="100%" height={320}>
               <AreaChart
                 data={areaChartData}
+                onClick={(nextState) => {
+                  if (nextState && nextState.activePayload && nextState.activePayload.length) {
+                    const payload = nextState.activePayload[0].payload;
+                    handleMonthRangeSelect(payload.year, payload.monthNum);
+                  }
+                }}
                 margin={{ top: 10, right: 10, left: -10, bottom: 5 }}
               >
                 <defs>
+
                   {/* Revenue Gradient */}
 
                   <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -833,7 +941,7 @@ export default function Overview() {
                       return (
                         <div className="bg-xeflow-surface border border-xeflow-border p-4 rounded-xl shadow-xl animate-in fade-in duration-200">
                           <p className="text-xs font-bold text-xeflow-muted mb-2 uppercase tracking-wide">
-                            {label} {payload[0].payload.year}
+                            {payload[0].payload.dateLabel || `${label} ${payload[0].payload.year}`}
                           </p>
                           <div className="flex flex-col gap-1.5">
                             <div className="flex items-center gap-4 justify-between">
@@ -886,8 +994,10 @@ export default function Overview() {
           </div>
         </div>
 
+        
         {/* Chart 2: Invoice Status Doughnut */}
 
+        
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl p-6 shadow-sm xl:col-span-1 flex flex-col justify-between">
           <div>
             <h3 className="text-lg font-bold text-xeflow-text">
@@ -917,6 +1027,7 @@ export default function Overview() {
               </PieChart>
             </ResponsiveContainer>
 
+            
             {/* Total Indicator in the center */}
 
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-[-5px]">
@@ -929,8 +1040,10 @@ export default function Overview() {
             </div>
           </div>
 
+          
           {/* Legends Table */}
 
+          
           <div className="flex flex-col gap-2 bg-xeflow-bg/30 border border-xeflow-border/40 rounded-xl p-3">
             {doughnutData.map((item, idx) => (
               <div
@@ -960,11 +1073,13 @@ export default function Overview() {
             </div>
           </div>
         </div>
-      </div>
+      </div> 
 
       {/*  Bottom Row: Top Services  Top Customers Grid  */}
 
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
         {/* Left Card: Top Services by Revenue */}
 
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl p-6 shadow-sm flex flex-col">
@@ -982,7 +1097,8 @@ export default function Overview() {
               topServices.map((service, idx) => (
                 <div key={idx} className="flex flex-col gap-1.5 group">
                   <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-xeflow-text group-hover:text-xeflow-brand transition-colors">
+                    <span className="text-xeflow-text group-hover:text-xeflow-brand transition-colors flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: service.color }} />
                       {service.name}
                     </span>
                     <span className="text-xeflow-text">
@@ -990,12 +1106,14 @@ export default function Overview() {
                     </span>
                   </div>
 
+
                   {/* Styled Progress Bar Track */}
+
 
                   <div className="w-full h-2.5 bg-xeflow-bg border border-xeflow-border/60 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-xeflow-brand to-blue-500 rounded-full group-hover:opacity-90 transition-all duration-500 ease-out"
-                      style={{ width: `${service.percentage}%` }}
+                      className="h-full rounded-full group-hover:opacity-90 transition-all duration-500 ease-out"
+                      style={{ width: `${service.percentage}%`, backgroundColor: service.color }}
                     />
                   </div>
                 </div>

@@ -415,23 +415,21 @@ const NewInvoice = () => {
           </div>
         </div>
 
-        {/* ITEMS TABLE */}
-
         <div className="mb-12">
-          <div className="grid grid-cols-12 gap-4 pb-3 border-b-2 border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider">
+          <div className="hidden md:grid grid-cols-12 gap-4 pb-3 border-b-2 border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider">
             <div className="col-span-6">Service / Description</div>
             <div className="col-span-2 text-right">Qty</div>
             <div className="col-span-2 text-right">Rate</div>
             <div className="col-span-2 text-right">Amount</div>
           </div>
 
-          <div className="space-y-3 pt-4">
+          <div className="space-y-4 pt-4">
             {lineItems.map((item) => (
               <div
                 key={item.id}
-                className="grid grid-cols-12 gap-4 items-center group bg-xeflow-bg/30 p-2 rounded-lg border border-transparent hover:border-xeflow-border transition-colors"
+                className="flex flex-col md:grid md:grid-cols-12 gap-4 items-stretch md:items-center group bg-xeflow-bg/30 p-4 md:p-2 rounded-xl md:rounded-lg border border-xeflow-border md:border-transparent hover:border-xeflow-border transition-colors"
               >
-                <div className="col-span-6 flex flex-col gap-1.5">
+                <div className="col-span-12 md:col-span-6 flex flex-col gap-1.5">
                   <select
                     value={item.service_id}
                     onChange={(e) =>
@@ -465,41 +463,48 @@ const NewInvoice = () => {
                   />
                 </div>
 
-                <div className="col-span-2">
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      handleLineItemChange(item.id, "quantity", e.target.value)
-                    }
-                    className="w-full text-right text-sm bg-xeflow-bg border border-xeflow-border rounded p-2 outline-none focus:border-xeflow-brand transition-colors"
-                  />
-                </div>
+                <div className="grid grid-cols-3 gap-3 col-span-12 md:col-span-6 md:contents">
+                  <div className="flex flex-col gap-1 md:col-span-2">
+                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Qty</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        handleLineItemChange(item.id, "quantity", e.target.value)
+                      }
+                      className="w-full text-left md:text-right text-sm bg-xeflow-bg border border-xeflow-border rounded p-2 outline-none focus:border-xeflow-brand transition-colors text-xeflow-text"
+                    />
+                  </div>
 
-                <div className="col-span-2">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={item.rate}
-                    onChange={(e) =>
-                      handleLineItemChange(item.id, "rate", e.target.value)
-                    }
-                    className="w-full text-right text-sm bg-xeflow-bg border border-xeflow-border rounded p-2 outline-none focus:border-xeflow-brand transition-colors"
-                  />
-                </div>
+                  <div className="flex flex-col gap-1 md:col-span-2">
+                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Rate</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={item.rate}
+                      onChange={(e) =>
+                        handleLineItemChange(item.id, "rate", e.target.value)
+                      }
+                      className="w-full text-left md:text-right text-sm bg-xeflow-bg border border-xeflow-border rounded p-2 outline-none focus:border-xeflow-brand transition-colors text-xeflow-text"
+                    />
+                  </div>
 
-                <div className="col-span-2 text-right text-sm font-bold relative flex items-center justify-end gap-3">
-                  {formatMoney(item.amount)}
-                  <button
-                    onClick={() => removeLineItem(item.id)}
-                    className="text-xeflow-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remove Item"
-                  >
-                    <FiTrash2 size={16} />
-                  </button>
+                  <div className="flex flex-col gap-1 md:col-span-2 text-right relative justify-end">
+                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Amount</span>
+                    <div className="text-sm font-bold text-xeflow-text flex items-center justify-end gap-2 h-[38px] md:h-auto">
+                      {formatMoney(item.amount)}
+                      <button
+                        onClick={() => removeLineItem(item.id)}
+                        className="text-xeflow-muted hover:text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
+                        title="Remove Item"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

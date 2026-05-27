@@ -182,32 +182,40 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
 
         {/*  Right Control */}
         <div className="flex items-center gap-3">
-
           {/* Modal Trigger Search button   */}
 
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="
+          <div className="hidden md:block">
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="
               flex items-center justify-between gap-3
               bg-xeflow-bg border border-xeflow-border
               rounded-xl px-3 py-2 w-full sm:w-full !md:w-full lg:w-64
               text-xeflow-muted hover:border-xeflow-brand/50 hover:bg-xeflow-surface
               transition-all duration-200 group shadow-inner cursor-text
             "
-          >
-            <div className="flex items-center gap-2">
-              <FiSearch
-                size={16}
-                className="opacity-60 group-hover:text-xeflow-brand transition-colors"
-              />
-              <span className="text-sm placeholder:text-xeflow-muted/70 whitespace-nowrap">
-                Search...
-              </span>
-            </div>
-            <kbd className="hidden md:flex items-center gap-1 text-[10px] font-bold text-xeflow-muted/60 border border-xeflow-border rounded-md px-1.5 py-1 bg-xeflow-surface leading-none select-none">
-              <FiCommand size={10} /> K
-            </kbd>
-          </button>
+            >
+              <div className="flex items-center gap-2">
+                <FiSearch
+                  size={16}
+                  className="opacity-60 group-hover:text-xeflow-brand transition-colors"
+                />
+                <span className="text-sm placeholder:text-xeflow-muted/70 whitespace-nowrap">
+                  Search...
+                </span>
+              </div>
+              <kbd className="hidden md:flex items-center gap-1 text-[10px] font-bold text-xeflow-muted/60 border border-xeflow-border rounded-md px-1.5 py-1 bg-xeflow-surface leading-none select-none">
+                <FiCommand size={10} /> K
+              </kbd>
+            </button>
+          </div>
+
+          {/* Mobile version (shown only on small screens, hidden on md and up) */}
+          <div className="md:hidden">
+            <button onClick={() => setIsSearchOpen(true)} className="p-2">
+              <FiSearch size={22} />
+            </button>
+          </div>
 
           <div className="w-px h-6 bg-xeflow-border mx-1 shrink-0 hidden md:block" />
 
@@ -229,17 +237,25 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
           >
             <div className="w-9 h-9 rounded-full shrink-0 bg-gradient-to-br from-xeflow-brand to-xeflow-electric flex items-center justify-center text-white text-xs font-extrabold ring-2 ring-xeflow-brand/20 shadow-md overflow-hidden">
               {user?.profile?.profile_picture ? (
-                <img 
-                  src={user.profile.profile_picture.startsWith("http") ? user.profile.profile_picture : `${API_BASE_URL}${user.profile.profile_picture}`} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover" 
+                <img
+                  src={
+                    user.profile.profile_picture.startsWith("http")
+                      ? user.profile.profile_picture
+                      : `${API_BASE_URL}${user.profile.profile_picture}`
+                  }
+                  alt="Profile"
+                  className="w-full h-full object-cover"
                 />
+              ) : user?.first_name ? (
+                user.first_name[0].toUpperCase()
               ) : (
-                user?.first_name ? user.first_name[0].toUpperCase() : "U"
+                "U"
               )}
             </div>
             <div className="hidden lg:block text-left leading-tight">
-              <p className="text-sm font-bold text-xeflow-text">{user?.first_name || user?.username}</p>
+              <p className="text-sm font-bold text-xeflow-text">
+                {user?.first_name || user?.username}
+              </p>
               <p className="text-[10px] text-xeflow-brand font-bold uppercase tracking-wider">
                 {user?.role || "Role"}
               </p>
@@ -248,12 +264,10 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
         </div>
       </header>
 
-      
       {/* CMD modal */}
 
       {isSearchOpen && (
         <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh] px-4">
-          
           {/* Blurred Backdrop */}
 
           <div
@@ -264,7 +278,6 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
           {/* Modal Container */}
 
           <div className="relative w-full max-w-2xl bg-xeflow-surface rounded-2xl shadow-2xl border border-xeflow-border overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
             {/* Search Input Area */}
 
             <div className="flex items-center px-4 py-4 border-b border-xeflow-border bg-xeflow-bg/50">

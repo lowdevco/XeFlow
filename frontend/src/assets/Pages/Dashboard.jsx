@@ -19,9 +19,12 @@ import {
   FiBriefcase,
 } from "react-icons/fi";
 
+
 /*  Trend arrow icons  */
 
+
 const TrendUp = () => (
+  
   <svg
     width="12"
     height="12"
@@ -378,9 +381,7 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* ── Dynamic Stat Widgets Grid ── */}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
         <StatWidget
           icon={<FiBarChart2 />}
           title="Total Revenue"

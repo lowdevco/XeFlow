@@ -580,7 +580,7 @@ const ViewInvoice = () => {
               </div>
 
               <div className="mb-10">
-                <div className="grid grid-cols-12 gap-4 pb-3 border-b-2 border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider">
+                <div className="hidden md:grid grid-cols-12 gap-4 pb-3 border-b-2 border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider">
                   <div className="col-span-6">Description</div>
                   <div className="col-span-2 text-right">Qty</div>
                   <div className="col-span-2 text-right">Rate</div>
@@ -592,19 +592,30 @@ const ViewInvoice = () => {
                     selectedInvoice.items.map((item, idx) => (
                       <div
                         key={idx}
-                        className="grid grid-cols-12 gap-4 items-center py-2 border-b border-xeflow-border/50 text-sm"
+                        className="flex flex-col md:grid md:grid-cols-12 gap-4 items-stretch md:items-center py-4 md:py-2 border-b border-xeflow-border/50 text-sm"
                       >
-                        <div className="col-span-6 font-semibold text-xeflow-text">
+                        <div className="col-span-12 md:col-span-6 font-semibold text-xeflow-text">
                           {item.description}
                         </div>
-                        <div className="col-span-2 text-right text-xeflow-muted">
-                          {parseFloat(item.quantity)}
-                        </div>
-                        <div className="col-span-2 text-right text-xeflow-muted">
-                          {formatMoney(item.rate)}
-                        </div>
-                        <div className="col-span-2 text-right font-bold text-xeflow-text">
-                          {formatMoney(item.amount)}
+                        <div className="grid grid-cols-3 gap-3 col-span-12 md:col-span-6 md:contents">
+                          <div className="flex flex-col gap-1 md:col-span-2">
+                            <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Qty</span>
+                            <span className="text-left md:text-right text-xeflow-muted font-medium">
+                              {parseFloat(item.quantity)}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1 md:col-span-2">
+                            <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Rate</span>
+                            <span className="text-left md:text-right text-xeflow-muted font-medium">
+                              {formatMoney(item.rate)}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1 md:col-span-2">
+                            <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Amount</span>
+                            <span className="text-left md:text-right font-bold text-xeflow-text">
+                              {formatMoney(item.amount)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))
