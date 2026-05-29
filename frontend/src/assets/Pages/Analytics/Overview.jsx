@@ -564,6 +564,7 @@ export default function Overview() {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 bg-xeflow-bg font-sans">
+      <div className="max-w-7xl mx-auto w-full">
 
       {/*  Title bar and Filter Controls  */}
 
@@ -1210,6 +1211,7 @@ export default function Overview() {
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       </div>
     </div>

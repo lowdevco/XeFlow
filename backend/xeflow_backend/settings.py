@@ -213,3 +213,14 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
+
+
+# Email ( Brevo )
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp-relay.brevo.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = config('BREVO_SMTP_USER')
+# EMAIL_HOST_PASSWORD = config('BREVO_SMTP_KEY')
+# DEFAULT_FROM_EMAIL = 'no-reply@xeventure.in'

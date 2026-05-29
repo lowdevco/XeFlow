@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   FiSearch,
@@ -10,6 +10,7 @@ import {
   FiChevronUp,
   FiChevronDown,
   FiPrinter,
+  FiFilter,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth, API_BASE_URL } from "../../js/api";
@@ -25,6 +26,10 @@ const GSTIN = "32ABCDE1234F1Z5";
 
 const ViewInvoice = () => {
   const [invoices, setInvoices] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [selectedCustomerFilter, setSelectedCustomerFilter] = useState(null);
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const filterDropdownRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,33 +100,56 @@ const ViewInvoice = () => {
   };
 
   useEffect(() => {
-    const fetchInvoices = async () => {
+    const fetchInvoicesAndCustomers = async () => {
       try {
-        const response = await fetchWithAuth("/invoices/", { method: "GET" });
-        if (!response.ok) throw new Error("Failed to fetch invoices.");
+        const [invRes, custRes] = await Promise.all([
+          fetchWithAuth("/invoices/", { method: "GET" }),
+          fetchWithAuth("/customers/", { method: "GET" }),
+        ]);
 
-        const data = await response.json();
-        setInvoices(data);
+        if (!invRes.ok) throw new Error("Failed to fetch invoices.");
+        if (!custRes.ok) throw new Error("Failed to fetch customers.");
+
+        const invData = await invRes.json();
+        const custData = await custRes.json();
+        setInvoices(invData);
+        setCustomers(custData);
       } catch (err) {
-        console.error("Error fetching invoices:", err);
+        console.error("Error fetching data:", err);
         setError(err.message);
         toast.error("Failed to load invoices."); 
       } finally {
         setIsLoading(false);
       }
     };
-    fetchInvoices();
+    fetchInvoicesAndCustomers();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+        setIsFilterDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const filteredInvoices = useMemo(() => {
     const lower = searchTerm.toLowerCase();
-    return invoices.filter(
-      (inv) =>
+    return invoices.filter((inv) => {
+      const matchesSearch =
         inv.invoice_number?.toLowerCase().includes(lower) ||
         inv.customer?.company_name?.toLowerCase().includes(lower) ||
-        inv.status?.toLowerCase().includes(lower),
-    );
-  }, [invoices, searchTerm]);
+        inv.status?.toLowerCase().includes(lower);
+
+      const matchesCustomer =
+        !selectedCustomerFilter ||
+        inv.customer?.id === selectedCustomerFilter.id;
+
+      return matchesSearch && matchesCustomer;
+    });
+  }, [invoices, searchTerm, selectedCustomerFilter]);
 
   const sortedInvoices = useMemo(() => {
     let sortable = [...filteredInvoices];
@@ -129,11 +157,6 @@ const ViewInvoice = () => {
       sortable.sort((a, b) => {
         let aVal = a[sortConfig.key];
         let bVal = b[sortConfig.key];
-
-        if (sortConfig.key === "customer") {
-          aVal = a.customer?.company_name || "";
-          bVal = b.customer?.company_name || "";
-        }
 
         if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
         if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
@@ -258,6 +281,52 @@ const ViewInvoice = () => {
               className="w-full pl-11 pr-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted outline-none focus:border-xeflow-brand transition-all"
             />
           </div>
+
+          <div className="relative" ref={filterDropdownRef}>
+            <button
+              onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold shadow-sm hover:shadow-md hover:border-xeflow-brand transition-all cursor-pointer whitespace-nowrap ${selectedCustomerFilter ? "bg-xeflow-brand/10 border-xeflow-brand text-xeflow-brand" : "bg-xeflow-surface border-xeflow-border text-xeflow-text"}`}
+              title="Filter by Customer"
+            >
+              <FiFilter size={16} />
+              <span>
+                {selectedCustomerFilter ? selectedCustomerFilter.company_name : "All Clients"}
+              </span>
+              <FiChevronDown size={14} className={`transition-transform duration-200 ${isFilterDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {isFilterDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-xeflow-surface border border-xeflow-border shadow-2xl p-2.5 z-50 animate-in fade-in slide-in-from-top-3 duration-250 max-h-[300px] overflow-y-auto custom-scrollbar">
+                <p className="text-[10px] font-black uppercase text-xeflow-muted tracking-wider px-3.5 py-1.5 border-b border-xeflow-border/40 mb-1">
+                  Select Customer
+                </p>
+                <div
+                  onClick={() => {
+                    setSelectedCustomerFilter(null);
+                    setIsFilterDropdownOpen(false);
+                    setCurrentPage(1);
+                  }}
+                  className={`text-left text-xs font-bold px-3.5 py-2 rounded-lg transition-colors cursor-pointer ${!selectedCustomerFilter ? "bg-xeflow-brand/10 text-xeflow-brand" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
+                >
+                  All Clients (View All)
+                </div>
+                {customers.map((customer) => (
+                  <div
+                    key={customer.id}
+                    onClick={() => {
+                      setSelectedCustomerFilter(customer);
+                      setIsFilterDropdownOpen(false);
+                      setCurrentPage(1);
+                    }}
+                    className={`text-left text-xs font-bold px-3.5 py-2 mt-0.5 rounded-lg transition-colors cursor-pointer truncate ${selectedCustomerFilter && selectedCustomerFilter.id === customer.id ? "bg-xeflow-brand/10 text-xeflow-brand" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
+                    title={customer.company_name}
+                  >
+                    {customer.company_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300">
@@ -273,13 +342,8 @@ const ViewInvoice = () => {
                       Invoice # <SortIcon columnKey="invoice_number" />
                     </div>
                   </th>
-                  <th
-                    className="px-6 py-4 cursor-pointer group"
-                    onClick={() => handleSort("customer")}
-                  >
-                    <div className="flex items-center">
-                      Client <SortIcon columnKey="customer" />
-                    </div>
+                  <th className="px-6 py-4">
+                    Client
                   </th>
                   <th
                     className="px-6 py-4 cursor-pointer group"

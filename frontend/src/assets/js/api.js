@@ -3,8 +3,17 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const API_ROOT = `${API_BASE_URL}/api`;
 
+const forceLogout = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  window.location.href = "/login";
+};
+
 export const fetchWithAuth = async (endpoint, options = {}) => {
   let token = localStorage.getItem("accessToken");
+  if (token === "undefined" || token === "null") {
+    token = null;
+  }
 
   const headers = {
     ...options.headers,

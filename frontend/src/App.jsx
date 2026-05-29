@@ -11,6 +11,7 @@ import { useDarkMode } from "./assets/js/useDarkMode";
 
 import Sidebar from "./assets/components/Sidebar";
 import Navbar from "./assets/components/Navbar";
+import Footer from "./assets/components/Footer";
 import ProtectedRoute from "./Routing/ProtectedRoute";
 import PublicRoute from "./Routing/PublicRoute"; 
 
@@ -109,8 +110,11 @@ export default function App() {
                       toggleDarkMode={toggle}
                     />
 
-                    <div className="flex-1 overflow-y-auto">
-                      <Outlet />
+                    <div className="flex-1 overflow-y-auto flex flex-col">
+                      <div className="flex-1">
+                        <Outlet />
+                      </div>
+                      <Footer />
                     </div>
                   </main>
                 </div>

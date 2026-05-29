@@ -147,7 +147,7 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
     <>
       <header
         className="
-          sticky top-4 z-40 mx-4 md:mx-8
+          sticky top-4 z-40 mx-4 md:mx-8 mb-6 md:mb-8
           flex items-center justify-between
           px-5 py-3.5 gap-4
           rounded-2xl
@@ -173,24 +173,22 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
             <FiMenu size={18} />
           </button>
 
-          <div className="hidden sm:block min-w-0">
+          <div className="hidden xl:block min-w-0">
             <h2 className="text-xl font-black text-xeflow-text tracking-tight truncate">
               XE<span className="text-xeflow-brand">FLOW</span>
             </h2>
           </div>
         </div>
 
-        {/*  Right Control */}
         <div className="flex items-center gap-3">
-          {/* Modal Trigger Search button   */}
 
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <button
               onClick={() => setIsSearchOpen(true)}
               className="
               flex items-center justify-between gap-3
               bg-xeflow-bg border border-xeflow-border
-              rounded-xl px-3 py-2 w-full sm:w-full !md:w-full lg:w-64
+              rounded-xl px-3 py-2 w-full sm:w-full lg:w-64
               text-xeflow-muted hover:border-xeflow-brand/50 hover:bg-xeflow-surface
               transition-all duration-200 group shadow-inner cursor-text
             "
@@ -204,20 +202,19 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
                   Search...
                 </span>
               </div>
-              <kbd className="hidden md:flex items-center gap-1 text-[10px] font-bold text-xeflow-muted/60 border border-xeflow-border rounded-md px-1.5 py-1 bg-xeflow-surface leading-none select-none">
+              <kbd className="hidden lg:flex items-center gap-1 text-[10px] font-bold text-xeflow-muted/60 border border-xeflow-border rounded-md px-1.5 py-1 bg-xeflow-surface leading-none select-none">
                 <FiCommand size={10} /> K
               </kbd>
             </button>
           </div>
-
-          {/* Mobile version (shown only on small screens, hidden on md and up) */}
-          <div className="md:hidden">
-            <button onClick={() => setIsSearchOpen(true)} className="p-2">
+          
+          <div className="lg:hidden">
+            <button onClick={() => setIsSearchOpen(true)} className="p-2 text-xeflow-muted hover:text-xeflow-brand transition-colors cursor-pointer">
               <FiSearch size={22} />
             </button>
           </div>
 
-          <div className="w-px h-6 bg-xeflow-border mx-1 shrink-0 hidden md:block" />
+          <div className="w-px h-6 bg-xeflow-border mx-1 shrink-0 hidden lg:block" />
 
           {/* Dark mode toggle */}
 

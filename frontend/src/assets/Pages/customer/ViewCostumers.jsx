@@ -9,6 +9,10 @@ import {
   FiChevronUp,
   FiChevronDown,
   FiMapPin,
+  FiX,
+  FiEye,
+  FiFileText,
+  FiDollarSign,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -18,6 +22,9 @@ import { API_BASE_URL, fetchWithAuth } from "../../js/api";
 
 const ViewCustomers = () => {
   const [customers, setCustomers] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [invoiceFilter, setInvoiceFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
@@ -30,18 +37,22 @@ const ViewCustomers = () => {
   const itemsPerPage = 5;
 
   useEffect(() => {
-    const fetchCustomers = async () => {
+    const fetchCustomersAndInvoices = async () => {
       try {
-        const response = await fetchWithAuth("/customers/", {
-          method: "GET",
-        });
+        const [custRes, invRes] = await Promise.all([
+          fetchWithAuth("/customers/", { method: "GET" }),
+          fetchWithAuth("/invoices/", { method: "GET" }),
+        ]);
 
-        if (!response.ok) throw new Error("Failed to fetch customers");
+        if (!custRes.ok) throw new Error("Failed to fetch customers");
+        if (!invRes.ok) throw new Error("Failed to fetch invoices");
 
-        const data = await response.json();
-        setCustomers(data);
+        const custData = await custRes.json();
+        const invData = await invRes.json();
+        setCustomers(custData);
+        setInvoices(invData);
       } catch (err) {
-        console.error("Error fetching customers:", err);
+        console.error("Error fetching customers & invoices:", err);
         setError(err.message);
         toast.error("Failed to load customers."); 
       } finally {
@@ -49,7 +60,7 @@ const ViewCustomers = () => {
       }
     };
 
-    fetchCustomers();
+    fetchCustomersAndInvoices();
   }, []);
 
     // Data Table Logic
@@ -110,6 +121,61 @@ const ViewCustomers = () => {
     ) : (
       <FiChevronDown className="text-xeflow-brand ml-1" />
     );
+  };
+
+  const customerInvoices = useMemo(() => {
+    if (!selectedCustomer) return [];
+    return invoices.filter(
+      (inv) => inv.customer && inv.customer.id === selectedCustomer.id
+    );
+  }, [invoices, selectedCustomer]);
+
+  const filteredCustomerInvoices = useMemo(() => {
+    if (invoiceFilter === "pending") {
+      return customerInvoices.filter(
+        (inv) => inv.status !== "Paid" && inv.status !== "Draft"
+      );
+    }
+    return customerInvoices;
+  }, [customerInvoices, invoiceFilter]);
+
+  const customerStats = useMemo(() => {
+    const stats = { total: 0, paid: 0, pending: 0, count: 0, pendingCount: 0 };
+    customerInvoices.forEach((inv) => {
+      const total = parseFloat(inv.total_amount) || 0;
+      const paid = parseFloat(inv.amount_paid) || 0;
+      const due = parseFloat(inv.balance_due) || 0;
+      stats.total += total;
+      stats.paid += paid;
+      stats.pending += due;
+      stats.count++;
+      if (inv.status !== "Paid" && inv.status !== "Draft") {
+        stats.pendingCount++;
+      }
+    });
+    return stats;
+  }, [customerInvoices]);
+
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount || 0);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Paid":
+        return "bg-green-500/10 text-green-500 border-green-500/20";
+      case "Sent":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "Draft":
+        return "bg-orange-500/10 text-orange-500 border-orange-500/20";
+      case "Overdue":
+        return "bg-red-500/10 text-red-500 border-red-500/20";
+      default:
+        return "bg-xeflow-border/50 text-xeflow-muted border-xeflow-border";
+    }
   };
 
   const formatDate = (dateString) => {
@@ -228,7 +294,11 @@ const ViewCustomers = () => {
                   paginatedCustomers.map((customer) => (
                     <tr
                       key={customer.id}
-                      className="hover:bg-xeflow-brand/5 transition-colors group"
+                      onClick={() => {
+                        setSelectedCustomer(customer);
+                        setInvoiceFilter("all");
+                      }}
+                      className="hover:bg-xeflow-brand/5 transition-colors group cursor-pointer"
                     >
                       <td className="px-6 py-4 font-bold text-xeflow-text whitespace-nowrap">
                         CST-{customer.id.toString().padStart(4, "0")}
@@ -366,6 +436,171 @@ const ViewCustomers = () => {
             </div>
           )}
         </div>
+      {selectedCustomer && (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 sm:p-6 bg-xeflow-bg/85 backdrop-blur-sm" onClick={() => setSelectedCustomer(null)}>
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-xeflow-surface rounded-2xl shadow-2xl border border-xeflow-border overflow-hidden animate-in zoom-in-95 duration-200 text-xeflow-text" onClick={(e) => e.stopPropagation()}>
+            
+            <div className="flex items-center justify-between p-6 border-b border-xeflow-border bg-xeflow-bg/30">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-xeflow-bg border border-xeflow-border flex items-center justify-center overflow-hidden shrink-0">
+                  {selectedCustomer.logo ? (
+                    <img
+                      src={
+                        selectedCustomer.logo.startsWith("http")
+                          ? selectedCustomer.logo
+                          : `${API_BASE_URL}${selectedCustomer.logo.startsWith("/") ? "" : "/"}${selectedCustomer.logo}`
+                      }
+                      alt={selectedCustomer.company_name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <FiBriefcase className="text-xeflow-muted" size={20} />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-xeflow-text leading-tight truncate max-w-[240px]">
+                    {selectedCustomer.company_name}
+                  </h3>
+                  <span className="text-[10px] font-black text-xeflow-muted uppercase tracking-wider">
+                    CST-{selectedCustomer.id.toString().padStart(4, "0")}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedCustomer(null)}
+                className="p-2 text-xeflow-muted hover:text-red-500 transition-colors bg-xeflow-bg rounded-full border border-xeflow-border"
+                title="Close"
+              >
+                <FiX size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+              <div className="bg-xeflow-bg/30 border border-xeflow-border rounded-xl p-4 space-y-3">
+                <h4 className="text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-1">
+                  Contact Profile
+                </h4>
+                <div className="flex items-center gap-3 text-sm">
+                  <FiBriefcase className="text-xeflow-muted shrink-0" size={16} />
+                  <div>
+                    <p className="text-xs font-semibold text-xeflow-muted">Representative</p>
+                    <p className="font-bold">{selectedCustomer.rep_name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm pt-2 border-t border-xeflow-border/40">
+                  <FiMail className="text-xeflow-muted shrink-0" size={16} />
+                  <div>
+                    <p className="text-xs font-semibold text-xeflow-muted">Email Address</p>
+                    <p className="font-semibold">{selectedCustomer.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm pt-2 border-t border-xeflow-border/40">
+                  <FiPhone className="text-xeflow-muted shrink-0" size={16} />
+                  <div>
+                    <p className="text-xs font-semibold text-xeflow-muted">Phone Number</p>
+                    <p className="font-semibold">{selectedCustomer.phone}</p>
+                  </div>
+                </div>
+                {selectedCustomer.address && (
+                  <div className="flex items-start gap-3 text-sm pt-2 border-t border-xeflow-border/40">
+                    <FiMapPin className="text-xeflow-muted shrink-0 mt-0.5" size={16} />
+                    <div>
+                      <p className="text-xs font-semibold text-xeflow-muted">Address</p>
+                      <p className="font-semibold leading-relaxed text-xs text-xeflow-muted">{selectedCustomer.address}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-xeflow-bg/30 border border-xeflow-border rounded-xl p-3 text-center">
+                  <p className="text-[9px] font-black uppercase text-xeflow-muted tracking-wider">Total Invoiced</p>
+                  <p className="text-sm font-black text-xeflow-text mt-1">{formatMoney(customerStats.total)}</p>
+                  <p className="text-[9px] font-semibold text-xeflow-muted mt-0.5">{customerStats.count} Invoices</p>
+                </div>
+                <div className="bg-green-500/5 border border-green-500/10 rounded-xl p-3 text-center">
+                  <p className="text-[9px] font-black uppercase text-green-600 tracking-wider">Total Paid</p>
+                  <p className="text-sm font-black text-green-500 mt-1">{formatMoney(customerStats.paid)}</p>
+                  <p className="text-[9px] font-semibold text-green-600/70 mt-0.5">Settled</p>
+                </div>
+                <div className="bg-xeflow-brand/5 border border-xeflow-brand/10 rounded-xl p-3 text-center">
+                  <p className="text-[9px] font-black uppercase text-xeflow-brand tracking-wider">Outstanding</p>
+                  <p className="text-sm font-black text-xeflow-brand mt-1">{formatMoney(customerStats.pending)}</p>
+                  <p className="text-[9px] font-semibold text-xeflow-brand/70 mt-0.5">{customerStats.pendingCount} Pending</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-xeflow-muted uppercase tracking-wider">
+                    Invoice History
+                  </h4>
+                  <div className="flex rounded-lg bg-xeflow-bg border border-xeflow-border p-0.5 text-xs font-bold select-none shrink-0 animate-in fade-in duration-200">
+                    <button
+                      onClick={() => setInvoiceFilter("all")}
+                      className={`px-3 py-1 rounded-md transition-all cursor-pointer ${invoiceFilter === "all" ? "bg-xeflow-surface text-xeflow-brand shadow-sm" : "text-xeflow-muted hover:text-xeflow-text"}`}
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={() => setInvoiceFilter("pending")}
+                      className={`px-3 py-1 rounded-md transition-all cursor-pointer ${invoiceFilter === "pending" ? "bg-xeflow-surface text-xeflow-brand shadow-sm" : "text-xeflow-muted hover:text-xeflow-text"}`}
+                    >
+                      Pending ({customerStats.pendingCount})
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1.5 custom-scrollbar">
+                  {filteredCustomerInvoices.length > 0 ? (
+                    filteredCustomerInvoices.map((inv) => (
+                      <div
+                        key={inv.id}
+                        className="bg-xeflow-surface border border-xeflow-border/80 hover:border-xeflow-brand/55 rounded-xl p-4 flex items-center justify-between transition-all group"
+                      >
+                        <div className="space-y-1.5 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-xeflow-text shrink-0">{inv.invoice_number}</span>
+                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-wider shrink-0 ${getStatusColor(inv.status)}`}>
+                              {inv.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-[10px] text-xeflow-muted font-semibold">
+                            <span>Issue: {new Date(inv.issue_date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>
+                            <span>Due: {new Date(inv.due_date).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 flex items-center gap-3">
+                          <div>
+                            <p className="font-black text-sm text-xeflow-text">{formatMoney(inv.total_amount)}</p>
+                            {parseFloat(inv.balance_due) > 0 && (
+                              <p className="text-[10px] font-bold text-xeflow-brand">Due: {formatMoney(inv.balance_due)}</p>
+                            )}
+                          </div>
+                          <Link to="/invoice/view" className="p-1.5 bg-xeflow-bg border border-xeflow-border group-hover:border-xeflow-brand group-hover:text-xeflow-brand rounded-lg transition-colors">
+                            <FiEye size={14} />
+                          </Link>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 bg-xeflow-bg/20 border border-dashed border-xeflow-border rounded-xl">
+                      <FiFileText className="mx-auto text-xeflow-muted opacity-40 mb-3" size={28} />
+                      <p className="text-xs font-bold text-xeflow-text">No invoices found</p>
+                      <p className="text-[10px] text-xeflow-muted mt-1 uppercase tracking-wider">
+                        {invoiceFilter === "pending" ? "No pending invoices" : "No invoices linked to this client"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

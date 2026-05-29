@@ -201,7 +201,8 @@ export default function Dashboard() {
   const itemsPerPage = 5;
 
   useEffect(() => {
-    const isAuthenticated = !!localStorage.getItem("accessToken");
+    const token = localStorage.getItem("accessToken");
+    const isAuthenticated = !!(token && token !== "undefined" && token !== "null");
     const onDashboard = window.location.pathname === "/dashboard";
 
     if (isAuthenticated && onDashboard) {
@@ -362,6 +363,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg">
+      <div className="max-w-7xl mx-auto w-full">
       
       {/* ── Page header ── */}
 
@@ -381,7 +383,7 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
         <StatWidget
           icon={<FiBarChart2 />}
           title="Total Revenue"
@@ -636,6 +638,7 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

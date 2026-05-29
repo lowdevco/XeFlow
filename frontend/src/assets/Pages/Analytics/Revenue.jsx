@@ -605,7 +605,8 @@ export default function Revenue() {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 bg-xeflow-bg font-sans">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="max-w-7xl mx-auto w-full">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-xeflow-text tracking-tight flex items-center gap-2">
             Revenue Analytics
@@ -1112,6 +1113,7 @@ export default function Revenue() {
               View Detailed Report <FiArrowRight size={14} />
             </Link>
           </div>
+        </div>
         </div>
       </div>
     </div>

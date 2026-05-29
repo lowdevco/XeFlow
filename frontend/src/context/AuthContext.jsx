@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
-    if (token) {
+    if (token && token !== "undefined" && token !== "null") {
       fetchUser();
     } else {
       setLoading(false);
@@ -34,7 +34,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, refreshUser: fetchUser, loading }}>
+    <AuthContext.Provider
+      value={{ user, setUser, refreshUser: fetchUser, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );
