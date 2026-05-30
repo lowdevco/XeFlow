@@ -691,7 +691,7 @@ const EditInvoice = () => {
           {/*  Delete Confirmation Modal  */}
           
       {deletingId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-xeflow-bg/40 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-xeflow-bg/40 backdrop-blur-[2px]">
           <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-in fade-in zoom-in-95 duration-200">
             <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <FiAlertTriangle size={32} />
@@ -725,8 +725,8 @@ const EditInvoice = () => {
 
       {/* Invoice Edit Modal  */}
       {editingInvoice && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 sm:p-6 bg-xeflow-bg/80 backdrop-blur-sm">
-                  <div className="relative w-full max-w-6xl max-h-[90vh] flex flex-col bg-xeflow-surface rounded-2xl shadow-2xl border border-xeflow-border overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6 bg-xeflow-bg/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col bg-xeflow-surface rounded-2xl shadow-2xl border border-xeflow-border overflow-hidden animate-in zoom-in-95 duration-200">
                       
                       {/* Modal Header */}
                       
@@ -1206,7 +1206,7 @@ const EditInvoice = () => {
       )}
 
       {paymentInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-xeflow-bg/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-xeflow-bg/80 backdrop-blur-sm">
           <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200 text-xeflow-text">
             <div className="flex items-center justify-between px-6 py-4 border-b border-xeflow-border bg-xeflow-bg/50">
               <h3 className="text-lg font-bold">

@@ -184,6 +184,7 @@ const Login = () => {
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
+                    autoComplete="username"
                     placeholder="Enter your username"
                     className="w-full pl-11 pr-4 py-3.5 bg-xeflow-surface2 border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted/50 outline-none focus:border-xeflow-brand focus:bg-xeflow-surface transition-all duration-200"
                   />
@@ -206,6 +207,7 @@ const Login = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     className="w-full pl-11 pr-4 py-3.5 bg-xeflow-surface2 border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted/50 outline-none focus:border-xeflow-brand focus:bg-xeflow-surface transition-all duration-200"
                   />
                 </div>

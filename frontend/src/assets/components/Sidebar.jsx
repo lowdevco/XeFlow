@@ -73,7 +73,7 @@ export default function Sidebar({ isOpen, onClose }) {
       className={`
         flex flex-col bg-xeflow-surface
         transition-all duration-300 ease-in-out
-        z-[9999] overflow-hidden flex-shrink-0
+        z-[9999] md:z-auto overflow-hidden flex-shrink-0
         fixed inset-y-0 left-0 md:relative
         ${isOpen 
           ? "w-[310px] border-r border-xeflow-border shadow-2xl translate-x-0" 

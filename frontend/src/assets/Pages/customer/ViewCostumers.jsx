@@ -437,7 +437,7 @@ const ViewCustomers = () => {
           )}
         </div>
       {selectedCustomer && (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 sm:p-6 bg-xeflow-bg/85 backdrop-blur-sm" onClick={() => setSelectedCustomer(null)}>
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6 bg-xeflow-bg/85 backdrop-blur-sm" onClick={() => setSelectedCustomer(null)}>
           <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-xeflow-surface rounded-2xl shadow-2xl border border-xeflow-border overflow-hidden animate-in zoom-in-95 duration-200 text-xeflow-text" onClick={(e) => e.stopPropagation()}>
             
             <div className="flex items-center justify-between p-6 border-b border-xeflow-border bg-xeflow-bg/30">

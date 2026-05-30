@@ -528,8 +528,8 @@ const ViewInvoice = () => {
       </div>
 
       {selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-xeflow-bg/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col bg-xeflow-surface rounded-2xl shadow-2xl border border-xeflow-border overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6 bg-xeflow-bg/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-xeflow-surface rounded-2xl shadow-2xl border border-xeflow-border overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-6 py-4 border-b border-xeflow-border bg-xeflow-bg/50">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-bold text-xeflow-text">
@@ -543,11 +543,11 @@ const ViewInvoice = () => {
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => window.print()}
-                  className="p-2 text-xeflow-muted hover:text-xeflow-brand transition-colors"
-                  title="Print"
+                  onClick={() => handleDownload(selectedInvoice)}
+                  className="p-2 text-xeflow-muted hover:text-green-500 transition-colors"
+                  title="Download PDF"
                 >
-                  <FiPrinter size={18} />
+                  <FiDownload size={18} />
                 </button>
                 <button
                   onClick={() => setSelectedInvoice(null)}
@@ -784,7 +784,7 @@ const ViewInvoice = () => {
       )}
 
       {paymentInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-xeflow-bg/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-xeflow-bg/80 backdrop-blur-sm">
           <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200 text-xeflow-text">
             <div className="flex items-center justify-between px-6 py-4 border-b border-xeflow-border bg-xeflow-bg/50">
               <h3 className="text-lg font-bold">

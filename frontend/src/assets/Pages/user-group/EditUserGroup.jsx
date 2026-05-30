@@ -21,7 +21,7 @@ import { fetchWithAuth } from "../../js/api";
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-transparent backdrop-blur-sm">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-transparent backdrop-blur-sm">
       <div
         className={`bg-xeflow-surface w-full ${maxWidth} rounded-3xl shadow-2xl border border-xeflow-border p-6 flex flex-col max-h-[90vh]`}
       >
