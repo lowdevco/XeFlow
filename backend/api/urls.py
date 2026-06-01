@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import SidebarMenuView, CustomerListCreateView, CustomerDetailView, ServiceListCreateView, ServiceDetailView, InvoiceListCreateView, InvoiceDetailView, AddInvoicePaymentView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView   
-from .views import UserRegistrationView, GroupCreateView, GroupListView, PermissionListView,GroupUpdateDeleteView, CurrentUserView, UserListView, UserAdminDetailView
+from .views import UserRegistrationView, GroupCreateView, GroupListView, PermissionListView,GroupUpdateDeleteView, CurrentUserView, UserListView, UserAdminDetailView, MailSystem
 
 urlpatterns = [
     path('sidebar/', SidebarMenuView.as_view(), name='api-sidebar'),
@@ -20,4 +20,5 @@ urlpatterns = [
     path('groups/create/', GroupCreateView.as_view(), name='group-create'),
     path('permissions/', PermissionListView.as_view(), name='permission-list'),
     path('groups/<int:pk>/',GroupUpdateDeleteView.as_view(), name='group-detail'),
+    path('send-email/', MailSystem.as_view(), name='send-email'),
 ]

@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { FiPlus, FiTrash2, FiDownload, FiSend, FiSave } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
+import { generateInvoicePDF } from "../../js/pdfGenerator";
+import SendEmailModal from "../../components/SendEmailModal";
+import CustomSelect from "../../components/CustomSelect";
 
 // Const Values
 
@@ -13,6 +16,7 @@ const GSTIN = "32ABCDE1234F1Z5";
 
 const NewInvoice = () => {
   const navigate = useNavigate();
+  const [emailInvoice, setEmailInvoice] = useState(null);
 
   //  State For Invoice Data Fetching From Database
   const [dbCustomers, setDbCustomers] = useState([]);
@@ -46,7 +50,7 @@ const NewInvoice = () => {
 
   //  Financial State
 
-  const [taxType, setTaxType] = useState("GST");
+  const [taxType, setTaxType] = useState("No GST");
   const [igstRate, setIgstRate] = useState("18");
   const [cgstRate, setCgstRate] = useState("9");
   const [sgstRate, setSgstRate] = useState("9");
@@ -54,6 +58,34 @@ const NewInvoice = () => {
   const [discountType, setDiscountType] = useState("percent");
   const [amountPaid, setAmountPaid] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const customerOptions = useMemo(() => {
+    return [
+      { value: "", label: "-- Select a Customer --" },
+      ...dbCustomers.map((cust) => ({
+        value: cust.id.toString(),
+        label: `${cust.company_name} (${cust.rep_name})`,
+      })),
+    ];
+  }, [dbCustomers]);
+
+  const serviceOptions = useMemo(() => {
+    return [
+      { value: "", label: "-- Custom Item --" },
+      ...dbServices.map((srv) => ({
+        value: srv.id.toString(),
+        label: srv.name,
+      })),
+    ];
+  }, [dbServices]);
+
+  const taxTypeOptions = useMemo(() => {
+    return [
+      { value: "GST", label: "GST (CGST/SGST)" },
+      { value: "IGST", label: "IGST" },
+      { value: "No GST", label: "No GST" },
+    ];
+  }, []);
 
   //  Initial Data Fetching From Data Base
 
@@ -201,16 +233,22 @@ const NewInvoice = () => {
     }).format(amount || 0);
   };
 
-  //  Invoice Save to Data basse Handler
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 
-  const handleSaveDraft = async () => {
+  const handleSaveInvoice = async (statusType) => {
     if (!selectedCustomer) {
-      toast.error("Please select a customer before saving.");
-      return;
+      toast.error("Please select a customer first.");
+      return null;
     }
-    if (lineItems.length === 0 || lineItems[0].description === "") {
-      toast.error("Please add at least one valid line item.");
-      return;
+
+    if (lineItems.length === 0) {
+      toast.error("Please add at least one line item.");
+      return null;
     }
 
     const toastId = toast.loading("Saving invoice...");
@@ -221,10 +259,9 @@ const NewInvoice = () => {
       invoice_number: invoiceMeta.invoiceNumber,
       issue_date: invoiceMeta.issueDate,
       due_date: invoiceMeta.dueDate,
-      status: "Draft",
+      status: statusType,
       notes: invoiceMeta.notes,
       terms: invoiceMeta.terms,
-
       tax_type: taxType,
       discount_percentage:
         discountType === "percent" ? parseFloat(discount) || 0 : 0,
@@ -249,20 +286,45 @@ const NewInvoice = () => {
       });
 
       if (response.ok) {
+        const createdInvoice = await response.json();
         toast.success("Invoice created successfully!", { id: toastId });
-        navigate("/invoice/view");
+        return createdInvoice;
       } else {
         const errorData = await response.json();
         console.error("Django Error:", errorData);
         toast.error("Failed to create invoice. Check console.", {
           id: toastId,
         });
+        return null;
       }
     } catch (error) {
       console.error("Network Error:", error);
       toast.error("Network error occurred.", { id: toastId });
+      return null;
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    const inv = await handleSaveInvoice("Draft");
+    if (inv) {
+      navigate("/invoice/view");
+    }
+  };
+
+  const handleDownload = async () => {
+    const inv = await handleSaveInvoice("Draft");
+    if (inv) {
+      generateInvoicePDF(inv, formatDate, formatMoney, toast);
+      navigate("/invoice/view");
+    }
+  };
+
+  const handleSendInvoice = async () => {
+    const inv = await handleSaveInvoice("Sent");
+    if (inv) {
+      setEmailInvoice(inv);
     }
   };
 
@@ -278,10 +340,18 @@ const NewInvoice = () => {
         >
           <FiSave size={16} /> {isSubmitting ? "Saving..." : "Save Draft"}
         </button>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-xeflow-border bg-xeflow-surface text-xeflow-text hover:bg-xeflow-brand/5 font-semibold text-sm transition-all">
+        <button
+          onClick={handleDownload}
+          disabled={isSubmitting}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-xeflow-border bg-xeflow-surface text-xeflow-text hover:bg-xeflow-brand/5 font-semibold text-sm transition-all disabled:opacity-50"
+        >
           <FiDownload size={16} /> Download
         </button>
-        <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-xeflow-brand text-white hover:opacity-90 font-semibold text-sm transition-all shadow-sm">
+        <button
+          onClick={handleSendInvoice}
+          disabled={isSubmitting}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-xeflow-brand text-white hover:opacity-90 font-semibold text-sm transition-all shadow-sm disabled:opacity-50"
+        >
           <FiSend size={16} /> Send Invoice
         </button>
       </div>
@@ -372,23 +442,21 @@ const NewInvoice = () => {
             Billed To
           </h3>
           <div className="max-w-md space-y-3">
-            <select
-              className="w-full text-lg font-bold bg-xeflow-bg border border-xeflow-border rounded-lg p-3 outline-none focus:border-xeflow-brand transition-colors cursor-pointer"
-              onChange={(e) => {
+            <CustomSelect
+              value={selectedCustomer?.id?.toString() || ""}
+              onChange={(val) => {
                 const customer = dbCustomers.find(
-                  (c) => c.id.toString() === e.target.value,
+                  (c) => c.id.toString() === val,
                 );
                 setSelectedCustomer(customer || null);
               }}
-              value={selectedCustomer?.id || ""}
-            >
-              <option value="">-- Select a Customer --</option>
-              {dbCustomers.map((cust) => (
-                <option key={cust.id} value={cust.id}>
-                  {cust.company_name} ({cust.rep_name})
-                </option>
-              ))}
-            </select>
+              options={customerOptions}
+              placeholder="-- Select a Customer --"
+              fullWidth={true}
+              align="left"
+              buttonClassName="w-full text-lg font-bold bg-xeflow-bg border border-xeflow-border rounded-lg p-3 outline-none focus:border-xeflow-brand text-xeflow-text text-left"
+              dropdownClassName="w-full left-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+            />
 
             {selectedCustomer && (
               <div className="p-4 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-muted space-y-1.5 shadow-sm">
@@ -430,24 +498,22 @@ const NewInvoice = () => {
                 className="flex flex-col md:grid md:grid-cols-12 gap-4 items-stretch md:items-center group bg-xeflow-bg/30 p-4 md:p-2 rounded-xl md:rounded-lg border border-xeflow-border md:border-transparent hover:border-xeflow-border transition-colors"
               >
                 <div className="col-span-12 md:col-span-6 flex flex-col gap-1.5">
-                  <select
-                    value={item.service_id}
-                    onChange={(e) =>
+                  <CustomSelect
+                    value={item.service_id?.toString() || ""}
+                    onChange={(val) =>
                       handleLineItemChange(
                         item.id,
                         "service_id",
-                        e.target.value,
+                        val,
                       )
                     }
-                    className="w-full text-sm font-bold bg-transparent border-b border-xeflow-border outline-none focus:border-xeflow-brand pb-1 text-xeflow-text cursor-pointer"
-                  >
-                    <option value="">-- Custom Item --</option>
-                    {dbServices.map((srv) => (
-                      <option key={srv.id} value={srv.id}>
-                        {srv.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={serviceOptions}
+                    placeholder="-- Custom Item --"
+                    fullWidth={true}
+                    align="left"
+                    buttonClassName="w-full text-sm font-bold bg-transparent border-b border-xeflow-border outline-none focus:border-xeflow-brand pb-1 text-xeflow-text text-left"
+                    dropdownClassName="w-full left-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+                  />
                   <input
                     type="text"
                     placeholder="Additional details..."
@@ -602,15 +668,15 @@ const NewInvoice = () => {
               <span className="text-xeflow-muted font-bold uppercase tracking-wide">
                 Tax Type
               </span>
-              <select
+              <CustomSelect
                 value={taxType}
-                onChange={(e) => setTaxType(e.target.value)}
-                className="w-32 bg-xeflow-surface border border-xeflow-border rounded-md p-1.5 outline-none font-bold focus:border-xeflow-brand transition-colors text-xeflow-text cursor-pointer text-xs"
-              >
-                <option value="GST">GST (CGST/SGST)</option>
-                <option value="IGST">IGST</option>
-                <option value="No GST">No GST</option>
-              </select>
+                onChange={setTaxType}
+                options={taxTypeOptions}
+                placeholder="Select Tax Type"
+                align="right"
+                buttonClassName="w-32 bg-xeflow-surface border border-xeflow-border rounded-md p-1.5 outline-none font-bold focus:border-xeflow-brand text-xeflow-text text-xs text-left"
+                dropdownClassName="w-48 right-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+              />
             </div>
 
             {taxType === "GST" && (
@@ -701,6 +767,16 @@ const NewInvoice = () => {
           </div>
         </div>
       </div>
+      <SendEmailModal
+        isOpen={!!emailInvoice}
+        onClose={() => {
+          setEmailInvoice(null);
+          navigate("/invoice/view");
+        }}
+        invoice={emailInvoice}
+        formatDate={formatDate}
+        formatMoney={formatMoney}
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FiUserPlus,
@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
+import CustomSelect from "../../components/CustomSelect";
 
 const AddUser = () => {
   const navigate = useNavigate();
@@ -25,6 +26,16 @@ const AddUser = () => {
   const [availableRoles, setAvailableRoles] = useState([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const roleOptions = useMemo(() => {
+    return [
+      { value: "0", label: "User (Default)" },
+      ...availableRoles.map((role) => ({
+        value: role.id.toString(),
+        label: role.name,
+      })),
+    ];
+  }, [availableRoles]);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -197,30 +208,23 @@ const handleSubmit = async (e) => {
                   </label>
                   <div className="relative">
                     <FiShield
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted z-10 pointer-events-none"
                       size={18}
                     />
-                    <select
-                      name="role_id"
-                      value={formData.role_id}
-                      onChange={handleChange}
-                      className="w-full pl-11 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand transition-all cursor-pointer appearance-none"
-                      required
-                    >
-                      <option value="" disabled>
-                        Select a role...
-                      </option>
-                      <option value="0">User (Default)</option>
-                      {isLoadingRoles ? (
-                        <option disabled>Loading...</option>
-                      ) : (
-                        availableRoles.map((role) => (
-                          <option key={role.id} value={role.id}>
-                            {role.name}
-                          </option>
-                        ))
-                      )}
-                    </select>
+                    <CustomSelect
+                      value={formData.role_id?.toString() || ""}
+                      onChange={(val) =>
+                        handleChange({
+                          target: { name: "role_id", value: val },
+                        })
+                      }
+                      options={roleOptions}
+                      placeholder={isLoadingRoles ? "Loading..." : "Select a role..."}
+                      fullWidth={true}
+                      align="left"
+                      buttonClassName="w-full pl-11 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand text-left"
+                      dropdownClassName="w-full left-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+                    />
                   </div>
                 </div>
               </div>

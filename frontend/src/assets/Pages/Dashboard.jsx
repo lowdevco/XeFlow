@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { fetchWithAuth } from "../js/api";
+import CustomSelect from "../components/CustomSelect";
 import {
   AreaChart,
   Area,
@@ -17,6 +18,8 @@ import {
   FiFileText,
   FiUsers,
   FiBriefcase,
+  FiCalendar,
+  FiChevronDown,
 } from "react-icons/fi";
 
 
@@ -200,6 +203,17 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  const [filterType, setFilterType] = useState("fy");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const periodOptions = useMemo(() => [
+    { value: "fy", label: "This Financial Year" },
+    { value: "last_fy", label: "Last Financial Year" },
+    { value: "month", label: "This Month" },
+    { value: "last_month", label: "Last Month" },
+    { value: "custom", label: "Custom Range" },
+  ], []);
+
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const isAuthenticated = !!(token && token !== "undefined" && token !== "null");
@@ -235,8 +249,6 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  // Format Currency
-  
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -244,13 +256,91 @@ export default function Dashboard() {
       maximumFractionDigits: 0,
     }).format(amount || 0);
   };
+
+  const activeRange = useMemo(() => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+
+    let start = new Date();
+    let end = new Date();
+    let label = "";
+
+    switch (filterType) {
+      case "month":
+        start = new Date(currentYear, currentMonth, 1);
+        end = new Date(currentYear, currentMonth + 1, 0);
+        label = today.toLocaleDateString("en-IN", {
+          month: "long",
+          year: "numeric",
+        });
+        break;
+
+      case "last_month":
+        start = new Date(currentYear, currentMonth - 1, 1);
+        end = new Date(currentYear, currentMonth, 0);
+        label = start.toLocaleDateString("en-IN", {
+          month: "long",
+          year: "numeric",
+        });
+        break;
+
+      case "fy": {
+        const isFYStart = currentMonth >= 3;
+        const fyStartYear = isFYStart ? currentYear : currentYear - 1;
+        start = new Date(fyStartYear, 3, 1);
+        end = new Date(fyStartYear + 1, 2, 31);
+        label = `FY ${fyStartYear}-${(fyStartYear + 1).toString().substring(2)}`;
+        break;
+      }
+
+      case "last_fy": {
+        const isFYStart = currentMonth >= 3;
+        const fyStartYear = (isFYStart ? currentYear : currentYear - 1) - 1;
+        start = new Date(fyStartYear, 3, 1);
+        end = new Date(fyStartYear + 1, 2, 31);
+        label = `FY ${fyStartYear}-${(fyStartYear + 1).toString().substring(2)}`;
+        break;
+      }
+
+      case "custom":
+        if (customStart && customEnd) {
+          start = new Date(customStart);
+          end = new Date(customEnd);
+          const opt = { day: "numeric", month: "short", year: "numeric" };
+          label = `${start.toLocaleDateString("en-IN", opt)} - ${end.toLocaleDateString("en-IN", opt)}`;
+        } else {
+          start = new Date(currentYear, currentMonth, 1);
+          end = new Date(currentYear, currentMonth + 1, 0);
+          label = "Select Range";
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    return { start, end, label };
+  }, [filterType, customStart, customEnd]);
+
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((inv) => {
+      if (!inv.issue_date) return false;
+      const issue = new Date(inv.issue_date);
+      return issue >= activeRange.start && issue <= activeRange.end;
+    });
+  }, [invoices, activeRange]);
+
   const stats = useMemo(() => {
     let totalRev = 0;
     let gstCollected = 0;
     let sentCount = 0;
 
-    invoices.forEach((inv) => {
-      if (inv.status === "Paid" || inv.status === "Sent") {
+    filteredInvoices.forEach((inv) => {
+      if (inv.status !== "Draft") {
         totalRev += parseFloat(inv.total_amount) || 0;
         gstCollected +=
           (parseFloat(inv.cgst_amount) || 0) +
@@ -267,11 +357,47 @@ export default function Dashboard() {
       customers: customers.length,
       services: services.length,
     };
-  }, [invoices, customers, services]);
-
-  // Dynamic Data Engine Years
+  }, [filteredInvoices, customers, services]);
 
   const chartData = useMemo(() => {
+    const durationMs = activeRange.end.getTime() - activeRange.start.getTime();
+    const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+
+    if (durationDays <= 31) {
+      const results = [];
+      const current = new Date(activeRange.start);
+      const limit = new Date(activeRange.end);
+
+      while (current <= limit) {
+        results.push({
+          name: current.getDate().toString(),
+          dateLabel: current.toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+          year: current.getFullYear(),
+          monthNum: current.getMonth(),
+          dayNum: current.getDate(),
+          revenue: 0,
+        });
+        current.setDate(current.getDate() + 1);
+      }
+
+      filteredInvoices.forEach((inv) => {
+        if (inv.status !== "Draft" && inv.issue_date) {
+          const issue = new Date(inv.issue_date);
+          const match = results.find(
+            (r) =>
+              r.dayNum === issue.getDate() &&
+              r.monthNum === issue.getMonth() &&
+              r.year === issue.getFullYear()
+          );
+          if (match) {
+            match.revenue += parseFloat(inv.total_amount) || 0;
+          }
+        }
+      });
+
+      return results;
+    }
+
     const monthNames = [
       "Jan",
       "Feb",
@@ -286,22 +412,57 @@ export default function Dashboard() {
       "Nov",
       "Dec",
     ];
+    const results = [];
+    const start = new Date(activeRange.start);
+    const end = new Date(activeRange.end);
 
-    let monthlyData = monthNames.map((month) => ({ name: month, revenue: 0 }));
+    let current = new Date(start.getFullYear(), start.getMonth(), 1);
+    const limit = new Date(end.getFullYear(), end.getMonth() + 1, 1);
 
-    invoices.forEach((inv) => {
+    while (current < limit) {
+      results.push({
+        name: monthNames[current.getMonth()],
+        year: current.getFullYear(),
+        monthNum: current.getMonth(),
+        revenue: 0,
+      });
+      current.setMonth(current.getMonth() + 1);
+    }
+
+    if (results.length <= 2) {
+      const results6 = [];
+      const baseDate = new Date(activeRange.end);
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(baseDate.getFullYear(), baseDate.getMonth() - i, 1);
+        results6.push({
+          name: monthNames[d.getMonth()],
+          year: d.getFullYear(),
+          monthNum: d.getMonth(),
+          revenue: 0,
+        });
+      }
+      results.length = 0;
+      results.push(...results6);
+    }
+
+    filteredInvoices.forEach((inv) => {
       if (inv.status !== "Draft" && inv.issue_date) {
-        const date = new Date(inv.issue_date);
-        const monthIndex = date.getMonth();
-        monthlyData[monthIndex].revenue += parseFloat(inv.total_amount) || 0;
+        const issue = new Date(inv.issue_date);
+        const match = results.find(
+          (r) =>
+            r.monthNum === issue.getMonth() && r.year === issue.getFullYear(),
+        );
+        if (match) {
+          match.revenue += parseFloat(inv.total_amount) || 0;
+        }
       }
     });
 
-    return monthlyData;
-  }, [invoices]);
+    return results;
+  }, [filteredInvoices, activeRange]);
 
   const sortedInvoices = useMemo(() => {
-    let sortable = [...invoices];
+    let sortable = [...filteredInvoices];
     if (sortConfig !== null) {
       sortable.sort((a, b) => {
         let aVal = a[sortConfig.key];
@@ -318,7 +479,7 @@ export default function Dashboard() {
       });
     }
     return sortable;
-  }, [invoices, sortConfig]);
+  }, [filteredInvoices, sortConfig]);
 
   const totalPages = Math.ceil(sortedInvoices.length / itemsPerPage);
   const paginatedInvoices = useMemo(() => {
@@ -348,6 +509,8 @@ export default function Dashboard() {
         return "bg-orange-500/10 text-orange-500 border-orange-500/20";
       case "Overdue":
         return "bg-red-500/10 text-red-500 border-red-500/20";
+      case "Partially Paid":
+        return "bg-purple-500/10 text-purple-500 border-purple-500/20";
       default:
         return "bg-xeflow-border/50 text-xeflow-muted border-xeflow-border";
     }
@@ -365,9 +528,7 @@ export default function Dashboard() {
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg">
       <div className="max-w-7xl mx-auto w-full">
       
-      {/* ── Page header ── */}
-
-      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
           <p className="text-xs font-semibold text-xeflow-muted uppercase tracking-widest mb-1">
             Overview
@@ -376,12 +537,61 @@ export default function Dashboard() {
             Dashboard
           </h1>
         </div>
-        <Link to="/invoice/new">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-xeflow-brand text-white shadow-md shadow-xeflow-brand/20 hover:opacity-90 transition-all duration-200">
-            <FiPlus size={18} /> New Invoice
-          </button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <CustomSelect
+            value={filterType}
+            onChange={setFilterType}
+            options={periodOptions}
+            placeholder="Select Period"
+            dropdownHeader="Select Period"
+            align="right"
+            prefixIcon={<FiCalendar className="text-xeflow-brand text-sm shrink-0" />}
+            triggerLabel={activeRange.label}
+            buttonClassName="flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-xeflow-surface border border-xeflow-border text-xeflow-text shadow-sm hover:shadow-md hover:border-xeflow-brand transition-all cursor-pointer min-w-[210px] text-left"
+            dropdownClassName="w-60 right-0 bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-2xl p-2.5"
+            optionClassName="py-2.5 rounded-xl text-xs font-bold px-3.5"
+          />
+          <Link to="/invoice/new">
+            <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-xeflow-brand text-white shadow-md shadow-xeflow-brand/20 hover:opacity-90 transition-all duration-200">
+              <FiPlus size={18} /> New Invoice
+            </button>
+          </Link>
+        </div>
       </div>
+
+      {filterType === "custom" && (
+        <div className="mb-8 p-5 bg-xeflow-surface border border-xeflow-border/80 rounded-2xl shadow-inner flex flex-wrap items-center gap-5 animate-in slide-in-from-top-4 duration-300">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-black uppercase text-xeflow-muted tracking-wider">
+              From Date
+            </label>
+            <input
+              type="date"
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+              className="px-4 py-2.5 border border-xeflow-border rounded-xl text-sm text-xeflow-text bg-xeflow-bg outline-none focus:border-xeflow-brand transition-colors cursor-pointer font-semibold shadow-sm"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-black uppercase text-xeflow-muted tracking-wider">
+              To Date
+            </label>
+            <input
+              type="date"
+              value={customEnd}
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className="px-4 py-2.5 border border-xeflow-border rounded-xl text-sm text-xeflow-text bg-xeflow-bg outline-none focus:border-xeflow-brand transition-colors cursor-pointer font-semibold shadow-sm"
+            />
+          </div>
+
+          <div className="self-end pb-0.5">
+            <p className="text-xs text-xeflow-muted italic font-medium leading-loose">
+              *All stats and charts will dynamically restrict data within these exact boundaries.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
         <StatWidget
@@ -465,10 +675,12 @@ export default function Dashboard() {
                 />
                 <XAxis
                   dataKey="name"
+                  interval={0}
                   axisLine={false}
                   tickLine={false}
                   tick={{
-                    fontSize: 13,
+                    fontSize: 11,
+                    fontWeight: "bold",
                     fill: "var(--color-xeflow-muted, #64748b)",
                   }}
                   dy={10}
@@ -588,7 +800,7 @@ export default function Dashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-3 py-1 rounded-md text-xs uppercase font-bold border ${getStatusColor(invoice.status)}`}
+                          className={`px-3 py-1 rounded-md text-xs uppercase font-bold border whitespace-nowrap inline-block ${getStatusColor(invoice.status)}`}
                         >
                           {invoice.status}
                         </span>

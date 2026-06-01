@@ -24,6 +24,7 @@ import { RiVipCrownFill } from "react-icons/ri";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
+import CustomSelect from "../../components/CustomSelect";
 
 
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }) => {
@@ -49,7 +50,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }) => {
 };
 
 const EditUser = () => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
   
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -87,6 +88,16 @@ const EditUser = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const roleOptions = useMemo(() => {
+    return [
+      { value: "", label: "No Role / Default (User)" },
+      ...groups.map((g) => ({
+        value: g.id.toString(),
+        label: g.name,
+      })),
+    ];
+  }, [groups]);
 
   useEffect(() => {
     fetchData();
@@ -253,6 +264,9 @@ const EditUser = () => {
         toast.success("User updated successfully", { id: toastId });
         setActiveModal(null);
         fetchData();
+        if (selectedUser?.id === currentUser?.id) {
+          refreshUser();
+        }
       } else {
         const errorData = await res.json();
         const firstErrorKey = Object.keys(errorData)[0];
@@ -681,30 +695,26 @@ const EditUser = () => {
               <label className="text-xs font-bold text-xeflow-muted uppercase tracking-wider">
                 User Role / Group
               </label>
-              <select
-                name="role_id"
-                value={formData.role_id}
-                onChange={handleFormChange}
-                className="w-full px-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand transition-all cursor-pointer"
-              >
-                <option value="">No Role / Default (User)</option>
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
+              <CustomSelect
+                value={formData.role_id?.toString() || ""}
+                onChange={(val) =>
+                  handleFormChange({
+                    target: { name: "role_id", value: val },
+                  })
+                }
+                options={roleOptions}
+                placeholder="No Role / Default (User)"
+                fullWidth={true}
+                align="left"
+                buttonClassName="w-full px-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand text-left"
+                dropdownClassName="w-full left-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+              />
             </div>
           </div>
 
           <div className="border-t border-xeflow-border my-6" />
 
-          {/* Privilege Status Toggles */}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-            {/* Is Staff */}
-
+          <div className="grid grid-cols-1 gap-4">
             <div
               onClick={() => handleToggleChange("is_staff")}
               className="flex items-center justify-between p-4 bg-xeflow-bg/30 border border-xeflow-border rounded-xl cursor-pointer hover:border-xeflow-brand/40 transition-colors"
@@ -720,34 +730,6 @@ const EditUser = () => {
               <div
                 className={`w-9 h-[18px] rounded-full p-0.5 flex items-center transition-all ${
                   formData.is_staff ? "bg-xeflow-brand justify-end" : "bg-xeflow-border justify-start"
-                }`}
-              >
-                <div className="w-3.5 h-3.5 bg-white rounded-full shadow-sm" />
-              </div>
-            </div>
-
-            {/* Is Superuser */}
-
-            <div
-              onClick={() => handleToggleChange("is_superuser")}
-              className={`flex items-center justify-between p-4 bg-xeflow-bg/30 border border-xeflow-border rounded-xl transition-colors ${
-                currentUser?.is_superuser
-                  ? "cursor-pointer hover:border-xeflow-brand/40"
-                  : "cursor-not-allowed opacity-60"
-              }`}
-            >
-              <div className="space-y-0.5">
-                <p className="text-sm font-bold text-xeflow-text flex items-center gap-1.5">
-                  <RiVipCrownFill size={16} className="text-amber-500" /> Superuser Status
-                  {!currentUser?.is_superuser && <FiLock size={12} className="text-xeflow-muted ml-1" />}
-                </p>
-                <p className="text-xs text-xeflow-muted">
-                  Enables complete, unrestricted control over the platform.
-                </p>
-              </div>
-              <div
-                className={`w-9 h-[18px] rounded-full p-0.5 flex items-center transition-all ${
-                  formData.is_superuser ? "bg-xeflow-brand justify-end" : "bg-xeflow-border justify-start"
                 }`}
               >
                 <div className="w-3.5 h-3.5 bg-white rounded-full shadow-sm" />

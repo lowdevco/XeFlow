@@ -11,6 +11,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Invoice
+from django.core.mail import send_mail, EmailMessage
+import base64
 
 # --------------Module Views--------------#
 
@@ -131,6 +133,15 @@ class GroupUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAdminUser]
 
+    def perform_destroy(self, instance):
+        try:
+            if instance.profile.is_superuser:
+                raise PermissionDenied("Cannot delete the user group with superuser access.")
+        except AttributeError:
+            pass
+        instance.delete()
+
+
 class PermissionListView(generics.ListAPIView):
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
@@ -161,11 +172,68 @@ class UserAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAdminUser]
 
     def perform_destroy(self, instance):
-        if instance.is_superuser and not self.request.user.is_superuser:
-            raise PermissionDenied("Only superusers can delete superuser accounts.")
+        if instance.is_superuser:
+            if not self.request.user.is_superuser:
+                raise PermissionDenied("Only superusers can delete superuser accounts.")
+
+            # Prevent deleting the last superuser
+            superusers = User.objects.filter(is_superuser=True)
+            if superusers.count() <= 1 and superusers.filter(id=instance.id).exists():
+                raise PermissionDenied("Cannot delete the last remaining superuser.")
         instance.delete()
 
 
+
+#---------------------Email (mailtrap) -------------------------#
+
+
+class MailSystem(APIView):
+    permission_classes = []
+
+    def get(self, request):
+        recipient = request.query_params.get('email', 'test.mailtrap1234@gmail.com')
+        send_mail(
+            subject='Example Subject',
+            message='Message body',
+            from_email="django@mailtrap.club",
+            recipient_list=[recipient],
+            fail_silently=False,
+        )
+        return Response({'message': f'Message Sent to {recipient}!'})
+
+    def post(self, request):
+        recipient = request.data.get('email', 'test.mailtrap1234@gmail.com')
+        cc = request.data.get('cc', '')
+        bcc = request.data.get('bcc', '')
+        subject = request.data.get('subject', 'Example Subject')
+        message = request.data.get('message', 'Message body')
+        pdf_base64 = request.data.get('pdf', '')
+        filename = request.data.get('filename', 'Invoice.pdf')
+
+        cc_list = [c.strip() for c in cc.split(',')] if cc else []
+        bcc_list = [b.strip() for b in bcc.split(',')] if bcc else []
+
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email="django@mailtrap.club",
+            to=[recipient],
+            cc=cc_list,
+            bcc=bcc_list,
+        )
+
+        if pdf_base64:
+            try:
+                pdf_data = base64.b64decode(pdf_base64)
+                email.attach(filename, pdf_data, 'application/pdf')
+            except Exception as e:
+                return Response({'error': f'Failed to parse PDF attachment: {str(e)}'}, status=400)
+
+        try:
+            email.send(fail_silently=False)
+            return Response({'message': f'Message Sent to {recipient}!'})
+        except Exception as e:
+            return Response({'error': f'Failed to send email: {str(e)}'}, status=500)
 
 
 #----------------------------------------------------------------#

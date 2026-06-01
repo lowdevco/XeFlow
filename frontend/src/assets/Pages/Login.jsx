@@ -6,14 +6,15 @@ import {
   FiArrowRight,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -44,6 +45,7 @@ const Login = () => {
       if (response.ok) {
         localStorage.setItem("accessToken", data.access);
         localStorage.setItem("refreshToken", data.refresh);
+        await refreshUser();
         navigate("/dashboard");
       } else {
         throw new Error(
@@ -213,26 +215,6 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2.5 cursor-pointer group select-none">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-xeflow-border text-xeflow-brand focus:ring-xeflow-brand/10 bg-xeflow-surface2 cursor-pointer transition-colors"
-                  />
-                  <span className="text-xs font-bold text-xeflow-muted group-hover:text-xeflow-text transition-colors">
-                    Remember me
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  className="text-xs font-black text-xeflow-brand hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
-
               <button
                 disabled={isLoading}
                 type="submit"
@@ -247,19 +229,7 @@ const Login = () => {
                 )}
               </button>
             </form>
-          </div>
-
-          <div className="mt-8 text-center border-t border-xeflow-border/40 pt-6">
-            <p className="text-xs font-bold text-xeflow-muted">
-              Don't have an account?{" "}
-              <button
-                type="button"
-                className="text-xeflow-brand hover:underline font-black"
-              >
-                Contact Admin
-              </button>
-            </p>
-          </div>
+          </div> 
         </div>
       </div>
     </div>

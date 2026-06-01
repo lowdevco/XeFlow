@@ -15,6 +15,8 @@ import {
 import toast from "react-hot-toast";
 import { fetchWithAuth, API_BASE_URL } from "../../js/api";
 import { generateInvoicePDF } from "../../js/pdfGenerator";
+import SendEmailModal from "../../components/SendEmailModal";
+import CustomSelect from "../../components/CustomSelect";
 
 
 // Const Values 
@@ -28,6 +30,9 @@ const ViewInvoice = () => {
   const [invoices, setInvoices] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState(null);
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState("All");
+  const [selectedYearFilter, setSelectedYearFilter] = useState("All");
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const filterDropdownRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,6 +47,7 @@ const ViewInvoice = () => {
   const itemsPerPage = 7;
 
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [emailInvoice, setEmailInvoice] = useState(null);
 
   // Accoradian
   
@@ -135,6 +141,43 @@ const ViewInvoice = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const availableYears = useMemo(() => {
+    const years = invoices.map((inv) => new Date(inv.issue_date).getFullYear());
+    return [...new Set(years)].sort((a, b) => b - a);
+  }, [invoices]);
+
+  const statusOptions = [
+    { value: "All", label: "All Statuses" },
+    { value: "Paid", label: "Paid" },
+    { value: "Sent", label: "Sent" },
+    { value: "Draft", label: "Draft" },
+    { value: "Overdue", label: "Overdue" },
+    { value: "Partially Paid", label: "Partially Paid" },
+  ];
+
+  const monthOptions = [
+    { value: "All", label: "All Months" },
+    { value: "0", label: "January" },
+    { value: "1", label: "February" },
+    { value: "2", label: "March" },
+    { value: "3", label: "April" },
+    { value: "4", label: "May" },
+    { value: "5", label: "June" },
+    { value: "6", label: "July" },
+    { value: "7", label: "August" },
+    { value: "8", label: "September" },
+    { value: "9", label: "October" },
+    { value: "10", label: "November" },
+    { value: "11", label: "December" },
+  ];
+
+  const yearOptions = useMemo(() => {
+    return [
+      { value: "All", label: "All Years" },
+      ...availableYears.map((y) => ({ value: y.toString(), label: y.toString() })),
+    ];
+  }, [availableYears]);
+
   const filteredInvoices = useMemo(() => {
     const lower = searchTerm.toLowerCase();
     return invoices.filter((inv) => {
@@ -147,9 +190,22 @@ const ViewInvoice = () => {
         !selectedCustomerFilter ||
         inv.customer?.id === selectedCustomerFilter.id;
 
-      return matchesSearch && matchesCustomer;
+      const matchesStatus =
+        selectedStatusFilter === "All" ||
+        inv.status?.toLowerCase() === selectedStatusFilter.toLowerCase();
+
+      const invDate = new Date(inv.issue_date);
+      const matchesMonth =
+        selectedMonthFilter === "All" ||
+        invDate.getMonth() === parseInt(selectedMonthFilter);
+
+      const matchesYear =
+        selectedYearFilter === "All" ||
+        invDate.getFullYear() === parseInt(selectedYearFilter);
+
+      return matchesSearch && matchesCustomer && matchesStatus && matchesMonth && matchesYear;
     });
-  }, [invoices, searchTerm, selectedCustomerFilter]);
+  }, [invoices, searchTerm, selectedCustomerFilter, selectedStatusFilter, selectedMonthFilter, selectedYearFilter]);
 
   const sortedInvoices = useMemo(() => {
     let sortable = [...filteredInvoices];
@@ -220,26 +276,14 @@ const ViewInvoice = () => {
         return "bg-orange-500/10 text-orange-500 border-orange-500/20";
       case "Overdue":
         return "bg-red-500/10 text-red-500 border-red-500/20";
+      case "Partially Paid":
+        return "bg-purple-500/10 text-purple-500 border-purple-500/20";
       default:
         return "bg-xeflow-border/50 text-xeflow-muted border-xeflow-border";
     }
   };
 
-  const handleMail = (invoice) => {
-    const email = invoice.customer?.email || "";
-    const subject = encodeURIComponent(
-      `Invoice ${invoice.invoice_number} from Xeventure IT Solutions`,
-    );
-    const body = encodeURIComponent(
-      `Hi ${invoice.customer?.rep_name || "there"},\n\n` +
-        `Please find attached the invoice ${invoice.invoice_number} for the recent services.\n\n` +
-        `Thank you for your business!\n\n` +
-        `Best regards,\n` +
-        `Xeventure Technologies`,
-    );
 
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-  };
 
   const handleDownload = (invoice) => {
     generateInvoicePDF(invoice, formatDate, formatMoney, toast);
@@ -264,8 +308,8 @@ const ViewInvoice = () => {
           </Link>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
-          <div className="relative w-full sm:w-96">
+        <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
+          <div className="relative w-full lg:w-80 shrink-0">
             <FiSearch
               className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
               size={18}
@@ -282,50 +326,82 @@ const ViewInvoice = () => {
             />
           </div>
 
-          <div className="relative" ref={filterDropdownRef}>
-            <button
-              onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold shadow-sm hover:shadow-md hover:border-xeflow-brand transition-all cursor-pointer whitespace-nowrap ${selectedCustomerFilter ? "bg-xeflow-brand/10 border-xeflow-brand text-xeflow-brand" : "bg-xeflow-surface border-xeflow-border text-xeflow-text"}`}
-              title="Filter by Customer"
-            >
-              <FiFilter size={16} />
-              <span>
-                {selectedCustomerFilter ? selectedCustomerFilter.company_name : "All Clients"}
-              </span>
-              <FiChevronDown size={14} className={`transition-transform duration-200 ${isFilterDropdownOpen ? "rotate-180" : ""}`} />
-            </button>
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto lg:justify-end">
+            <div className="relative" ref={filterDropdownRef}>
+              <button
+                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold shadow-sm hover:shadow-md hover:border-xeflow-brand transition-all cursor-pointer whitespace-nowrap ${selectedCustomerFilter ? "bg-xeflow-brand/10 border-xeflow-brand text-xeflow-brand" : "bg-xeflow-surface border-xeflow-border text-xeflow-text"}`}
+                title="Filter by Customer"
+              >
+                <FiFilter size={16} />
+                <span>
+                  {selectedCustomerFilter ? selectedCustomerFilter.company_name : "All Clients"}
+                </span>
+                <FiChevronDown size={14} className={`transition-transform duration-200 ${isFilterDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
 
-            {isFilterDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-xeflow-surface border border-xeflow-border shadow-2xl p-2.5 z-50 animate-in fade-in slide-in-from-top-3 duration-250 max-h-[300px] overflow-y-auto custom-scrollbar">
-                <p className="text-[10px] font-black uppercase text-xeflow-muted tracking-wider px-3.5 py-1.5 border-b border-xeflow-border/40 mb-1">
-                  Select Customer
-                </p>
-                <div
-                  onClick={() => {
-                    setSelectedCustomerFilter(null);
-                    setIsFilterDropdownOpen(false);
-                    setCurrentPage(1);
-                  }}
-                  className={`text-left text-xs font-bold px-3.5 py-2 rounded-lg transition-colors cursor-pointer ${!selectedCustomerFilter ? "bg-xeflow-brand/10 text-xeflow-brand" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
-                >
-                  All Clients (View All)
-                </div>
-                {customers.map((customer) => (
+              {isFilterDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-xeflow-surface border border-xeflow-border shadow-2xl p-2.5 z-50 animate-in fade-in slide-in-from-top-3 duration-250 max-h-[300px] overflow-y-auto custom-scrollbar">
+                  <p className="text-[10px] font-black uppercase text-xeflow-muted tracking-wider px-3.5 py-1.5 border-b border-xeflow-border/40 mb-1">
+                    Select Customer
+                  </p>
                   <div
-                    key={customer.id}
                     onClick={() => {
-                      setSelectedCustomerFilter(customer);
+                      setSelectedCustomerFilter(null);
                       setIsFilterDropdownOpen(false);
                       setCurrentPage(1);
                     }}
-                    className={`text-left text-xs font-bold px-3.5 py-2 mt-0.5 rounded-lg transition-colors cursor-pointer truncate ${selectedCustomerFilter && selectedCustomerFilter.id === customer.id ? "bg-xeflow-brand/10 text-xeflow-brand" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
-                    title={customer.company_name}
+                    className={`text-left text-xs font-bold px-3.5 py-2 rounded-lg transition-colors cursor-pointer ${!selectedCustomerFilter ? "bg-xeflow-brand/10 text-xeflow-brand" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
                   >
-                    {customer.company_name}
+                    All Clients (View All)
                   </div>
-                ))}
-              </div>
-            )}
+                  {customers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      onClick={() => {
+                        setSelectedCustomerFilter(customer);
+                        setIsFilterDropdownOpen(false);
+                        setCurrentPage(1);
+                      }}
+                      className={`text-left text-xs font-bold px-3.5 py-2 mt-0.5 rounded-lg transition-colors cursor-pointer truncate ${selectedCustomerFilter && selectedCustomerFilter.id === customer.id ? "bg-xeflow-brand/10 text-xeflow-brand" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
+                      title={customer.company_name}
+                    >
+                      {customer.company_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <CustomSelect
+              value={selectedStatusFilter}
+              onChange={(val) => {
+                setSelectedStatusFilter(val);
+                setCurrentPage(1);
+              }}
+              options={statusOptions}
+              placeholder="All Statuses"
+            />
+
+            <CustomSelect
+              value={selectedMonthFilter}
+              onChange={(val) => {
+                setSelectedMonthFilter(val);
+                setCurrentPage(1);
+              }}
+              options={monthOptions}
+              placeholder="All Months"
+            />
+
+            <CustomSelect
+              value={selectedYearFilter}
+              onChange={(val) => {
+                setSelectedYearFilter(val);
+                setCurrentPage(1);
+              }}
+              options={yearOptions}
+              placeholder="All Years"
+            />
           </div>
         </div>
 
@@ -410,7 +486,7 @@ const ViewInvoice = () => {
                           </td>
                           <td className="px-6 py-4">
                             <span
-                              className={`px-3 py-1 rounded-md text-xs font-bold border ${getStatusColor(invoice.status)}`}
+                              className={`px-3 py-1 rounded-md text-xs font-bold border whitespace-nowrap inline-block ${getStatusColor(invoice.status)}`}
                             >
                               {invoice.status}
                             </span>
@@ -425,7 +501,7 @@ const ViewInvoice = () => {
                                 <FiEye size={16} />
                               </button>
                               <button
-                                onClick={() => handleMail(invoice)}
+                                onClick={() => setEmailInvoice(invoice)}
                                 className="p-2 bg-xeflow-bg border border-xeflow-border hover:border-blue-500 hover:text-blue-500 rounded-lg transition-colors"
                                 title="Send via Email"
                               >
@@ -536,7 +612,7 @@ const ViewInvoice = () => {
                   Invoice {selectedInvoice.invoice_number}
                 </h2>
                 <span
-                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${getStatusColor(selectedInvoice.status)}`}
+                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider whitespace-nowrap inline-block ${getStatusColor(selectedInvoice.status)}`}
                 >
                   {selectedInvoice.status}
                 </span>
@@ -548,6 +624,13 @@ const ViewInvoice = () => {
                   title="Download PDF"
                 >
                   <FiDownload size={18} />
+                </button>
+                <button
+                  onClick={() => setEmailInvoice(selectedInvoice)}
+                  className="p-2 text-xeflow-muted hover:text-blue-500 transition-colors"
+                  title="Send via Email"
+                >
+                  <FiMail size={18} />
                 </button>
                 <button
                   onClick={() => setSelectedInvoice(null)}
@@ -852,6 +935,14 @@ const ViewInvoice = () => {
           </div>
         </div>
       )}
+
+      <SendEmailModal
+        isOpen={!!emailInvoice}
+        onClose={() => setEmailInvoice(null)}
+        invoice={emailInvoice}
+        formatDate={formatDate}
+        formatMoney={formatMoney}
+      />
     </div>
   );
 };

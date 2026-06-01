@@ -1,8 +1,5 @@
 import LOGO from "../image/Xeventure.png";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPANY DETAILS  ·  Edit these to update the "Bill From" section
-// ─────────────────────────────────────────────────────────────────────────────
 const COMPANY = {
   name: "Xeventure IT Solutions",
   address:
@@ -43,8 +40,6 @@ function _parseDate(d) {
   return isNaN(parsed) ? new Date() : parsed;
 }
 
-/** Returns "DD/MM/YYYY" */
-
 function fmtDDMMYYYY(d) {
   const dt = _parseDate(d);
   const dd = String(dt.getDate()).padStart(2, "0");
@@ -52,13 +47,9 @@ function fmtDDMMYYYY(d) {
   return `${dd}/${mm}/${dt.getFullYear()}`;
 }
 
-/** Returns full month name, e.g. "April" */
-
 function fmtMonthName(d) {
   return _MONTHS[_parseDate(d).getMonth()];
 }
-
-// AMOUNT → WORDS  (Indian numbering: Crore / Lakh / Thousand)
 
 const _ONES = [
   "",
@@ -152,15 +143,10 @@ const IC = {
   mail: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
 };
 
-// CSS — shared inline styles as JS constants
-
 const PRIMARY = "#1b4fd8";
-const BGk = "#f1f5f9"; // Background
-const BORDER = "#d1d9e6"; // table / card borders
-const TXT = "#0f172a"; // primary text
-const MUTED = "#475569"; // secondary text
-const ACCENT = "#2563eb"; // blue accent (unused totals)
-const GREEN = "#16a34a";
+const BORDER = "#d1d9e6";
+const TXT = "#0f172a";
+const MUTED = "#475569";
 const RED = "#dc2626";
 
 const thStyle = `padding: 7px 6px; text-align: center; font-size: 9.5px;
@@ -171,8 +157,6 @@ const tdStyle = `padding: 8px 6px; font-size: 11.5px; color: ${TXT};
 const tdR = tdStyle + " text-align: right;";
 const tdC = tdStyle + " text-align: center;";
 
-// PARTY INFO ROW helper
-
 function infoRow(label, value, extra = "") {
   if (!value) return "";
   return `
@@ -182,19 +166,14 @@ function infoRow(label, value, extra = "") {
     </tr>`;
 }
 
-// ITEMS TABLE  (handles GST / IGST / No-Tax)
-
 function buildItemsTable(invoice, fmtMoney) {
   const taxType = (invoice.tax_type || "").toUpperCase();
   const isGST = taxType === "GST";
   const isIGST = taxType === "IGST";
 
-  // ---- CGST / SGST rates used across all items ----
   const cgstRate = parseFloat(invoice.cgst_rate) || 0;
   const sgstRate = parseFloat(invoice.sgst_rate) || 0;
   const igstRate = parseFloat(invoice.igst_rate) || 0;
-
-  // ---- header rows ----
 
   let headerHTML = "";
   if (isGST) {
@@ -244,8 +223,6 @@ function buildItemsTable(invoice, fmtMoney) {
         <th style="${thStyle} width:15%">TOTAL (₹)</th>
       </tr>`;
   }
-
-  // ---- item rows ----
 
   const items = invoice.items || [];
   let totalTaxable = 0,
@@ -327,7 +304,6 @@ function buildItemsTable(invoice, fmtMoney) {
         .join("")
     : `<tr><td colspan="11" style="${tdC} color:#94a3b8;">No line items.</td></tr>`;
 
-  // ---- TOTAL row ----
   let totalRowHTML;
   const ts = `padding: 9px 6px; font-size: 12.5px; font-weight: 800; color: ${TXT};
     border: 1px solid ${BORDER}; border-top: 2px solid ${PRIMARY}; background: #f1f5f9;`;
@@ -375,8 +351,6 @@ function buildItemsTable(invoice, fmtMoney) {
   };
 }
 
-// TAX SUMMARY (right side of bottom section)
-
 function buildTaxSummary(invoice, fmtMoney, totals) {
   const taxType = (invoice.tax_type || "").toUpperCase();
   const isGST = taxType === "GST";
@@ -416,6 +390,21 @@ function buildTaxSummary(invoice, fmtMoney, totals) {
       </tr>`;
   }
 
+  const amtPaid = parseFloat(invoice.amount_paid) || 0;
+  let paidRows = "";
+  if (amtPaid > 0) {
+    const balDue = (parseFloat(totals.grandTotal) || 0) - amtPaid;
+    paidRows = `
+      <tr>
+        <td style="${rs} font-weight:700; color:#10b981;">Advance Paid</td>
+        <td style="${rv} color:#10b981; font-weight:800;">${fmtMoney(amtPaid)}</td>
+      </tr>
+      <tr>
+        <td style="${rs} font-weight:700; color:#dc2626;">Balance Due</td>
+        <td style="${rv} color:#dc2626; font-weight:800;">${fmtMoney(balDue)}</td>
+      </tr>`;
+  }
+
   return `
     <table style="width:100%; border-collapse:collapse; border:1px solid ${BORDER}; border-radius:6px; overflow:hidden; font-family:inherit;">
       <tr>
@@ -424,11 +413,12 @@ function buildTaxSummary(invoice, fmtMoney, totals) {
       </tr>
       ${taxRows}
       <tr>
-        <td style="padding:10px 12px; font-size:14px; font-weight:900; color:white; background:${PRIMARY};">Grand Total</td>
-        <td style="padding:10px 12px; font-size:14px; font-weight:900; color:white; background:${PRIMARY}; text-align:right;">
+        <td style="padding:10px 12px; font-size:14px; font-weight:900; color:white; background:${PRIMARY}; border-bottom:1px solid ${PRIMARY};">Grand Total</td>
+        <td style="padding:10px 12px; font-size:14px; font-weight:900; color:white; background:${PRIMARY}; border-bottom:1px solid ${PRIMARY}; text-align:right;">
           ₹ ${fmtMoney(totals.grandTotal)}
         </td>
       </tr>
+      ${paidRows}
       <tr>
         <td colspan="2" style="padding:4px 12px; font-size:10px; color:${MUTED}; text-align:right;">(E &amp; O.E.)</td>
       </tr>
@@ -439,9 +429,192 @@ function buildTaxSummary(invoice, fmtMoney, totals) {
     </table>`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN PDF GENERATOR
-// ─────────────────────────────────────────────────────────────────────────────
+function _buildPDFElementAndOptions(invoice, formatDate, formatMoney) {
+  const dateStr = fmtDDMMYYYY(invoice.issue_date);
+  const monthStr =
+    invoice.invoice_month || fmtMonthName(invoice.issue_date);
+  const yearStr =
+    new Date(invoice.issue_date || Date.now()).getFullYear() ||
+    new Date().getFullYear();
+  const supplyStr = invoice.place_of_supply || "Kerala (32)";
+
+  const { html: tableHTML, ...totals } = buildItemsTable(
+    invoice,
+    formatMoney,
+  );
+
+  const totalWords = amountToWords(
+    totals.grandTotal || invoice.total_amount || 0,
+  );
+
+  const taxSummaryHTML = buildTaxSummary(invoice, formatMoney, totals);
+
+  const cust = invoice.customer || {};
+  const custHTML = cust.company_name
+    ? `<table style="border-collapse:collapse; width:100%;">
+      ${infoRow("Name", cust.company_name)}
+      ${infoRow("GSTIN", cust.gstin || cust.gst_number || "—")}
+      ${infoRow("Address", cust.address)}
+      ${infoRow("Phone", cust.phone)}
+      ${infoRow("Website", cust.website || "—")}
+      ${infoRow("Email", cust.email)}
+     </table>`
+    : `<p style="color:${RED}; font-size:12px; margin:0;">Customer details missing.</p>`;
+
+  const fromHTML = `<table style="border-collapse:collapse; width:100%;">
+  ${infoRow("Name", COMPANY.name)}
+  ${infoRow("GSTIN", COMPANY.gstin)}
+  ${infoRow("Address", COMPANY.address)}
+  ${infoRow("Phone", COMPANY.phone)}
+  ${infoRow("Website", COMPANY.website)}
+  ${infoRow("Email", COMPANY.email)}
+</table>`;
+
+  const el = document.createElement("div");
+  el.style.cssText = `
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: ${TXT};
+  background: #ffffff;
+  width: 794px;
+  box-sizing: border-box;
+  padding: 36px 40px 0 40px;
+`;
+
+  el.innerHTML = `
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+    <div>
+      <img src="${LOGO}"
+           style="height:80px; object-fit:contain; display:block;"
+           alt="${COMPANY.name}">
+    </div>
+    <div style="text-align:right; line-height:1;">
+      <div style="font-size:50px; font-weight:900; color:${TXT}; letter-spacing:-1px; line-height:1;">INVOICE</div>
+      <div style="font-size:36px; font-weight:900; color:${TXT}; line-height:1.1;">${yearStr}</div>
+    </div>
+  </div>
+
+  <hr style="border:none; border-top:1.5px solid ${BORDER}; margin:0 0 14px 0;">
+
+  <div style="display:flex; border:1.5px solid ${BORDER}; border-radius:8px; overflow:hidden; margin-bottom:16px;">
+    ${[
+      {
+        icon: IC.doc,
+        label: "Invoice No.",
+        val: invoice.invoice_number || "—",
+      },
+      { icon: IC.cal, label: "Invoice Date", val: dateStr },
+      { icon: IC.cal, label: "Invoice Month", val: monthStr },
+      { icon: IC.pin, label: "Place of Supply", val: supplyStr },
+    ]
+      .map(
+        (m, i) => `
+      <div style="flex:1; padding:10px 14px;
+        ${i < 3 ? `border-right:1.5px solid ${BORDER};` : ""}">
+        <div style="display:flex; align-items:center; gap:6px; color:${MUTED}; font-size:11px; font-weight:600; margin-bottom:3px;">
+          <span style="color:${PRIMARY};">${m.icon}</span> ${m.label}
+        </div>
+        <div style="font-size:14px; font-weight:800; color:${TXT};">${m.val}</div>
+      </div>`,
+      )
+      .join("")}
+  </div>
+
+  <div style="display:flex; gap:14px; margin-bottom:16px;">
+    <div style="flex:1; border:1.5px solid ${BORDER}; border-radius:8px; overflow:hidden;">
+      <div style="background:${PRIMARY}; color:white; padding:9px 16px;
+        font-size:12px; font-weight:800; text-transform:uppercase;
+        display:flex; align-items:center; gap:8px; letter-spacing:0.5px;">
+        ${IC.user}&nbsp;BILL TO
+      </div>
+      <div style="padding:14px 16px;">${custHTML}</div>
+    </div>
+    <div style="flex:1; border:1.5px solid ${BORDER}; border-radius:8px; overflow:hidden;">
+      <div style="background:${PRIMARY}; color:white; padding:9px 16px;
+        font-size:12px; font-weight:800; text-transform:uppercase;
+        display:flex; align-items:center; gap:8px; letter-spacing:0.5px;">
+        ${IC.bldg}&nbsp;BILL FROM
+      </div>
+      <div style="padding:14px 16px;">${fromHTML}</div>
+    </div>
+  </div>
+
+  ${tableHTML}
+
+  <div style="display:flex; gap:14px; margin-bottom:0; page-break-inside:avoid;">
+    <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
+      <div style="border:1.5px solid ${BORDER}; border-radius:8px; padding:14px 16px;">
+        <div style="font-size:10.5px; font-weight:800; text-transform:uppercase;
+          letter-spacing:0.5px; color:${TXT}; margin-bottom:8px;">Total in Words</div>
+        <div style="font-size:11.5px; font-weight:600; color:${PRIMARY}; line-height:1.5;">
+          ${totalWords}
+        </div>
+      </div>
+
+      <div style="border:1.5px solid ${BORDER}; border-radius:8px; padding:14px 16px;">
+        <div style="display:flex; align-items:center; gap:8px;
+          font-size:12px; font-weight:800; text-transform:uppercase;
+          letter-spacing:0.5px; color:${TXT}; margin-bottom:10px;
+          padding-bottom:8px; border-bottom:1px solid ${BORDER};">
+          ${IC.bank}&nbsp;Bank Details
+        </div>
+        <table style="border-collapse:collapse; width:100%;">
+          <tr><td style="padding:3px 0; font-size:11.5px; font-weight:700; color:${TXT}; width:130px;">Account Holder Name</td>
+              <td style="padding:3px 0; font-size:11.5px; color:${MUTED};">${BANK.accountName}</td></tr>
+          <tr><td style="padding:3px 0; font-size:11.5px; font-weight:700; color:${TXT};">Bank Name</td>
+              <td style="padding:3px 0; font-size:11.5px; color:${MUTED};">${BANK.bankName}</td></tr>
+          <tr><td style="padding:3px 0; font-size:11.5px; font-weight:700; color:${TXT};">Bank Account Number</td>
+              <td style="padding:3px 0; font-size:11.5px; color:${MUTED};">${BANK.accountNumber}</td></tr>
+          <tr><td style="padding:3px 0; font-size:11.5px; font-weight:700; color:${TXT};">Bank Branch IFSC</td>
+              <td style="padding:3px 0; font-size:11.5px; color:${MUTED};">${BANK.ifsc}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
+      ${taxSummaryHTML}
+
+      <div style="border:1.5px solid ${BORDER}; border-radius:8px; padding:12px 16px;
+        display:flex; align-items:center; gap:12px;">
+        <span style="flex-shrink:0;">${IC.note}</span>
+        <div style="font-size:11.5px; color:${MUTED}; line-height:1.6;">
+          <span>This is computer generated invoice</span><br>
+          <span>no signature required.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:${PRIMARY}; color:white; padding:12px 20px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin: 20px -40px 0 -40px;">
+    <div style="display:flex; align-items:center; gap:20px; font-size:11.5px;">
+      <span style="display:flex;align-items:center;gap:5px;">${IC.phone}&nbsp;${COMPANY.phone}</span>
+      <span style="display:flex;align-items:center;gap:5px;">${IC.web}&nbsp;${COMPANY.website}</span>
+      <span style="display:flex;align-items:center;gap:5px;">${IC.mail}&nbsp;${COMPANY.email}</span>
+    </div>
+    <div style="font-size:13px; font-weight:700; letter-spacing:0.3px;">
+      Thank you for your business!
+    </div>
+  </div>
+`;
+
+  const opt = {
+    margin: [0, 0, 0, 0],
+    filename: `Invoice_${invoice.invoice_number || "draft"}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      letterRendering: true,
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+  };
+
+  return { el, opt };
+}
+
 export const generateInvoicePDF = (invoice, formatDate, formatMoney, toast) => {
   const loadingToast = toast.loading("Generating PDF...");
 
@@ -449,215 +622,7 @@ export const generateInvoicePDF = (invoice, formatDate, formatMoney, toast) => {
     import("html2pdf.js")
       .then((mod) => {
         const html2pdf = mod.default || mod;
-
-        // ── dates ──
-        const dateStr = fmtDDMMYYYY(invoice.issue_date);
-        const monthStr =
-          invoice.invoice_month || fmtMonthName(invoice.issue_date);
-        const yearStr =
-          new Date(invoice.issue_date || Date.now()).getFullYear() ||
-          new Date().getFullYear();
-        const supplyStr = invoice.place_of_supply || "Kerala (32)";
-
-        // ── items table + running totals ──
-        const { html: tableHTML, ...totals } = buildItemsTable(
-          invoice,
-          formatMoney,
-        );
-
-        // ── total in words ──
-        const totalWords = amountToWords(
-          totals.grandTotal || invoice.total_amount || 0,
-        );
-
-        // ── tax summary ──
-        const taxSummaryHTML = buildTaxSummary(invoice, formatMoney, totals);
-
-        // ── customer / company detail builders ──
-        const cust = invoice.customer || {};
-        const custHTML = cust.company_name
-          ? `<table style="border-collapse:collapse; width:100%;">
-            ${infoRow("Name", cust.company_name)}
-            ${infoRow("GSTIN", cust.gstin || cust.gst_number || "—")}
-            ${infoRow("Address", cust.address)}
-            ${infoRow("Phone", cust.phone)}
-            ${infoRow("Website", cust.website || "—")}
-            ${infoRow("Email", cust.email)}
-           </table>`
-          : `<p style="color:${RED}; font-size:12px; margin:0;">Customer details missing.</p>`;
-
-        const fromHTML = `<table style="border-collapse:collapse; width:100%;">
-        ${infoRow("Name", COMPANY.name)}
-        ${infoRow("GSTIN", COMPANY.gstin)}
-        ${infoRow("Address", COMPANY.address)}
-        ${infoRow("Phone", COMPANY.phone)}
-        ${infoRow("Website", COMPANY.website)}
-        ${infoRow("Email", COMPANY.email)}
-      </table>`;
-
-        // ══════════════════════════════════════════════════════════════
-        // BUILD HTML ELEMENT
-        // ══════════════════════════════════════════════════════════════
-        const el = document.createElement("div");
-        el.style.cssText = `
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        color: ${TXT};
-        background: #ffffff;
-        width: 794px;
-        box-sizing: border-box;
-        padding: 36px 40px 0 40px;
-      `;
-
-        el.innerHTML = `
-        <!-- ═══ HEADER ═══ -->
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-          <!-- Logo -->
-          <div>
-            <img src="${LOGO}"
-                 style="height:80px; object-fit:contain; display:block;"
-                 alt="${COMPANY.name}">
-          </div>
-          <!-- INVOICE / YEAR -->
-          <div style="text-align:right; line-height:1;">
-            <div style="font-size:50px; font-weight:900; color:${TXT}; letter-spacing:-1px; line-height:1;">INVOICE</div>
-            <div style="font-size:36px; font-weight:900; color:${TXT}; line-height:1.1;">${yearStr}</div>
-          </div>
-        </div>
-
-        <!-- thin rule -->
-        <hr style="border:none; border-top:1.5px solid ${BORDER}; margin:0 0 14px 0;">
-
-        <!-- ═══ METADATA BAR ═══ -->
-        <div style="display:flex; border:1.5px solid ${BORDER}; border-radius:8px; overflow:hidden; margin-bottom:16px;">
-          ${[
-            {
-              icon: IC.doc,
-              label: "Invoice No.",
-              val: invoice.invoice_number || "—",
-            },
-            { icon: IC.cal, label: "Invoice Date", val: dateStr },
-            { icon: IC.cal, label: "Invoice Month", val: monthStr },
-            { icon: IC.pin, label: "Place of Supply", val: supplyStr },
-          ]
-            .map(
-              (m, i) => `
-            <div style="flex:1; padding:10px 14px;
-              ${i < 3 ? `border-right:1.5px solid ${BORDER};` : ""}">
-              <div style="display:flex; align-items:center; gap:6px; color:${MUTED}; font-size:11px; font-weight:600; margin-bottom:3px;">
-                <span style="color:${PRIMARY};">${m.icon}</span> ${m.label}
-              </div>
-              <div style="font-size:14px; font-weight:800; color:${TXT};">${m.val}</div>
-            </div>`,
-            )
-            .join("")}
-        </div>
-
-        <!-- ═══ BILL TO / BILL FROM ═══ -->
-        <div style="display:flex; gap:14px; margin-bottom:16px;">
-          <!-- BILL TO -->
-          <div style="flex:1; border:1.5px solid ${BORDER}; border-radius:8px; overflow:hidden;">
-            <div style="background:${PRIMARY}; color:white; padding:9px 16px;
-              font-size:12px; font-weight:800; text-transform:uppercase;
-              display:flex; align-items:center; gap:8px; letter-spacing:0.5px;">
-              ${IC.user}&nbsp;BILL TO
-            </div>
-            <div style="padding:14px 16px;">${custHTML}</div>
-          </div>
-          <!-- BILL FROM -->
-          <div style="flex:1; border:1.5px solid ${BORDER}; border-radius:8px; overflow:hidden;">
-            <div style="background:${PRIMARY}; color:white; padding:9px 16px;
-              font-size:12px; font-weight:800; text-transform:uppercase;
-              display:flex; align-items:center; gap:8px; letter-spacing:0.5px;">
-              ${IC.bldg}&nbsp;BILL FROM
-            </div>
-            <div style="padding:14px 16px;">${fromHTML}</div>
-          </div>
-        </div>
-
-        <!-- ═══ ITEMS TABLE ═══ -->
-        ${tableHTML}
-
-        <!-- ═══ BOTTOM SECTION (Total in Words + Bank | Tax Summary) ═══ -->
-        <div style="display:flex; gap:14px; margin-bottom:0; page-break-inside:avoid;">
-
-          <!-- LEFT: Total in Words + Bank Details -->
-          <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
-
-            <!-- Total in Words -->
-            <div style="border:1.5px solid ${BORDER}; border-radius:8px; padding:14px 16px;">
-              <div style="font-size:10.5px; font-weight:800; text-transform:uppercase;
-                letter-spacing:0.5px; color:${TXT}; margin-bottom:8px;">Total in Words</div>
-              <div style="font-size:11.5px; font-weight:600; color:${PRIMARY}; line-height:1.5;">
-                ${totalWords}
-              </div>
-            </div>
-
-            <!-- Bank Details -->
-            <div style="border:1.5px solid ${BORDER}; border-radius:8px; padding:14px 16px;">
-              <div style="display:flex; align-items:center; gap:8px;
-                font-size:12px; font-weight:800; text-transform:uppercase;
-                letter-spacing:0.5px; color:${TXT}; margin-bottom:10px;
-                padding-bottom:8px; border-bottom:1px solid ${BORDER};">
-                ${IC.bank}&nbsp;Bank Details
-              </div>
-              <table style="border-collapse:collapse; width:100%;">
-                <tr><td style="padding:3px 0; font-size:11.5px; font-weight:700; color:${TXT}; width:130px;">Account Holder Name</td>
-                    <td style="padding:3px 0; font-size:11.5px; color:${MUTED};">${BANK.accountName}</td></tr>
-                <tr><td style="padding:3px 0; font-size:11.5px; font-weight:700; color:${TXT};">Bank Name</td>
-                    <td style="padding:3px 0; font-size:11.5px; color:${MUTED};">${BANK.bankName}</td></tr>
-                <tr><td style="padding:3px 0; font-size:11.5px; font-weight:700; color:${TXT};">Bank Account Number</td>
-                    <td style="padding:3px 0; font-size:11.5px; color:${MUTED};">${BANK.accountNumber}</td></tr>
-                <tr><td style="padding:3px 0; font-size:11.5px; font-weight:700; color:${TXT};">Bank Branch IFSC</td>
-                    <td style="padding:3px 0; font-size:11.5px; color:${MUTED};">${BANK.ifsc}</td></tr>
-              </table>
-            </div>
-          </div>
-
-          <!-- RIGHT: Tax Summary + Computer Generated Notice -->
-          <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
-            ${taxSummaryHTML}
-
-            <!-- Computer Generated Notice -->
-            <div style="border:1.5px solid ${BORDER}; border-radius:8px; padding:12px 16px;
-              display:flex; align-items:center; gap:12px;">
-              <span style="flex-shrink:0;">${IC.note}</span>
-              <div style="font-size:11.5px; color:${MUTED}; line-height:1.6;">
-                <span>This is computer generated invoice</span><br>
-                <span>no signature required.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ═══ FOOTER ═══ -->
-        <div style="background:${PRIMARY}; color:white; padding:12px 20px;
-          display:flex; justify-content:space-between; align-items:center;
-          margin: 20px -40px 0 -40px;">
-          <div style="display:flex; align-items:center; gap:20px; font-size:11.5px;">
-            <span style="display:flex;align-items:center;gap:5px;">${IC.phone}&nbsp;${COMPANY.phone}</span>
-            <span style="display:flex;align-items:center;gap:5px;">${IC.web}&nbsp;${COMPANY.website}</span>
-            <span style="display:flex;align-items:center;gap:5px;">${IC.mail}&nbsp;${COMPANY.email}</span>
-          </div>
-          <div style="font-size:13px; font-weight:700; letter-spacing:0.3px;">
-            Thank you for your business!
-          </div>
-        </div>
-      `;
-
-        // ── html2pdf options ──
-        const opt = {
-          margin: [0, 0, 0, 0],
-          filename: `Invoice_${invoice.invoice_number || "draft"}.pdf`,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            letterRendering: true,
-          },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-        };
+        const { el, opt } = _buildPDFElementAndOptions(invoice, formatDate, formatMoney);
 
         html2pdf()
           .from(el)
@@ -677,4 +642,36 @@ export const generateInvoicePDF = (invoice, formatDate, formatMoney, toast) => {
     console.error("generateInvoicePDF error:", err);
     toast.error("Failed to generate PDF.", { id: loadingToast });
   }
+};
+
+export const generateInvoicePDFBase64 = (invoice, formatDate, formatMoney) => {
+  return new Promise((resolve, reject) => {
+    try {
+      import("html2pdf.js")
+        .then((mod) => {
+          const html2pdf = mod.default || mod;
+          const { el, opt } = _buildPDFElementAndOptions(invoice, formatDate, formatMoney);
+
+          html2pdf()
+            .from(el)
+            .set(opt)
+            .output("datauristring")
+            .then((dataUriString) => {
+              const base64 = dataUriString.split(",")[1];
+              resolve(base64);
+            })
+            .catch((err) => {
+              console.error("html2pdf render base64 error:", err);
+              reject(err);
+            });
+        })
+        .catch((err) => {
+          console.error("html2pdf.js import failed:", err);
+          reject(err);
+        });
+    } catch (err) {
+      console.error("generateInvoicePDFBase64 error:", err);
+      reject(err);
+    }
+  });
 };

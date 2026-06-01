@@ -241,18 +241,13 @@ class GroupSerializer(serializers.ModelSerializer):
     )
     users = serializers.SerializerMethodField()
     is_superuser = serializers.BooleanField(
-        write_only=True,
-        required=False,
-        default=False
+        required=False
     )
     is_staff = serializers.BooleanField(
-        write_only=True,
-        required=False,
-        default=False
+        required=False
     )
 
     class Meta:
-
         model = Group
 
         fields = [
@@ -273,6 +268,16 @@ class GroupSerializer(serializers.ModelSerializer):
             }
             for user in obj.user_set.all()
         ]
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        try:
+            response['is_superuser'] = instance.profile.is_superuser
+            response['is_staff'] = instance.profile.is_staff
+        except AttributeError:
+            response['is_superuser'] = False
+            response['is_staff'] = False
+        return response
 
     def create(self, validated_data):
         permissions = validated_data.pop(
@@ -303,11 +308,11 @@ class GroupSerializer(serializers.ModelSerializer):
         )
         is_superuser = validated_data.pop(
             'is_superuser',
-            False
+            instance.profile.is_superuser if hasattr(instance, 'profile') else False
         )
         is_staff = validated_data.pop(
             'is_staff',
-            False
+            instance.profile.is_staff if hasattr(instance, 'profile') else False
         )
         instance.name = validated_data.get(
             'name',
@@ -451,15 +456,33 @@ class UserAdminSerializer(serializers.ModelSerializer):
 
         current_user = request.user
 
-        # Enforce Hierarchy Checks
         if self.instance and self.instance.is_superuser and not current_user.is_superuser:
             raise serializers.ValidationError("Only superusers can edit superuser accounts.")
 
-        is_superuser_val = attrs.get('is_superuser')
-        if is_superuser_val is not None:
+        resulting_is_superuser = attrs.get('is_superuser')
+        role_id = attrs.get('role_id')
+
+        if role_id is not None:
+            group_has_superuser = False
+            if role_id > 0:
+                try:
+                    group = Group.objects.get(id=role_id)
+                    group_has_superuser = group.profile.is_superuser
+                except (Group.DoesNotExist, AttributeError):
+                    pass
+            resulting_is_superuser = group_has_superuser
+        elif resulting_is_superuser is None and self.instance:
+            resulting_is_superuser = self.instance.is_superuser
+
+        if resulting_is_superuser is not None:
             old_is_superuser = self.instance.is_superuser if self.instance else False
-            if is_superuser_val != old_is_superuser and not current_user.is_superuser:
+            if resulting_is_superuser != old_is_superuser and not current_user.is_superuser:
                 raise serializers.ValidationError("Only superusers can grant or revoke superuser status.")
+
+            if old_is_superuser and not resulting_is_superuser:
+                superusers = User.objects.filter(is_superuser=True)
+                if superusers.count() <= 1 and superusers.filter(id=self.instance.id).exists():
+                    raise serializers.ValidationError("Cannot revoke superuser status from the last remaining superuser.")
 
         return attrs
 
@@ -474,8 +497,15 @@ class UserAdminSerializer(serializers.ModelSerializer):
                 except Group.DoesNotExist:
                     pass
 
+            groups = instance.groups.all()
+            has_superuser_group = groups.filter(profile__is_superuser=True).exists()
+            has_staff_group = groups.filter(profile__is_staff=True).exists()
+            validated_data['is_superuser'] = has_superuser_group
+            validated_data['is_staff'] = has_staff_group
+
         password = self.context.get('request').data.get('password')
         if password:
             instance.set_password(password)
 
         return super().update(instance, validated_data)
+

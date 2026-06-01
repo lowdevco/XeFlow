@@ -13,6 +13,7 @@ import {
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
 import Xeventure_Logo from "../../image/Xeventure.png";
+import CustomSelect from "../../components/CustomSelect";
 
 const GSTIN = "32ABCDE1234F1Z5";
 
@@ -21,6 +22,12 @@ const EditInvoice = () => {
   const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCustomerFilter, setSelectedCustomerFilter] = useState(null);
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState("All");
+  const [selectedYearFilter, setSelectedYearFilter] = useState("All");
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const filterDropdownRef = React.useRef(null);
   const [sortConfig, setSortConfig] = useState({
     key: "created_at",
     direction: "desc",
@@ -108,6 +115,43 @@ const EditInvoice = () => {
   const [discountType, setDiscountType] = useState("percent");
   const [amountPaid, setAmountPaid] = useState("");
 
+  const customerOptions = useMemo(() => {
+    return [
+      { value: "", label: "Select a Customer" },
+      ...dbCustomers.map((cust) => ({
+        value: cust.id.toString(),
+        label: `${cust.company_name} (${cust.rep_name})`,
+      })),
+    ];
+  }, [dbCustomers]);
+
+  const serviceOptions = useMemo(() => {
+    return [
+      { value: "", label: "-- Custom Item --" },
+      ...dbServices.map((srv) => ({
+        value: srv.id.toString(),
+        label: srv.name,
+      })),
+    ];
+  }, [dbServices]);
+
+  const taxTypeOptions = useMemo(() => {
+    return [
+      { value: "GST", label: "GST (CGST/SGST)" },
+      { value: "IGST", label: "IGST" },
+      { value: "No GST", label: "No GST" },
+    ];
+  }, []);
+
+  const statusEditOptions = useMemo(() => {
+    return [
+      { value: "Draft", label: "Draft" },
+      { value: "Sent", label: "Sent" },
+      { value: "Paid", label: "Paid" },
+      { value: "Overdue", label: "Overdue" },
+    ];
+  }, []);
+
 
 
   const loadInitialData = async () => {
@@ -133,17 +177,83 @@ const EditInvoice = () => {
     loadInitialData();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+        setIsFilterDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
 
     
+  const availableYears = useMemo(() => {
+    const years = invoices.map((inv) => new Date(inv.issue_date).getFullYear());
+    return [...new Set(years)].sort((a, b) => b - a);
+  }, [invoices]);
+
+  const statusOptions = [
+    { value: "All", label: "All Statuses" },
+    { value: "Paid", label: "Paid" },
+    { value: "Sent", label: "Sent" },
+    { value: "Draft", label: "Draft" },
+    { value: "Overdue", label: "Overdue" },
+    { value: "Partially Paid", label: "Partially Paid" },
+  ];
+
+  const monthOptions = [
+    { value: "All", label: "All Months" },
+    { value: "0", label: "January" },
+    { value: "1", label: "February" },
+    { value: "2", label: "March" },
+    { value: "3", label: "April" },
+    { value: "4", label: "May" },
+    { value: "5", label: "June" },
+    { value: "6", label: "July" },
+    { value: "7", label: "August" },
+    { value: "8", label: "September" },
+    { value: "9", label: "October" },
+    { value: "10", label: "November" },
+    { value: "11", label: "December" },
+  ];
+
+  const yearOptions = useMemo(() => {
+    return [
+      { value: "All", label: "All Years" },
+      ...availableYears.map((y) => ({ value: y.toString(), label: y.toString() })),
+    ];
+  }, [availableYears]);
+
   const filteredInvoices = useMemo(() => {
     const lower = searchTerm.toLowerCase();
-    return invoices.filter(
-      (inv) =>
+    return invoices.filter((inv) => {
+      const matchesSearch =
         inv.invoice_number?.toLowerCase().includes(lower) ||
         inv.customer?.company_name?.toLowerCase().includes(lower) ||
-        inv.status?.toLowerCase().includes(lower),
-    );
-  }, [invoices, searchTerm]);
+        inv.status?.toLowerCase().includes(lower);
+
+      const matchesCustomer =
+        !selectedCustomerFilter ||
+        inv.customer?.id === selectedCustomerFilter.id;
+
+      const matchesStatus =
+        selectedStatusFilter === "All" ||
+        inv.status?.toLowerCase() === selectedStatusFilter.toLowerCase();
+
+      const invDate = new Date(inv.issue_date);
+      const matchesMonth =
+        selectedMonthFilter === "All" ||
+        invDate.getMonth() === parseInt(selectedMonthFilter);
+
+      const matchesYear =
+        selectedYearFilter === "All" ||
+        invDate.getFullYear() === parseInt(selectedYearFilter);
+
+      return matchesSearch && matchesCustomer && matchesStatus && matchesMonth && matchesYear;
+    });
+  }, [invoices, searchTerm, selectedCustomerFilter, selectedStatusFilter, selectedMonthFilter, selectedYearFilter]);
 
   const sortedInvoices = useMemo(() => {
     let sortable = [...filteredInvoices];
@@ -219,6 +329,8 @@ const EditInvoice = () => {
         return "bg-orange-500/10 text-orange-500 border-orange-500/20";
       case "Overdue":
         return "bg-red-500/10 text-red-500 border-red-500/20";
+      case "Partially Paid":
+        return "bg-purple-500/10 text-purple-500 border-purple-500/20";
       default:
         return "bg-xeflow-border/50 text-xeflow-muted border-xeflow-border";
     }
@@ -471,8 +583,8 @@ const EditInvoice = () => {
 
               {/* Toolbar */}
               
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
-          <div className="relative w-full sm:w-96">
+        <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
+          <div className="relative w-full lg:w-80 shrink-0">
             <FiSearch
               className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
               size={18}
@@ -486,6 +598,84 @@ const EditInvoice = () => {
                 setCurrentPage(1);
               }}
               className="w-full pl-11 pr-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted outline-none focus:border-xeflow-brand transition-all"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto lg:justify-end">
+            <div className="relative" ref={filterDropdownRef}>
+              <button
+                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold shadow-sm hover:shadow-md hover:border-xeflow-brand transition-all cursor-pointer whitespace-nowrap ${selectedCustomerFilter ? "bg-xeflow-brand/10 border-xeflow-brand text-xeflow-brand" : "bg-xeflow-surface border-xeflow-border text-xeflow-text"}`}
+                title="Filter by Customer"
+              >
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <span>
+                  {selectedCustomerFilter ? selectedCustomerFilter.company_name : "All Clients"}
+                </span>
+                <FiChevronDown size={14} className={`transition-transform duration-200 ${isFilterDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isFilterDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-xeflow-surface border border-xeflow-border shadow-2xl p-2.5 z-50 animate-in fade-in slide-in-from-top-3 duration-250 max-h-[300px] overflow-y-auto custom-scrollbar">
+                  <p className="text-[10px] font-black uppercase text-xeflow-muted tracking-wider px-3.5 py-1.5 border-b border-xeflow-border/40 mb-1">
+                    Select Customer
+                  </p>
+                  <div
+                    onClick={() => {
+                      setSelectedCustomerFilter(null);
+                      setIsFilterDropdownOpen(false);
+                      setCurrentPage(1);
+                    }}
+                    className={`text-left text-xs font-bold px-3.5 py-2 rounded-lg transition-colors cursor-pointer ${!selectedCustomerFilter ? "bg-xeflow-brand/10 text-xeflow-brand" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
+                  >
+                    All Clients (View All)
+                  </div>
+                  {dbCustomers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      onClick={() => {
+                        setSelectedCustomerFilter(customer);
+                        setIsFilterDropdownOpen(false);
+                        setCurrentPage(1);
+                      }}
+                      className={`text-left text-xs font-bold px-3.5 py-2 mt-0.5 rounded-lg transition-colors cursor-pointer truncate ${selectedCustomerFilter && selectedCustomerFilter.id === customer.id ? "bg-xeflow-brand/10 text-xeflow-brand" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
+                      title={customer.company_name}
+                    >
+                      {customer.company_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <CustomSelect
+              value={selectedStatusFilter}
+              onChange={(val) => {
+                setSelectedStatusFilter(val);
+                setCurrentPage(1);
+              }}
+              options={statusOptions}
+              placeholder="All Statuses"
+            />
+
+            <CustomSelect
+              value={selectedMonthFilter}
+              onChange={(val) => {
+                setSelectedMonthFilter(val);
+                setCurrentPage(1);
+              }}
+              options={monthOptions}
+              placeholder="All Months"
+            />
+
+            <CustomSelect
+              value={selectedYearFilter}
+              onChange={(val) => {
+                setSelectedYearFilter(val);
+                setCurrentPage(1);
+              }}
+              options={yearOptions}
+              placeholder="All Years"
             />
           </div>
         </div>
@@ -578,7 +768,7 @@ const EditInvoice = () => {
                           </td>
                           <td className="px-6 py-4">
                             <span
-                              className={`px-3 py-1 rounded-md text-xs font-bold border ${getStatusColor(invoice.status)}`}
+                              className={`px-3 py-1 rounded-md text-xs font-bold border whitespace-nowrap inline-block ${getStatusColor(invoice.status)}`}
                             >
                               {invoice.status}
                             </span>
@@ -783,21 +973,20 @@ const EditInvoice = () => {
                       <span className="text-sm font-semibold text-xeflow-muted uppercase">
                         Status
                       </span>
-                      <select
+                      <CustomSelect
                         value={invoiceMeta.status}
-                        onChange={(e) =>
+                        onChange={(val) =>
                           setInvoiceMeta({
                             ...invoiceMeta,
-                            status: e.target.value,
+                            status: val,
                           })
                         }
-                        className="text-right font-bold w-32 bg-xeflow-bg outline-none border border-xeflow-border rounded-md p-1 focus:border-xeflow-brand text-xeflow-text transition-colors cursor-pointer"
-                      >
-                        <option value="Draft">Draft</option>
-                        <option value="Sent">Sent</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Overdue">Overdue</option>
-                      </select>
+                        options={statusEditOptions}
+                        placeholder="Select Status"
+                        align="right"
+                        buttonClassName="text-right font-bold w-32 bg-xeflow-bg outline-none border border-xeflow-border rounded-md p-1 focus:border-xeflow-brand text-xeflow-text transition-colors text-xs text-left"
+                        dropdownClassName="w-32 right-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+                      />
                     </div>
                     <div className="flex justify-between items-center gap-4">
                       <span className="text-sm font-semibold text-xeflow-muted uppercase">
@@ -856,23 +1045,21 @@ const EditInvoice = () => {
                   Billed To
                 </h3>
                 <div className="max-w-md space-y-3">
-                  <select
-                    className="w-full text-base font-bold bg-xeflow-bg border border-xeflow-border rounded-lg p-2.5 outline-none focus:border-xeflow-brand transition-colors cursor-pointer text-xeflow-text"
-                    onChange={(e) => {
+                  <CustomSelect
+                    value={selectedCustomer?.id?.toString() || ""}
+                    onChange={(val) => {
                       const customer = dbCustomers.find(
-                        (c) => c.id.toString() === e.target.value,
+                        (c) => c.id.toString() === val,
                       );
                       setSelectedCustomer(customer || null);
                     }}
-                    value={selectedCustomer?.id || ""}
-                  >
-                    <option value=""> Select a Customer </option>
-                    {dbCustomers.map((cust) => (
-                      <option key={cust.id} value={cust.id}>
-                        {cust.company_name} ({cust.rep_name})
-                      </option>
-                    ))}
-                  </select>
+                    options={customerOptions}
+                    placeholder="Select a Customer"
+                    fullWidth={true}
+                    align="left"
+                    buttonClassName="w-full text-base font-bold bg-xeflow-bg border border-xeflow-border rounded-lg p-2.5 outline-none focus:border-xeflow-brand text-xeflow-text text-left"
+                    dropdownClassName="w-full left-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+                  />
 
                   {selectedCustomer && (
                     <div className="p-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-muted space-y-1 shadow-sm">
@@ -922,24 +1109,22 @@ const EditInvoice = () => {
                       className="flex flex-col md:grid md:grid-cols-12 gap-4 items-stretch md:items-center group bg-xeflow-bg/30 p-4 md:p-2 rounded-xl md:rounded-lg border border-xeflow-border md:border-transparent hover:border-xeflow-border transition-colors"
                     >
                       <div className="col-span-12 md:col-span-6 flex flex-col gap-1.5">
-                        <select
-                          value={item.service_id}
-                          onChange={(e) =>
+                        <CustomSelect
+                          value={item.service_id?.toString() || ""}
+                          onChange={(val) =>
                             handleLineItemChange(
                               item.id,
                               "service_id",
-                              e.target.value,
+                              val,
                             )
                           }
-                          className="w-full text-sm font-bold bg-transparent border-b border-xeflow-border outline-none focus:border-xeflow-brand pb-1 text-xeflow-text cursor-pointer"
-                        >
-                          <option value="">-- Custom Item --</option>
-                          {dbServices.map((srv) => (
-                            <option key={srv.id} value={srv.id}>
-                              {srv.name}
-                            </option>
-                          ))}
-                        </select>
+                          options={serviceOptions}
+                          placeholder="-- Custom Item --"
+                          fullWidth={true}
+                          align="left"
+                          buttonClassName="w-full text-sm font-bold bg-transparent border-b border-xeflow-border outline-none focus:border-xeflow-brand pb-1 text-xeflow-text text-left"
+                          dropdownClassName="w-full left-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+                        />
                         <input
                           type="text"
                           placeholder="Additional details..."
@@ -1102,15 +1287,15 @@ const EditInvoice = () => {
                     <span className="text-xeflow-muted font-bold uppercase tracking-wide">
                       Tax Type
                     </span>
-                    <select
+                    <CustomSelect
                       value={taxType}
-                      onChange={(e) => setTaxType(e.target.value)}
-                      className="w-32 bg-xeflow-surface border border-xeflow-border rounded-md p-1.5 outline-none font-bold focus:border-xeflow-brand transition-colors text-xeflow-text cursor-pointer text-xs"
-                    >
-                      <option value="GST">GST (CGST/SGST)</option>
-                      <option value="IGST">IGST</option>
-                      <option value="No GST">No GST</option>
-                    </select>
+                      onChange={setTaxType}
+                      options={taxTypeOptions}
+                      placeholder="Select Tax Type"
+                      align="right"
+                      buttonClassName="w-32 bg-xeflow-surface border border-xeflow-border rounded-md p-1.5 outline-none font-bold focus:border-xeflow-brand text-xeflow-text text-xs text-left"
+                      dropdownClassName="w-48 right-0 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-2xl p-1.5"
+                    />
                   </div>
 
                   {taxType === "GST" && (

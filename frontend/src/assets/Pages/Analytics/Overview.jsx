@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { fetchWithAuth } from "../../js/api";
+import CustomSelect from "../../components/CustomSelect";
 import {
   AreaChart,
   Area,
@@ -91,9 +92,6 @@ export default function Overview() {
   const [filterType, setFilterType] = useState("fy");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
   const handleMonthRangeSelect = (year, monthNum) => {
     const start = new Date(year, monthNum, 1);
     const end = new Date(year, monthNum + 1, 0);
@@ -104,16 +102,13 @@ export default function Overview() {
     setFilterType("custom");
   };
 
-  /* ── Click Outside Dropdown Handler ── */
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const periodOptions = useMemo(() => [
+    { value: "month", label: "This Month" },
+    { value: "last_month", label: "Last Month" },
+    { value: "fy", label: "This Financial Year" },
+    { value: "last_fy", label: "Last Financial Year" },
+    { value: "custom", label: "Custom Range" },
+  ], []);
 
   /* ── Load Parallel Data ── */
   useEffect(() => {
@@ -584,75 +579,19 @@ export default function Overview() {
 
           {/* Dropdown Selector */}
 
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center justify-between gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-xeflow-surface border border-xeflow-border text-xeflow-text shadow-sm hover:shadow-md hover:border-xeflow-brand transition-all cursor-pointer min-w-[210px]"
-            >
-              <span className="flex items-center gap-2">
-                <FiCalendar className="text-xeflow-brand text-base shrink-0" />
-                {activeRange.label}
-              </span>
-              <FiChevronDown
-                className={`text-xeflow-muted transition-transform shrink-0 ${isDropdownOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2.5 w-60 rounded-2xl bg-xeflow-surface border border-xeflow-border shadow-2xl p-2.5 z-50 animate-in fade-in slide-in-from-top-3 duration-250">
-                <p className="text-[10px] font-black uppercase text-xeflow-muted tracking-wider px-3.5 py-1.5 border-b border-xeflow-border/40">
-                  Select Period
-                </p>
-                <div className="flex flex-col gap-1 mt-2">
-                  <button
-                    onClick={() => {
-                      setFilterType("month");
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`text-left text-sm font-bold px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${filterType === "month" ? "bg-xeflow-brand text-white" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
-                  >
-                    This Month
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterType("last_month");
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`text-left text-sm font-bold px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${filterType === "last_month" ? "bg-xeflow-brand text-white" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
-                  >
-                    Last Month
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterType("fy");
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`text-left text-sm font-bold px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${filterType === "fy" ? "bg-xeflow-brand text-white" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
-                  >
-                    This Financial Year
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterType("last_fy");
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`text-left text-sm font-bold px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${filterType === "last_fy" ? "bg-xeflow-brand text-white" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
-                  >
-                    Last Financial Year
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterType("custom");
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`text-left text-sm font-bold px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer ${filterType === "custom" ? "bg-xeflow-brand text-white" : "text-xeflow-text hover:bg-xeflow-brand/10"}`}
-                  >
-                    Custom Range
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <CustomSelect
+            value={filterType}
+            onChange={setFilterType}
+            options={periodOptions}
+            placeholder="Select Period"
+            dropdownHeader="Select Period"
+            align="right"
+            prefixIcon={<FiCalendar className="text-xeflow-brand text-base shrink-0" />}
+            triggerLabel={activeRange.label}
+            buttonClassName="flex items-center justify-between gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-xeflow-surface border border-xeflow-border text-xeflow-text shadow-sm hover:shadow-md hover:border-xeflow-brand transition-all cursor-pointer min-w-[210px] text-left"
+            dropdownClassName="w-60 right-0 bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-2xl p-2.5"
+            optionClassName="py-2.5 rounded-xl text-sm font-bold px-3.5"
+          />
 
           {/* Filter Funnel Icon */}
 

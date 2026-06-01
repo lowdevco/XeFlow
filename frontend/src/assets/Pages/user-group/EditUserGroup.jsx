@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
+import { useAuth } from "../../../context/AuthContext";
 
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }) => {
   if (!isOpen) return null;
@@ -41,6 +42,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }) => {
 };
 
 const EditUserGroup = () => {
+  const { user: currentUser } = useAuth();
   const [groups, setGroups] = useState([]);
   const [availablePermissions, setAvailablePermissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -406,7 +408,15 @@ const EditUserGroup = () => {
                           >
                             <FiShield size={16} />
                           </button>
-
+                          {currentUser?.is_superuser && !group.is_superuser && (
+                            <button
+                              onClick={() => openDelete(group)}
+                              className="p-2 bg-xeflow-bg hover:bg-red-100 text-red-600 border border-xeflow-border hover:border-red-200 rounded-lg transition-colors tooltip-trigger"
+                              title="Delete Group"
+                            >
+                              <FiTrash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

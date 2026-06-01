@@ -147,30 +147,6 @@ const AddUserGroup = () => {
 
       <div className="bg-xeflow-surface rounded-2xl border border-xeflow-border shadow-sm p-6 space-y-4">
         <h3 className="text-sm font-bold text-xeflow-text">Group Privileges</h3>
-
-        {/* Superuser */}
-
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isSuperuser}
-            onChange={(e) => setIsSuperuser(e.target.checked)}
-            className=" appearance-none w-5 h-5 border rounded-2xl lg:rounded-3xl border-xeflow-border bg-white  checked:bg-blue-600 "
-          />
-
-          <div>
-            <p className="font-semibold text-sm text-xeflow-text">
-              Superuser Access
-            </p>
-
-            <p className="text-xs text-xeflow-muted">
-              Full unrestricted system access
-            </p>
-          </div>
-        </label>
-
-        {/* Staff */}
-
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
@@ -178,12 +154,10 @@ const AddUserGroup = () => {
             onChange={(e) => setIsStaff(e.target.checked)}
             className=" appearance-none w-5 h-5 border-1 rounded-3xl border-xeflow-border bg-white  checked:bg-blue-600  checked:border-xeflow-surface"
           />
-
           <div>
             <p className="font-semibold text-sm text-xeflow-text">
               Staff Access
             </p>
-
             <p className="text-xs text-xeflow-muted">
               Allows access to Django admin/staff features
             </p>
