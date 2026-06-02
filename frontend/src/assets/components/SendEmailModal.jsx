@@ -3,6 +3,7 @@ import { FiX, FiSend, FiMail, FiPaperclip } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../js/api";
 import { generateInvoicePDFBase64 } from "../js/pdfGenerator";
+import { COMPANY } from "../info/company";
 
 export default function SendEmailModal({
   isOpen,
@@ -27,7 +28,7 @@ export default function SendEmailModal({
       setBccEmail("");
       
       const invNum = invoice.invoice_number || "Draft";
-      setSubject(`Invoice ${invNum} from Xeventure IT Solutions`);
+      setSubject(`Invoice ${invNum} from ${COMPANY.name}`);
       
       const clientName = customer.rep_name || customer.company_name || "Valued Client";
       const totalStr = formatMoney ? formatMoney(invoice.total_amount) : `INR ${invoice.total_amount}`;
@@ -43,7 +44,7 @@ export default function SendEmailModal({
         `Please let us know if you have any questions or require further assistance.\n\n` +
         `Thank you for your business!\n\n` +
         `Best regards,\n` +
-        `Xeventure Billing Department`
+        `${COMPANY.name} Billing Department`
       );
     }
   }, [invoice, isOpen, formatDate, formatMoney]);
@@ -153,7 +154,7 @@ export default function SendEmailModal({
                 type="text"
                 value={bccEmail}
                 onChange={(e) => setBccEmail(e.target.value)}
-                placeholder="audit@xeventure.com"
+                placeholder={`audit@${COMPANY.website.replace(/^www\./, "")}`}
                 className="w-full px-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand text-xeflow-text transition-all"
                 disabled={isProcessing}
               />

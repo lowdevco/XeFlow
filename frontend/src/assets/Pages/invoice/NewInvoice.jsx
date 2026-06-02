@@ -9,10 +9,7 @@ import CustomSelect from "../../components/CustomSelect";
 
 // Const Values
 
-import Xeventure_Logo from "../../image/Xeventure.png";
-const GSTIN = "32ABCDE1234F1Z5";
-
-//_______________________________
+import { COMPANY } from "../../info/company";
 
 const NewInvoice = () => {
   const navigate = useNavigate();
@@ -22,7 +19,7 @@ const NewInvoice = () => {
   const [dbCustomers, setDbCustomers] = useState([]);
   const [dbServices, setDbServices] = useState([]);
 
-  // ─── STATE: INVOICE DETAILS ─────────────
+  //  STATE: INVOICE DETAILS
   const [invoiceMeta, setInvoiceMeta] = useState({
     invoiceNumber: "INV-" + Math.floor(1000 + Math.random() * 9000),
     issueDate: new Date().toISOString().split("T")[0],
@@ -362,20 +359,18 @@ const NewInvoice = () => {
         {/* Header Section */}
 
         <div className="flex flex-col md:flex-row justify-between gap-10 border-b border-xeflow-border pb-10 mb-10">
-          {/* Static From Details (Xeventure) */}
 
           <div className="w-full md:w-1/2 space-y-4">
             <img
-              src={Xeventure_Logo}
-              alt="Xeventure Logo"
+              src={COMPANY.logo}
+              alt={COMPANY.name}
               className="w-auto h-24 pl-13 md:h-32 lg:scale-500 scale-300 sm:scale-320 md:scale-300 object-contain "
             />
             <div className="text-sm text-xeflow-muted space-y-1 mt-2">
-              <p>Xeventure IT Soltions,near SBI Bank</p>
-              <p>Sulthan Bathery, Wayanad Kerala 673592 </p>
-              <p>Email: Xeventure@acme.com </p>
-              <p>Phone: +91 8018573446</p>
-              <p className="font-bold text-xeflow-text pt-2">GSTIN: {GSTIN}</p>
+              <p>{COMPANY.address}</p>
+              <p>Email: {COMPANY.email}</p>
+              <p>Phone: {COMPANY.phone}</p>
+              <p className="font-bold text-xeflow-text pt-2">GSTIN: {COMPANY.gstin}</p>
             </div>
           </div>
 
@@ -501,14 +496,10 @@ const NewInvoice = () => {
                   <CustomSelect
                     value={item.service_id?.toString() || ""}
                     onChange={(val) =>
-                      handleLineItemChange(
-                        item.id,
-                        "service_id",
-                        val,
-                      )
+                      handleLineItemChange(item.id, "service_id", val)
                     }
                     options={serviceOptions}
-                    placeholder="-- Custom Item --"
+                    placeholder=" Custom Item "
                     fullWidth={true}
                     align="left"
                     buttonClassName="w-full text-sm font-bold bg-transparent border-b border-xeflow-border outline-none focus:border-xeflow-brand pb-1 text-xeflow-text text-left"
@@ -531,20 +522,28 @@ const NewInvoice = () => {
 
                 <div className="grid grid-cols-3 gap-3 col-span-12 md:col-span-6 md:contents">
                   <div className="flex flex-col gap-1 md:col-span-2">
-                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Qty</span>
+                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">
+                      Qty
+                    </span>
                     <input
                       type="number"
                       min="1"
                       value={item.quantity}
                       onChange={(e) =>
-                        handleLineItemChange(item.id, "quantity", e.target.value)
+                        handleLineItemChange(
+                          item.id,
+                          "quantity",
+                          e.target.value,
+                        )
                       }
                       className="w-full text-left md:text-right text-sm bg-xeflow-bg border border-xeflow-border rounded p-2 outline-none focus:border-xeflow-brand transition-colors text-xeflow-text"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1 md:col-span-2">
-                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Rate</span>
+                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">
+                      Rate
+                    </span>
                     <input
                       type="number"
                       min="0"
@@ -559,7 +558,9 @@ const NewInvoice = () => {
                   </div>
 
                   <div className="flex flex-col gap-1 md:col-span-2 text-right relative justify-end">
-                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">Amount</span>
+                    <span className="text-[10px] font-bold text-xeflow-muted uppercase md:hidden">
+                      Amount
+                    </span>
                     <div className="text-sm font-bold text-xeflow-text flex items-center justify-end gap-2 h-[38px] md:h-auto">
                       {formatMoney(item.amount)}
                       <button
@@ -587,7 +588,6 @@ const NewInvoice = () => {
         {/*  BOTTOM SUMMARY SECTION  */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-stretch">
-         
           {/* Notes and  Terms Section  */}
 
           <div className="flex flex-col gap-6">
@@ -780,6 +780,5 @@ const NewInvoice = () => {
     </div>
   );
 };
-
 
 export default NewInvoice;

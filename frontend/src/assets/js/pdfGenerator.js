@@ -1,38 +1,6 @@
-import LOGO from "../image/Xeventure.png";
-
-const COMPANY = {
-  name: "Xeventure IT Solutions",
-  address:
-    "Bathery Opp to Issacs Residency, Sulthan Bathery, Wayanad, Kerala, India 673592",
-  gstin: "32BEDPT5030H1ZR",
-  pan: "BEDPT5030H",
-  phone: "+91 9746905919",
-  website: "www.xeventureit.com",
-  email: "info@xeventureit.com",
-};
-
-const BANK = {
-  accountName: "NIKHIL THOMAS",
-  bankName: "FEDERAL BANK",
-  accountNumber: "10690100173612",
-  ifsc: "FDRL0001069",
-  branch: "Sulthan Bathery",
-};
-
-const _MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+import { COMPANY } from "../info/company";
+import { BANK } from "../info/bank";
+import { fmtMonthName } from "../info/formatter";
 
 function _parseDate(d) {
   if (!d) return new Date();
@@ -45,10 +13,6 @@ function fmtDDMMYYYY(d) {
   const dd = String(dt.getDate()).padStart(2, "0");
   const mm = String(dt.getMonth() + 1).padStart(2, "0");
   return `${dd}/${mm}/${dt.getFullYear()}`;
-}
-
-function fmtMonthName(d) {
-  return _MONTHS[_parseDate(d).getMonth()];
 }
 
 const _ONES = [
@@ -483,7 +447,7 @@ function _buildPDFElementAndOptions(invoice, formatDate, formatMoney) {
   el.innerHTML = `
   <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
     <div>
-      <img src="${LOGO}"
+      <img src="${COMPANY.logo}"
            style="height:80px; object-fit:contain; display:block;"
            alt="${COMPANY.name}">
     </div>

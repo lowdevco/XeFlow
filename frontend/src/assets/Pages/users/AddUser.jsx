@@ -107,7 +107,7 @@ const handleSubmit = async (e) => {
   }
 };
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 mt-20 lg:mt-30 bg-xeflow-bg transition-colors duration-300">
+    <div className="flex-1 overflow-visible p-4 md:p-8 pb-24 mt-20 lg:mt-30 bg-xeflow-bg transition-colors duration-300">
       <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
@@ -135,7 +135,7 @@ const handleSubmit = async (e) => {
           </div>
         </div>
 
-        <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300">
+        <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-visible transition-colors duration-300">
           <div className="p-6 md:p-10">
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

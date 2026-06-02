@@ -7,6 +7,7 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { COMPANY } from "../info/company";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -129,7 +130,7 @@ const Login = () => {
               Welcome Back!
             </h2>
             <p className="text-sm text-slate-300 font-medium leading-relaxed">
-              Xeflow Billing System. Internal dashboard for managing Xeventure's
+              Xeflow Billing System. Internal dashboard for managing {COMPANY.name}'s
               service billing, invoice automation, and financial reporting.
               Designed for optimized, secure, and rapid billing operations.
             </p>
@@ -137,7 +138,7 @@ const Login = () => {
 
           <div className="z-10">
             <p className="text-[10px] font-bold text-slate-400 tracking-wider">
-              &copy; 2026 Xeventure IT Solutions. All rights reserved.
+              &copy; 2026 {COMPANY.name}. All rights reserved.
             </p>
           </div>
         </div>

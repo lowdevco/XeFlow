@@ -22,9 +22,9 @@ import CustomSelect from "../../components/CustomSelect";
 // Const Values 
 
 
-import Xeventure_Logo from "../../image/Xeventure.png";
-
-const GSTIN = "32ABCDE1234F1Z5";
+import { COMPANY } from "../../info/company";
+import { formatMoney, formatDate } from "../../info/formatter";
+import { API_ROUTES } from "../../../Routing/apiroutes";
 
 const ViewInvoice = () => {
   const [invoices, setInvoices] = useState([]);
@@ -75,7 +75,7 @@ const ViewInvoice = () => {
     setIsRecordingPayment(true);
 
     try {
-      const response = await fetchWithAuth(`/invoices/${paymentInvoice.id}/payment/`, {
+      const response = await fetchWithAuth(API_ROUTES.INVOICE_PAYMENT(paymentInvoice.id), {
         method: "POST",
         body: JSON.stringify({ amount: amt }),
       });
@@ -109,8 +109,8 @@ const ViewInvoice = () => {
     const fetchInvoicesAndCustomers = async () => {
       try {
         const [invRes, custRes] = await Promise.all([
-          fetchWithAuth("/invoices/", { method: "GET" }),
-          fetchWithAuth("/customers/", { method: "GET" }),
+          fetchWithAuth(API_ROUTES.INVOICES, { method: "GET" }),
+          fetchWithAuth(API_ROUTES.CUSTOMERS, { method: "GET" }),
         ]);
 
         if (!invRes.ok) throw new Error("Failed to fetch invoices.");
@@ -252,19 +252,7 @@ const ViewInvoice = () => {
     );
   };
 
-  const formatMoney = (amount) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-    }).format(amount || 0);
-  };
 
-  const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -646,17 +634,16 @@ const ViewInvoice = () => {
               <div className="flex flex-col md:flex-row justify-between gap-8 border-b border-xeflow-border pb-8 mb-8">
                 <div className="w-full md:w-1/2 space-y-3">
                   <img
-                    src={Xeventure_Logo}
-                    alt="Xeventure Logo"
+                    src={COMPANY.logo}
+                    alt={COMPANY.name}
                     className="w-auto h-20 md:h-28 object-contain"
                   />
                   <div className="text-sm text-xeflow-muted space-y-1 mt-2">
-                    <p>123 Tech Park, Cyber Hub</p>
-                    <p>Kerala, India 673592</p>
-                    <p>Email: billing@xeventure.com</p>
-                    <p>Phone: +91 98765 43210</p>
+                    <p>{COMPANY.address}</p>
+                    <p>Email: {COMPANY.email}</p>
+                    <p>Phone: {COMPANY.phone}</p>
                     <p className="font-bold text-xeflow-text pt-2">
-                      GSTIN: {GSTIN}
+                      GSTIN: {COMPANY.gstin}
                     </p>
                   </div>
                 </div>

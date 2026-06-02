@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { fetchWithAuth } from "../js/api";
 import CustomSelect from "../components/CustomSelect";
+import { formatMoney } from "../info/formatter";
+import { API_ROUTES } from "../../Routing/apiroutes";
 import {
   AreaChart,
   Area,
@@ -215,26 +217,12 @@ export default function Dashboard() {
   ], []);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const isAuthenticated = !!(token && token !== "undefined" && token !== "null");
-    const onDashboard = window.location.pathname === "/dashboard";
-
-    if (isAuthenticated && onDashboard) {
-      const lastRefresh = sessionStorage.getItem("dashboard_last_refresh");
-      const now = Date.now();
-      if (!lastRefresh || now - parseInt(lastRefresh, 10) > 2000) {
-        sessionStorage.setItem("dashboard_last_refresh", now.toString());
-        window.location.reload();
-        return;
-      }
-    }
-
     const fetchDashboardData = async () => {
       try {
         const [invRes, custRes, servRes] = await Promise.all([
-          fetchWithAuth("/invoices/", { method: "GET" }),
-          fetchWithAuth("/customers/", { method: "GET" }),
-          fetchWithAuth("/services/", { method: "GET" }),
+          fetchWithAuth(API_ROUTES.INVOICES, { method: "GET" }),
+          fetchWithAuth(API_ROUTES.CUSTOMERS, { method: "GET" }),
+          fetchWithAuth(API_ROUTES.SERVICES, { method: "GET" }),
         ]);
 
         if (invRes.ok) setInvoices(await invRes.json());
@@ -248,14 +236,6 @@ export default function Dashboard() {
     };
     fetchDashboardData();
   }, []);
-
-  const formatMoney = (amount) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount || 0);
-  };
 
   const activeRange = useMemo(() => {
     const today = new Date();

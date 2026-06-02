@@ -12,10 +12,8 @@ import {
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
-import Xeventure_Logo from "../../image/Xeventure.png";
 import CustomSelect from "../../components/CustomSelect";
-
-const GSTIN = "32ABCDE1234F1Z5";
+import { COMPANY } from "../../info/company";
 
 const EditInvoice = () => {
   // Table State
@@ -949,17 +947,16 @@ const EditInvoice = () => {
               <div className="flex flex-col md:flex-row justify-between gap-10 border-b border-xeflow-border pb-8 mb-8">
                 <div className="w-full md:w-1/2 space-y-4">
                   <img
-                    src={Xeventure_Logo}
-                    alt="Xeventure Logo"
+                    src={COMPANY.logo}
+                    alt={COMPANY.name}
                     className="w-auto h-20 md:h-24 scale-500 ml-29"
                   />
                   <div className="text-sm text-xeflow-muted space-y-1 mt-2">
-                    <p>123 Tech Park, Cyber Hub</p>
-                    <p>Kerala, India 673592</p>
-                    <p>Email: billing@xeventure.com</p>
-                    <p>Phone: +91 98765 43210</p>
+                    <p>{COMPANY.address}</p>
+                    <p>Email: {COMPANY.email}</p>
+                    <p>Phone: {COMPANY.phone}</p>
                     <p className="font-bold text-xeflow-text pt-2">
-                      GSTIN: {GSTIN}
+                      GSTIN: {COMPANY.gstin}
                     </p>
                   </div>
                 </div>
