@@ -10,6 +10,7 @@ import {
 } from "react-icons/fi";
 import { RiVipCrownFill } from "react-icons/ri";
 import { Link } from "react-router-dom";
+import Skeleton from "react-loading-skeleton";
 
 const ViewUser = () => {
   const [users, setUsers] = useState([]);
@@ -93,7 +94,7 @@ const ViewUser = () => {
 
         {/* Data Table Card */}
 
-        <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden flex flex-col transition-colors duration-300">
+        <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden flex flex-col transition-colors duration-300">
           
           {/* Toolbar */}
 
@@ -124,10 +125,32 @@ const ViewUser = () => {
 
           <div className="overflow-x-auto min-h-[400px]">
             {loading ? (
-              <div className="flex flex-col items-center justify-center h-[400px] text-xeflow-muted">
-                <div className="w-8 h-8 border-4 border-xeflow-border border-t-xeflow-brand rounded-full animate-spin mb-4"></div>
-                <p>Loading users...</p>
-              </div>
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-xeflow-bg border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider transition-colors duration-300 select-none">
+                    <th className="px-6 py-4 font-semibold">User</th>
+                    <th className="px-6 py-4 font-semibold">Contact</th>
+                    <th className="px-6 py-4 font-semibold">Role</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-xeflow-border">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <Skeleton circle width={40} height={40} />
+                          <div className="space-y-2">
+                            <Skeleton width={120} height={14} className="rounded animate-pulse" />
+                            <Skeleton width={80} height={12} className="rounded animate-pulse" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4"><Skeleton width={180} height={14} className="rounded animate-pulse" /></td>
+                      <td className="px-6 py-4"><Skeleton width={90} height={20} className="rounded animate-pulse" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : paginatedUsers.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[400px] text-xeflow-muted">
                 <FiUser size={48} className="opacity-20 mb-4" />
@@ -141,7 +164,7 @@ const ViewUser = () => {
             ) : (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-xeflow-border bg-xeflow-bg/50 text-xs uppercase tracking-wider text-xeflow-muted font-bold">
+                  <tr className="bg-xeflow-bg border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider transition-colors duration-300 select-none">
                     <th className="px-6 py-4 font-semibold">User</th>
                     <th className="px-6 py-4 font-semibold">Contact</th>
                     <th className="px-6 py-4 font-semibold">Role</th>
@@ -157,7 +180,7 @@ const ViewUser = () => {
                     return (
                       <tr
                         key={u.id}
-                        className="hover:bg-xeflow-bg/50 transition-colors group"
+                        className="hover:bg-xeflow-brand/5 transition-colors group"
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
@@ -217,47 +240,43 @@ const ViewUser = () => {
           </div>
 
           {!loading && filteredUsers.length > 0 && (
-            <div className="p-4 md:px-6 border-t border-xeflow-border bg-xeflow-bg/30 flex items-center justify-between">
-              <span className="text-xs font-medium text-xeflow-muted">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
+              <span className="text-xs text-xeflow-muted font-medium">
                 Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
                 {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of{" "}
                 {filteredUsers.length} entries
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-1">
                 <button
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
                   disabled={currentPage === 1}
-                  className="p-1.5 rounded-lg border border-xeflow-border text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold text-xeflow-muted hover:bg-xeflow-brand/10 disabled:opacity-50 transition-colors"
                 >
-                  <FiChevronLeft size={16} />
+                  Prev
                 </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${
-                          currentPage === page
-                            ? "bg-xeflow-brand text-white border border-xeflow-brand"
-                            : "text-xeflow-muted border border-transparent hover:bg-xeflow-surface hover:border-xeflow-border"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ),
-                  )}
-                </div>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                      currentPage === i + 1
+                        ? "bg-xeflow-brand text-white shadow-sm shadow-xeflow-brand/20"
+                        : "border border-xeflow-border text-xeflow-text hover:bg-xeflow-brand/10 transition-colors"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
                 <button
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
                   disabled={currentPage === totalPages}
-                  className="p-1.5 rounded-lg border border-xeflow-border text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold text-xeflow-muted hover:bg-xeflow-brand/10 disabled:opacity-50 transition-colors"
                 >
-                  <FiChevronRight size={16}/>
+                  Next
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useMemo } from "react";
+import Skeleton from "react-loading-skeleton";
 import { LuIndianRupee } from "react-icons/lu";
 import {
   FiSearch,
@@ -245,11 +246,11 @@ const EditService = () => {
         {/* ── DATA TABLE ── */}
 
 
-        <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300">
+        <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-xeflow-bg/50 border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider select-none">
+                <tr className="bg-xeflow-bg border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider transition-colors duration-300 select-none">
                   <th
                     className="px-6 py-4 cursor-pointer group whitespace-nowrap"
                     onClick={() => handleSort("id")}
@@ -281,12 +282,11 @@ const EditService = () => {
               <tbody className="divide-y divide-xeflow-border text-sm text-xeflow-text">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-xeflow-muted">
-                        <div className="w-8 h-8 border-4 border-xeflow-border border-t-xeflow-brand rounded-full animate-spin mb-4"></div>
-                        <p>Loading catalog...</p>
-                      </div>
-                    </td>
+                    <td className="px-6 py-4"><Skeleton width={80} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={160} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={200} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={70} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4 text-center"><Skeleton width={80} height={28} className="rounded-lg inline-block animate-pulse" /></td>
                   </tr>
                 ) : paginatedServices.length > 0 ? (
                   paginatedServices.map((service) => (
@@ -360,16 +360,15 @@ const EditService = () => {
             </table>
           </div>
 
-          {/* ── PAGINATION FOOTER ── */}
-
           {totalPages > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg gap-4 transition-colors">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
               <span className="text-xs text-xeflow-muted font-medium">
                 Showing{" "}
                 {sortedServices.length === 0
                   ? 0
                   : (currentPage - 1) * itemsPerPage + 1}{" "}
-                to {Math.min(currentPage * itemsPerPage, sortedServices.length)}{" "}
+                to{" "}
+                {Math.min(currentPage * itemsPerPage, sortedServices.length)}{" "}
                 of {sortedServices.length} entries
               </span>
               <div className="flex gap-1">
@@ -384,11 +383,7 @@ const EditService = () => {
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                      currentPage === i + 1
-                        ? "bg-xeflow-brand text-white shadow-sm shadow-xeflow-brand/20"
-                        : "border border-xeflow-border text-xeflow-text hover:bg-xeflow-brand/10"
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1 ? "bg-xeflow-brand text-white shadow-sm shadow-xeflow-brand/20" : "border border-xeflow-border text-xeflow-text hover:bg-xeflow-brand/10"}`}
                   >
                     {i + 1}
                   </button>

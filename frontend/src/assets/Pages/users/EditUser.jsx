@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-
+import Skeleton from "react-loading-skeleton";
 import { API_BASE_URL, fetchWithAuth } from "../../js/api";
 
 import {
@@ -390,14 +390,31 @@ const EditUser = () => {
 
               <tbody className="divide-y divide-xeflow-border text-sm text-xeflow-text transition-colors duration-300">
                 {loading ? (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-24 text-center">
-                      <div className="flex flex-col items-center justify-center text-xeflow-muted">
-                        <div className="w-8 h-8 border-4 border-xeflow-border border-t-xeflow-brand rounded-full animate-spin mb-4"></div>
-                        <p className="font-semibold text-sm">Loading systems and profiles...</p>
-                      </div>
-                    </td>
-                  </tr>
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <Skeleton circle width={40} height={40} />
+                          <div className="space-y-2">
+                            <Skeleton width={120} height={14} className="rounded" />
+                            <Skeleton width={80} height={12} className="rounded" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Skeleton width={180} height={14} className="rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <Skeleton width={90} height={20} className="rounded" />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Skeleton width={32} height={32} className="rounded-lg animate-pulse" />
+                          <Skeleton width={32} height={32} className="rounded-lg animate-pulse" />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : paginatedUsers.length > 0 ? (
                   paginatedUsers.map((u) => {
                     const avatarUrl = getAvatarUrl(u.profile?.profile_picture);
@@ -522,35 +539,33 @@ const EditUser = () => {
                 Showing {sortedUsers.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to{" "}
                 {Math.min(currentPage * itemsPerPage, sortedUsers.length)} of {sortedUsers.length} entries
               </span>
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-1">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
-                  className="p-1.5 rounded-lg border border-xeflow-border text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold text-xeflow-muted hover:bg-xeflow-brand/10 disabled:opacity-50 transition-colors"
                 >
-                  <FiChevronLeft size={16} />
+                  Prev
                 </button>
-                <div className="flex gap-1">
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${
-                        currentPage === i + 1
-                          ? "bg-xeflow-brand text-white border border-xeflow-brand"
-                          : "text-xeflow-muted border border-transparent hover:bg-xeflow-surface hover:border-xeflow-border"
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                      currentPage === i + 1
+                        ? "bg-xeflow-brand text-white shadow-sm shadow-xeflow-brand/20"
+                        : "border border-xeflow-border text-xeflow-text hover:bg-xeflow-brand/10 transition-colors"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  className="p-1.5 rounded-lg border border-xeflow-border text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold text-xeflow-muted hover:bg-xeflow-brand/10 disabled:opacity-50 transition-colors"
                 >
-                  <FiChevronRight size={16} />
+                  Next
                 </button>
               </div>
             </div>

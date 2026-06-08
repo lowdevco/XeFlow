@@ -410,6 +410,7 @@ const NewInvoice = () => {
                       issueDate: e.target.value,
                     })
                   }
+                  onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                   className="text-right text-sm text-xeflow-text bg-transparent outline-none cursor-pointer border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
                 />
               </div>
@@ -423,6 +424,7 @@ const NewInvoice = () => {
                   onChange={(e) =>
                     setInvoiceMeta({ ...invoiceMeta, dueDate: e.target.value })
                   }
+                  onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                   className="text-right text-sm text-xeflow-text bg-transparent outline-none cursor-pointer border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
                 />
               </div>

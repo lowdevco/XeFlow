@@ -217,7 +217,6 @@ table.dataTable thead th .dt-column-order {
   display: none !important;
 }
 
-/* Replace with clean CSS ::after arrows */
 table.dataTable thead th.dt-orderable-asc,
 table.dataTable thead th.dt-orderable-desc {
   padding-right: 2.25rem;
@@ -398,4 +397,9 @@ div.dt-container .dt-processing {
   font-size: 0.85rem;
   font-weight: 600;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.react-loading-skeleton {
+  --base-color: var(--color-xeflow-border) !important;
+  --highlight-color: var(--color-xeflow-surface2) !important;
 }

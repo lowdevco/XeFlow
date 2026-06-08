@@ -11,12 +11,14 @@ import {
   FiChevronDown,
   FiPrinter,
   FiFilter,
+  FiFileText,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth, API_BASE_URL } from "../../js/api";
 import { generateInvoicePDF } from "../../js/pdfGenerator";
 import SendEmailModal from "../../components/SendEmailModal";
 import CustomSelect from "../../components/CustomSelect";
+import Skeleton from "react-loading-skeleton";
 
 
 // Const Values 
@@ -289,11 +291,18 @@ const ViewInvoice = () => {
               Manage, view, and send your invoices to clients.
             </p>
           </div>
-          <Link to="/invoice/new">
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-xeflow-brand text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-all shadow-md shadow-xeflow-brand/20">
-              <FiPlus size={18} /> Create Invoice
-            </button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to="/invoice/ledger">
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-xeflow-surface border border-xeflow-border text-xeflow-text text-sm font-semibold rounded-xl hover:border-xeflow-brand transition-all shadow-sm cursor-pointer">
+                <FiFileText size={18} className="text-xeflow-brand" /> View Ledger
+              </button>
+            </Link>
+            <Link to="/invoice/new">
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-xeflow-brand text-white text-sm font-semibold rounded-xl hover:opacity-90 transition-all shadow-md shadow-xeflow-brand/20 cursor-pointer">
+                <FiPlus size={18} /> Create Invoice
+              </button>
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-xeflow-surface p-4 rounded-xl border border-xeflow-border shadow-sm transition-colors duration-300">
@@ -393,11 +402,11 @@ const ViewInvoice = () => {
           </div>
         </div>
 
-        <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300">
+        <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-xeflow-bg/50 border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider select-none">
+                <tr className="bg-xeflow-bg border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider transition-colors duration-300 select-none">
                   <th
                     className="px-6 py-4 cursor-pointer group"
                     onClick={() => handleSort("invoice_number")}
@@ -439,12 +448,12 @@ const ViewInvoice = () => {
               <tbody className="divide-y divide-xeflow-border text-sm text-xeflow-text">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-xeflow-muted">
-                        <div className="w-8 h-8 border-4 border-xeflow-border border-t-xeflow-brand rounded-full animate-spin mb-4"></div>
-                        <p>Loading invoices...</p>
-                      </div>
-                    </td>
+                    <td className="px-6 py-4"><Skeleton width={80} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={120} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={90} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={90} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={70} height={20} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4 text-center"><Skeleton width={100} height={28} className="rounded-lg inline-block animate-pulse" /></td>
                   </tr>
                 ) : paginatedInvoices.length > 0 ? (
                   paginatedInvoices.map((invoice) => {
@@ -500,43 +509,35 @@ const ViewInvoice = () => {
                                 className="p-2 bg-xeflow-bg border border-xeflow-border hover:border-green-500 hover:text-green-500 rounded-lg transition-colors"
                                 title="Download PDF"
                               >
-                                <FiDownload size={16} />
+                                <FiFileText size={16} />
                               </button>
                             </div>
                           </td>
                         </tr>
                         {isExpanded && (
                           <tr className="bg-xeflow-bg/30">
-                            <td colSpan="6" className="px-6 py-4">
-                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-xeflow-surface border border-xeflow-border rounded-xl shadow-inner animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
-                                <div className="flex flex-col bg-xeflow-bg/40 p-3 rounded-lg border border-xeflow-border">
-                                  <span className="text-xs font-bold text-xeflow-muted uppercase tracking-wider">Total Amount</span>
-                                  <span className="text-base font-black text-xeflow-text mt-1">{formatMoney(invoice.total_amount)}</span>
+                            <td colSpan="6" className="p-0 border-b border-xeflow-border">
+                              <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center animate-in slide-in-from-top duration-200">
+                                <div className="p-3 bg-xeflow-surface border border-xeflow-border rounded-xl">
+                                  <p className="text-[10px] font-black uppercase text-xeflow-muted tracking-wider">Total Amount</p>
+                                  <p className="text-sm font-black text-xeflow-text mt-1">{formatMoney(invoice.total_amount)}</p>
                                 </div>
-                                <div className="flex flex-col bg-xeflow-bg/40 p-3 rounded-lg border border-xeflow-border">
-                                  <span className="text-xs font-bold text-xeflow-muted uppercase tracking-wider">Amount Paid</span>
-                                  <span className="text-base font-black text-green-500 mt-1">{formatMoney(invoice.amount_paid)}</span>
+                                <div className="p-3 bg-xeflow-surface border border-xeflow-border rounded-xl">
+                                  <p className="text-[10px] font-black uppercase text-xeflow-muted tracking-wider">Amount Paid</p>
+                                  <p className="text-sm font-black text-green-500 mt-1">{formatMoney(invoice.amount_paid)}</p>
                                 </div>
-                                <div className="flex flex-col bg-xeflow-bg/40 p-3 rounded-lg border border-xeflow-border">
-                                  <span className="text-xs font-bold text-xeflow-muted uppercase tracking-wider">Outstanding Amount</span>
-                                  <span className="text-base font-black text-xeflow-brand mt-1">{formatMoney(invoice.balance_due)}</span>
-                                </div>
-                                <div className="flex items-center justify-center md:justify-end">
-                                  {parseFloat(invoice.balance_due) > 0 ? (
+                                <div className="p-3 bg-xeflow-surface border border-xeflow-border rounded-xl flex items-center justify-between">
+                                  <div className="text-left">
+                                    <p className="text-[10px] font-black uppercase text-xeflow-muted tracking-wider">Outstanding</p>
+                                    <p className="text-sm font-black text-xeflow-brand mt-1">{formatMoney(invoice.balance_due)}</p>
+                                  </div>
+                                  {parseFloat(invoice.balance_due) > 0 && (
                                     <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setPaymentInvoice(invoice);
-                                        setPaymentAmount("");
-                                      }}
-                                      className="w-full md:w-auto px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
+                                      onClick={() => setPaymentInvoice(invoice)}
+                                      className="px-3 py-1.5 bg-xeflow-brand text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 cursor-pointer"
                                     >
-                                      Add Payment
+                                      <FiDollarSign size={12} /> Pay
                                     </button>
-                                  ) : (
-                                    <span className="px-4 py-2.5 text-xs font-bold text-green-500 bg-green-500/10 rounded-xl border border-green-500/20 text-center w-full md:w-auto">
-                                      Fully Paid
-                                    </span>
                                   )}
                                 </div>
                               </div>
@@ -561,27 +562,36 @@ const ViewInvoice = () => {
           </div>
 
           {totalPages > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
               <span className="text-xs text-xeflow-muted font-medium">
                 Showing{" "}
                 {sortedInvoices.length === 0
                   ? 0
                   : (currentPage - 1) * itemsPerPage + 1}{" "}
                 to {Math.min(currentPage * itemsPerPage, sortedInvoices.length)}{" "}
-                of {sortedInvoices.length}
+                of {sortedInvoices.length} entries
               </span>
               <div className="flex gap-1">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
-                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold hover:bg-xeflow-brand/10 disabled:opacity-50"
+                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold text-xeflow-muted hover:bg-xeflow-brand/10 disabled:opacity-50 transition-colors"
                 >
                   Prev
                 </button>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1 ? "bg-xeflow-brand text-white shadow-sm shadow-xeflow-brand/20" : "border border-xeflow-border text-xeflow-text hover:bg-xeflow-brand/10 transition-colors"}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold hover:bg-xeflow-brand/10 disabled:opacity-50"
+                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold text-xeflow-muted hover:bg-xeflow-brand/10 disabled:opacity-50 transition-colors"
                 >
                   Next
                 </button>

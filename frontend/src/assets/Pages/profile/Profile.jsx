@@ -9,6 +9,7 @@ import {
 
 import { CiAt } from "react-icons/ci";
 import { useAuth } from "../../../context/AuthContext";
+import Skeleton from "react-loading-skeleton";
 import { fetchWithAuth, API_BASE_URL } from "../../js/api";
 import toast from "react-hot-toast";
 
@@ -99,8 +100,36 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-xeflow-bg">
-        <div className="w-8 h-8 border-4 border-xeflow-border border-t-xeflow-brand rounded-full animate-spin"></div>
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-xeflow-bg">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="space-y-2">
+            <Skeleton width={180} height={28} className="rounded-lg" />
+            <Skeleton width={300} height={14} className="rounded" />
+          </div>
+
+          <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-6 md:p-8 border-b border-xeflow-border flex flex-col md:flex-row items-center gap-6">
+              <Skeleton circle width={96} height={96} />
+              <div className="flex-1 space-y-2 text-center md:text-left">
+                <Skeleton width={150} height={20} className="rounded-md" />
+                <Skeleton width={250} height={14} className="rounded" />
+              </div>
+              <Skeleton width={140} height={40} className="rounded-xl" />
+            </div>
+
+            <div className="p-6 md:p-8 space-y-6">
+              <Skeleton width={180} height={20} className="rounded-md" />
+              <div className="space-y-4">
+                <Skeleton height={44} className="rounded-xl" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Skeleton height={44} className="rounded-xl" />
+                  <Skeleton height={44} className="rounded-xl" />
+                </div>
+                <Skeleton height={44} className="rounded-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

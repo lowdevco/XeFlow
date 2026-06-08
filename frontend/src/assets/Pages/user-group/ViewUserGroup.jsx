@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, Fragment } from "react";
 import { Link } from "react-router-dom";
+import Skeleton from "react-loading-skeleton";
 import {
   FiSearch,
   FiChevronUp,
@@ -220,14 +221,14 @@ const ViewUserGroup = () => {
 
               <tbody className="divide-y divide-xeflow-border text-sm text-xeflow-text transition-colors duration-300">
                 {isLoading ? (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-xeflow-muted">
-                        <div className="w-8 h-8 border-4 border-xeflow-border border-t-xeflow-brand rounded-full animate-spin mb-4"></div>
-                        <p>Loading user groups...</p>
-                      </div>
-                    </td>
-                  </tr>
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4"><Skeleton width={120} height={14} className="rounded animate-pulse" /></td>
+                      <td className="px-6 py-4"><Skeleton width={80} height={24} className="rounded-full animate-pulse" /></td>
+                      <td className="px-6 py-4"><Skeleton width={120} height={24} className="rounded-full animate-pulse" /></td>
+                      <td className="px-6 py-4 text-right"><Skeleton width={32} height={20} className="rounded animate-pulse" /></td>
+                    </tr>
+                  ))
                 ) : error ? (
                   <tr>
                     <td

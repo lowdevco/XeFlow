@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import Skeleton from "react-loading-skeleton";
 
 import {
   FiSearch,
@@ -291,12 +292,11 @@ const handleEditSubmit = async (e) => {
               <tbody className="divide-y divide-xeflow-border text-sm text-xeflow-text transition-colors duration-300">
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan="5"
-                      className="px-6 py-12 text-center text-xeflow-muted"
-                    >
-                      Loading...
-                    </td>
+                    <td className="px-6 py-4"><Skeleton width={180} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={110} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={150} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={90} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4 text-center"><Skeleton width={80} height={28} className="rounded-lg inline-block animate-pulse" /></td>
                   </tr>
                 ) : paginatedCustomers.length > 0 ? (
                   paginatedCustomers.map((customer) => (

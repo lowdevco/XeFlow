@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
 import CustomSelect from "../../components/CustomSelect";
 import { COMPANY } from "../../info/company";
+import Skeleton from "react-loading-skeleton";
 
 const EditInvoice = () => {
   // Table State
@@ -680,11 +681,11 @@ const EditInvoice = () => {
 
               {/*  Data Table  */}
               
-        <div className="bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-sm overflow-hidden transition-colors duration-300">
+        <div className="bg-xeflow-surface border border-xeflow-border rounded-xl shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-xeflow-bg/50 border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider select-none">
+                <tr className="bg-xeflow-bg border-b border-xeflow-border text-xs font-bold text-xeflow-muted uppercase tracking-wider transition-colors duration-300 select-none">
                   <th
                     className="px-6 py-4 cursor-pointer group"
                     onClick={() => handleSort("invoice_number")}
@@ -731,12 +732,12 @@ const EditInvoice = () => {
               <tbody className="divide-y divide-xeflow-border text-sm text-xeflow-text">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-xeflow-muted">
-                        <div className="w-8 h-8 border-4 border-xeflow-border border-t-xeflow-brand rounded-full animate-spin mb-4"></div>
-                        <p>Loading invoices...</p>
-                      </div>
-                    </td>
+                    <td className="px-6 py-4"><Skeleton width={80} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={120} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={90} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={90} height={14} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4"><Skeleton width={70} height={20} className="rounded animate-pulse" /></td>
+                    <td className="px-6 py-4 text-center"><Skeleton width={100} height={28} className="rounded-lg inline-block animate-pulse" /></td>
                   </tr>
                 ) : paginatedInvoices.length > 0 ? (
                   paginatedInvoices.map((invoice) => {
@@ -846,27 +847,36 @@ const EditInvoice = () => {
           </div>
 
           {totalPages > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-xeflow-border bg-xeflow-bg transition-colors duration-300">
               <span className="text-xs text-xeflow-muted font-medium">
                 Showing{" "}
                 {sortedInvoices.length === 0
                   ? 0
                   : (currentPage - 1) * itemsPerPage + 1}{" "}
                 to {Math.min(currentPage * itemsPerPage, sortedInvoices.length)}{" "}
-                of {sortedInvoices.length}
+                of {sortedInvoices.length} entries
               </span>
               <div className="flex gap-1">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
-                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold hover:bg-xeflow-brand/10 disabled:opacity-50 text-xeflow-text"
+                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold text-xeflow-muted hover:bg-xeflow-brand/10 disabled:opacity-50 transition-colors"
                 >
                   Prev
                 </button>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1 ? "bg-xeflow-brand text-white shadow-sm shadow-xeflow-brand/20" : "border border-xeflow-border text-xeflow-text hover:bg-xeflow-brand/10 transition-colors"}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => p + 1)}
-                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold hover:bg-xeflow-brand/10 disabled:opacity-50 text-xeflow-text"
+                  className="px-3 py-1 border border-xeflow-border rounded-lg text-xs font-semibold text-xeflow-muted hover:bg-xeflow-brand/10 disabled:opacity-50 transition-colors"
                 >
                   Next
                 </button>
@@ -1014,6 +1024,7 @@ const EditInvoice = () => {
                             issueDate: e.target.value,
                           })
                         }
+                        onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                         className="text-right text-sm text-xeflow-text bg-transparent outline-none cursor-pointer border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
                       />
                     </div>
@@ -1030,6 +1041,7 @@ const EditInvoice = () => {
                             dueDate: e.target.value,
                           })
                         }
+                        onClick={(e) => { try { e.target.showPicker(); } catch (err) {} }}
                         className="text-right text-sm text-xeflow-text bg-transparent outline-none cursor-pointer border-b border-transparent hover:border-xeflow-border focus:border-xeflow-brand pb-1 transition-colors"
                       />
                     </div>

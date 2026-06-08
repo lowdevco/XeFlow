@@ -16,6 +16,7 @@ import {
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import Skeleton from "react-loading-skeleton";
 import { API_BASE_URL, fetchWithAuth } from "../../js/api";
 
 
@@ -274,12 +275,11 @@ const ViewCustomers = () => {
               <tbody className="divide-y divide-xeflow-border text-sm text-xeflow-text transition-colors duration-300">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-xeflow-muted">
-                        <div className="w-8 h-8 border-4 border-xeflow-border border-t-xeflow-brand rounded-full animate-spin mb-4"></div>
-                        <p>Loading customers...</p>
-                      </div>
-                    </td>
+                    <td className="px-6 py-4"><Skeleton width={80} height={14} className="rounded" /></td>
+                    <td className="px-6 py-4"><Skeleton width={180} height={14} className="rounded" /></td>
+                    <td className="px-6 py-4"><Skeleton width={110} height={14} className="rounded" /></td>
+                    <td className="px-6 py-4"><Skeleton width={150} height={14} className="rounded" /></td>
+                    <td className="px-6 py-4"><Skeleton width={90} height={14} className="rounded" /></td>
                   </tr>
                 ) : error ? (
                   <tr>
