@@ -218,9 +218,9 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 # Email ( Mailtrap )
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('MAILTRAP_HOST')
+EMAIL_HOST = config('MAILTRAP_HOST', default='')
 EMAIL_PORT = 2525
-EMAIL_HOST_USER = config('MAILTRAP_USER')
-EMAIL_HOST_PASSWORD = config('MAILTRAP_PASSWORD')
+EMAIL_HOST_USER = config('MAILTRAP_USER', default='')
+EMAIL_HOST_PASSWORD = config('MAILTRAP_PASSWORD', default='')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
