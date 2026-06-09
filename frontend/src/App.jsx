@@ -38,6 +38,7 @@ import EditUserGroup from "./assets/Pages/user-group/EditUserGroup";
 import ViewUserGroup from "./assets/Pages/user-group/ViewUserGroup";
 import Overview from "./assets/Pages/Analytics/Overview";
 import Revenue from "./assets/Pages/Analytics/Revenue";
+import Mockpdf from "./assets/js/Mockpdf"
 
 // ----------------------------------- //
 
@@ -89,6 +90,13 @@ export default function App() {
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
           </Route>
+
+          {/* Mock PDF View  */}
+
+          <Route element={<PublicRoute />}>
+            <Route path="/pdf" element={<Mockpdf />}/>
+          </Route>
+
 
           {/*  Protected routes  */}
 

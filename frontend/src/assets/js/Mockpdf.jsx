@@ -1,3 +1,6 @@
+import BG from "../image/invoice-template.png";
+import { COMPANY } from "../info/company.js";
+
 export default function InvoicePreview() {
   const invoice = {
     invoiceNumber: "INV-001",
@@ -46,8 +49,6 @@ export default function InvoicePreview() {
     },
   };
 
-  import BG from "../image/invoice-template.png";
-
   return (
     <div className="flex justify-center bg-slate-200 py-10">
       <div
@@ -61,7 +62,6 @@ export default function InvoicePreview() {
         "
       >
         {/* Background Template */}
-
         <img
           src={BG}
           alt=""
@@ -74,23 +74,15 @@ export default function InvoicePreview() {
             pointer-events-none
           "
         />
-
         {/* Invoice Header */}
+        <div className="flex absolute text-sm font-bold gap-[132px] top-[195px] left-[79px]">
+          <div>{invoice.invoiceNumber}</div>
 
-        <div className="absolute top-[140px] left-[60px] text-sm font-semibold">
-          {invoice.invoiceNumber}
-        </div>
+          <div>{invoice.invoiceDate}</div>
 
-        <div className="absolute top-[140px] left-[260px] text-sm font-semibold">
-          {invoice.invoiceDate}
-        </div>
+          <div>{invoice.invoiceMonth}</div>
 
-        <div className="absolute top-[140px] left-[470px] text-sm font-semibold">
-          {invoice.invoiceMonth}
-        </div>
-
-        <div className="absolute top-[140px] left-[640px] text-sm font-semibold">
-          {invoice.placeOfSupply}
+          <div>{invoice.placeOfSupply}</div>
         </div>
 
         {/* Bill To */}
@@ -99,17 +91,37 @@ export default function InvoicePreview() {
           className="
             absolute
             top-[275px]
-            left-[70px]
+            left-[50px]
             w-[270px]
-            text-sm
+            text-xs
+            p-2
             space-y-2
           "
         >
-          <p className="font-bold">{invoice.customer.name}</p>
-          <p>{invoice.customer.gstin}</p>
-          <p>{invoice.customer.address}</p>
-          <p>{invoice.customer.phone}</p>
-          <p>{invoice.customer.email}</p>
+          <p className="font-semibold flex gap-8">
+            <strong>Name:</strong>
+            {invoice.customer.name}
+          </p>
+          <p className="font-semibold flex gap-8">
+            <strong>GSTIN:</strong>
+            {invoice.customer.gstin}
+          </p>
+          <p className="font-semibold flex gap-6">
+            <strong>Address:</strong> {invoice.customer.address}
+          </p>
+          <p className="font-semibold flex gap-8">
+            {" "}
+            <strong>Phone:</strong>
+            {invoice.customer.phone}
+          </p>
+          <p className="font-semibold flex gap-6">
+            <strong>Website:</strong>
+            {invoice.customer.website}
+          </p>
+          <p className="font-semibold flex gap-8">
+            <strong>Email:</strong>
+            {invoice.customer.email}
+          </p>
         </div>
 
         {/* Bill From */}
@@ -118,25 +130,40 @@ export default function InvoicePreview() {
           className="
             absolute
             top-[275px]
-            left-[430px]
+            left-[450px]
             w-[270px]
-            text-sm
+            p-2
+            text-xs
             space-y-2
           "
         >
-          <p className="font-bold">{invoice.company.name}</p>
-          <p>{invoice.company.gstin}</p>
-          <p>{invoice.company.address}</p>
-          <p>{invoice.company.phone}</p>
-          <p>{invoice.company.email}</p>
+          <p className="font-semibold flex gap-8">
+            <strong>Name:</strong>
+            {COMPANY.name}
+          </p>
+          <p className="font-semibold flex gap-8">
+            <strong>GSTIN:</strong> {COMPANY.gstin}
+          </p>
+          <p className="font-semibold flex gap-6">
+            <strong>Address:</strong>{" "}
+            <p className=" text-xs">{COMPANY.address}</p>
+          </p>
+          <p className="font-semibold flex gap-8">
+            <strong>Phone:</strong> {COMPANY.phone}
+          </p>
+          <p className="font-semibold flex gap-6">
+            <strong>Website:</strong> {COMPANY.website}
+          </p>
+          <p className="font-semibold flex gap-8">
+            <strong>Email:</strong> {COMPANY.email}
+          </p>
         </div>
 
         {/* Items Table */}
-
         <div
           className="
             absolute
-            top-[455px]
+            top-[485px]
             left-[40px]
             w-[715px]
           "
@@ -177,9 +204,7 @@ export default function InvoicePreview() {
             </tbody>
           </table>
         </div>
-
         {/* Total In Words */}
-
         <div
           className="
             absolute
@@ -192,9 +217,7 @@ export default function InvoicePreview() {
 
           <p className="text-sm">{invoice.totalWords}</p>
         </div>
-
         {/* Bank Details */}
-
         <div
           className="
             absolute
@@ -221,9 +244,7 @@ export default function InvoicePreview() {
             <strong>IFSC:</strong> {invoice.bank.ifsc}
           </p>
         </div>
-
         {/* Tax Summary */}
-
         <div
           className="
             absolute
@@ -256,19 +277,6 @@ export default function InvoicePreview() {
               </tr>
             </tbody>
           </table>
-        </div>
-
-        {/* Footer Note */}
-
-        <div
-          className="
-            absolute
-            bottom-[120px]
-            right-[55px]
-            text-sm
-          "
-        >
-          This is a computer-generated invoice.
         </div>
       </div>
     </div>
