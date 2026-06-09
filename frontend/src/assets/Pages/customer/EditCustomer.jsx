@@ -16,6 +16,8 @@ import {
   FiChevronUp,
   FiChevronDown,
   FiMapPin,
+  FiGlobe,
+  FiTag,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
@@ -47,6 +49,8 @@ const EditCustomer = () => {
     phone: "",
     email: " ",
     address: " ",
+    gtin: "",
+    website: "",
     newLogo: null,
   });
 
@@ -160,6 +164,8 @@ const EditCustomer = () => {
       phone: customer.phone,
       email: customer.email,
       address: customer.address || "",
+      gtin: customer.gtin || "",
+      website: customer.website || "",
       newLogo: null,
     });
   };
@@ -175,6 +181,8 @@ const handleEditSubmit = async (e) => {
   submitData.append("phone", editForm.phone);
   submitData.append("email", editForm.email);
   submitData.append("address", editForm.address);
+  submitData.append("gtin", editForm.gtin);
+  submitData.append("website", editForm.website);
   if (editForm.newLogo) submitData.append("logo", editForm.newLogo);
 
   try {
@@ -353,6 +361,14 @@ const handleEditSubmit = async (e) => {
                           <FiMapPin className="text-xeflow-muted" size={14} />
                           <span className="truncate max-w-[200px]" title={customer.address}>{customer.address || "N/A"}</span>
                         </div>
+                        {customer.website && (
+                          <div className="flex items-center gap-2 text-xs mt-1">
+                            <FiGlobe className="text-xeflow-muted" size={14} />
+                            <a href={customer.website.startsWith('http') ? customer.website : `https://${customer.website}`} target="_blank" rel="noopener noreferrer" className="text-xeflow-brand hover:underline truncate max-w-[200px]" onClick={(e) => e.stopPropagation()}>
+                              {customer.website}
+                            </a>
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-xeflow-muted font-medium">
                         {formatDate(customer.created_at)}
@@ -627,6 +643,40 @@ const handleEditSubmit = async (e) => {
                           setEditForm({ ...editForm, address: e.target.value })
                         }
                         placeholder="e.g. 123 Main St, Anytown"
+                        className="w-full pl-10 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-xeflow-muted uppercase mb-2">
+                      Website
+                    </label>
+                    <div className="relative">
+                      <FiGlobe className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted" />
+                      <input
+                        type="url"
+                        value={editForm.website}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, website: e.target.value })
+                        }
+                        placeholder="e.g. https://example.com"
+                        className="w-full pl-10 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-xeflow-muted uppercase mb-2">
+                      GTIN
+                    </label>
+                    <div className="relative">
+                      <FiTag className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted" />
+                      <input
+                        type="text"
+                        value={editForm.gtin}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, gtin: e.target.value })
+                        }
+                        placeholder="e.g. 1234567890123"
                         className="w-full pl-10 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text outline-none focus:border-xeflow-brand"
                       />
                     </div>

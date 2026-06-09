@@ -421,6 +421,7 @@ function _buildPDFElementAndOptions(invoice, formatDate, formatMoney) {
       ${infoRow("Address", cust.address)}
       ${infoRow("Phone", cust.phone)}
       ${infoRow("Website", cust.website || "—")}
+      ${infoRow("GTIN", cust.gtin || "—")}
       ${infoRow("Email", cust.email)}
      </table>`
     : `<p style="color:${RED}; font-size:12px; margin:0;">Customer details missing.</p>`;

@@ -10,6 +10,8 @@ import {
   FiMapPin,
   FiX,
   FiHash,
+  FiGlobe,
+  FiTag,
 } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast"; 
@@ -27,6 +29,8 @@ const AddCustomer = () => {
     phone: "",
     email: "",
     customerAddress: "",
+    gtin: "",
+    website: "",
     logo: null,
   });
 
@@ -53,6 +57,8 @@ const AddCustomer = () => {
     submitData.append("phone", formData.phone);
     submitData.append("email", formData.email);
     submitData.append("address", formData.customerAddress);
+    submitData.append("gtin", formData.gtin);
+    submitData.append("website", formData.website);
 
     if (formData.logo) {
       submitData.append("logo", formData.logo);
@@ -262,6 +268,50 @@ const AddCustomer = () => {
                   onChange={handleChange}
                   placeholder="e.g. 123 Main St, Anytown"
                   className="w-full pl-11 pr-4 py-10 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted/50 outline-none focus:border-xeflow-brand transition-all duration-200"
+                />
+              </div>
+            </div>
+
+            {/* Website */}
+
+            <div>
+              <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
+                Website
+              </label>
+              <div className="relative">
+                <FiGlobe
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                  size={18}
+                />
+                <input
+                  type="url"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleChange}
+                  placeholder="e.g. https://example.com"
+                  className="w-full pl-11 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted/50 outline-none focus:border-xeflow-brand transition-all duration-200"
+                />
+              </div>
+            </div>
+
+            {/* GTIN */}
+
+            <div>
+              <label className="block text-xs font-bold text-xeflow-muted uppercase tracking-wider mb-2">
+                GTIN
+              </label>
+              <div className="relative">
+                <FiTag
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-xeflow-muted"
+                  size={18}
+                />
+                <input
+                  type="text"
+                  name="gtin"
+                  value={formData.gtin}
+                  onChange={handleChange}
+                  placeholder="e.g. 1234567890123"
+                  className="w-full pl-11 pr-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm text-xeflow-text placeholder:text-xeflow-muted/50 outline-none focus:border-xeflow-brand transition-all duration-200"
                 />
               </div>
             </div>

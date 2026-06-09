@@ -12,6 +12,7 @@ import {
   FiPrinter,
   FiFilter,
   FiFileText,
+  FiCreditCard,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth, API_BASE_URL } from "../../js/api";
@@ -536,7 +537,7 @@ const ViewInvoice = () => {
                                       onClick={() => setPaymentInvoice(invoice)}
                                       className="px-3 py-1.5 bg-xeflow-brand text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 cursor-pointer"
                                     >
-                                      <FiDollarSign size={12} /> Pay
+                                      <FiCreditCard size={12} /> Pay
                                     </button>
                                   )}
                                 </div>
@@ -713,6 +714,20 @@ const ViewInvoice = () => {
                       <p className="text-xeflow-muted">
                         <span className="font-bold text-xeflow-text">Address:</span>{" "}
                         {selectedInvoice.customer.address}
+                      </p>
+                    )}
+                    {selectedInvoice.customer.website && (
+                      <p className="text-xeflow-muted">
+                        <span className="font-bold text-xeflow-text">Website:</span>{" "}
+                        <a href={selectedInvoice.customer.website.startsWith('http') ? selectedInvoice.customer.website : `https://${selectedInvoice.customer.website}`} target="_blank" rel="noopener noreferrer" className="text-xeflow-brand hover:underline">
+                          {selectedInvoice.customer.website}
+                        </a>
+                      </p>
+                    )}
+                    {selectedInvoice.customer.gtin && (
+                      <p className="text-xeflow-muted">
+                        <span className="font-bold text-xeflow-text">GTIN:</span>{" "}
+                        {selectedInvoice.customer.gtin}
                       </p>
                     )}
                   </div>

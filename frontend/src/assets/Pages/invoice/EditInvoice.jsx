@@ -1098,6 +1098,24 @@ const EditInvoice = () => {
                           {selectedCustomer.address}
                         </p>
                       )}
+                      {selectedCustomer.website && (
+                        <p>
+                          <span className="font-bold text-xeflow-text">
+                            Website:
+                          </span>{" "}
+                          <a href={selectedCustomer.website.startsWith('http') ? selectedCustomer.website : `https://${selectedCustomer.website}`} target="_blank" rel="noopener noreferrer" className="text-xeflow-brand hover:underline">
+                            {selectedCustomer.website}
+                          </a>
+                        </p>
+                      )}
+                      {selectedCustomer.gtin && (
+                        <p>
+                          <span className="font-bold text-xeflow-text">
+                            GTIN:
+                          </span>{" "}
+                          {selectedCustomer.gtin}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

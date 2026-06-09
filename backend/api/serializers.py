@@ -224,7 +224,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
                 'rep_name': instance.customer.rep_name,
                 'email': instance.customer.email,
                 'phone': instance.customer.phone,
-                'address': instance.customer.address
+                'address': instance.customer.address,
+                'gtin': instance.customer.gtin,
+                'website': instance.customer.website
             }
         return response
     
