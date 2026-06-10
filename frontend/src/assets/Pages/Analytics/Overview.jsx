@@ -622,7 +622,7 @@ export default function Overview() {
             prefixIcon={<FiCalendar className="text-xeflow-brand text-base shrink-0" />}
             triggerLabel={activeRange.label}
             buttonClassName="flex items-center justify-between gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-xeflow-surface border border-xeflow-border text-xeflow-text shadow-sm hover:shadow-md hover:border-xeflow-brand transition-all cursor-pointer min-w-[210px] text-left"
-            dropdownClassName="w-60 right-0 bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-2xl p-2.5"
+            drop downClassName="w-60 right-0 bg-xeflow-surface border border-xeflow-border rounded-2xl shadow-2xl p-2.5"
             optionClassName="py-2.5 rounded-xl text-sm font-bold px-3.5"
           />
 

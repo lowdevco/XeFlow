@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FiX, FiSend, FiMail, FiPaperclip } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../js/api";
-import { generateInvoicePDFBase64 } from "../js/pdfGenerator";
+import { generateInvoicePDFBase64 } from "../js/PDF_template";
 import { COMPANY } from "../info/company";
 
 export default function SendEmailModal({
