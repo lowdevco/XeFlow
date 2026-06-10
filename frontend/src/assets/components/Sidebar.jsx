@@ -74,9 +74,10 @@ export default function Sidebar({ isOpen, onClose }) {
         transition-all duration-300 ease-in-out
         z-[9999] md:z-auto overflow-hidden flex-shrink-0
         fixed inset-y-0 left-0 md:relative
-        ${isOpen 
-          ? "w-[310px] border-r border-xeflow-border shadow-2xl translate-x-0" 
-          : "w-0 border-r-0 -translate-x-full md:translate-x-0 md:w-0 md:border-r-0"
+        ${
+          isOpen
+            ? "w-[310px] border-r border-xeflow-border shadow-2xl translate-x-0"
+            : "w-0 border-r-0 -translate-x-full md:translate-x-0 md:w-0 md:border-r-0"
         }
         md:shadow-none
       `}
@@ -84,7 +85,11 @@ export default function Sidebar({ isOpen, onClose }) {
       <div className="w-[310px] flex flex-col h-full overflow-hidden">
         <div className="flex items-center justify-between h-[72px] px-6 border-b border-xeflow-border shrink-0">
           <div className="flex items-center gap-3">
-            <img src={Logo} alt="XeFlow Logo" className="w-18 h-20   object-contain shrink-0" />
+            <img
+              src={Logo}
+              alt="XeFlow Logo"
+              className="w-18 h-20   object-contain shrink-0"
+            />
             <div className="leading-tight">
               <h1 className="text-[1.8rem] font-black tracking-tight text-xeflow-text uppercase leading-none">
                 Xe<span className="text-xeflow-brand">Flow</span>
@@ -111,111 +116,126 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Dynamic Navigation */}
 
         <nav className="flex-1 px-3 pt-4 pb-2 overflow-y-auto space-y-1 custom-scrollbar">
-          {modulesLoading ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-3.5 py-3 rounded-xl mb-3 bg-xeflow-bg/30">
-                <Skeleton width={40} height={40} className="rounded-lg shrink-0 animate-pulse" />
-                <Skeleton width={120} height={18} className="rounded animate-pulse" />
-              </div>
-            ))
-          ) : (
-            modules.map((module) => {
-              const hasChildren = module.children && module.children.length > 0;
-              const isDrawerOpen = openDrawerId === module.name;
-              const isActive =
-                location.pathname === module.url ||
-                (hasChildren &&
-                  module.children.some(
-                    (child) => location.pathname === child.url,
-                  ));
-
-              return (
-                <div key={module.name || Math.random()} className="mb-3">
-                  {hasChildren ? (
-                    <button
-                      type="button"
-                      onClick={(e) => toggleDrawer(e, module.name)}
-                      className={`group w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${isActive ? "bg-xeflow-brand text-white shadow-md shadow-xeflow-brand/25" : "text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-brand/6"}`}
-                    >
-                      <span className="flex items-center gap-3">
-                        <span
-                          className={`w-10 h-10 flex items-center justify-center rounded-lg shrink-0 transition-colors duration-200 ${isActive ? "bg-white/15" : "bg-xeflow-bg group-hover:bg-xeflow-brand/10"}`}
-                        >
-                          {module.icon && module.icon.startsWith("<svg") ? (
-                            <span
-                              dangerouslySetInnerHTML={{ __html: module.icon }}
-                              className="flex items-center justify-center [&>svg]:w-[18px] [&>svg]:h-[18px]"
-                            />
-                          ) : (
-                            <FiLayout size={18} />
-                          )}
-                        </span>
-                        {module.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <FiChevronDown
-                          size={18}
-                          className={`transition-transform duration-200 ${isDrawerOpen ? "rotate-180" : ""}`}
-                        />
-                      </div>
-                    </button>
-                  ) : (
-                    <Link
-                      to={module.url || "#"}
-                      onClick={() => {
-                        setOpenDrawerId(null);
-                        handleLinkClick();
-                      }}
-                      className={`group w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${isActive ? "bg-xeflow-brand text-white shadow-md shadow-xeflow-brand/25" : "text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-brand/6"}`}
-                    >
-                      <span className="flex items-center gap-3">
-                        <span
-                          className={`w-10 h-10 flex items-center justify-center rounded-lg shrink-0 transition-colors duration-200 ${isActive ? "bg-white/15" : "bg-xeflow-bg group-hover:bg-xeflow-brand/10"}`}
-                        >
-                          {module.icon && module.icon.startsWith("<svg") ? (
-                            <span
-                              dangerouslySetInnerHTML={{ __html: module.icon }}
-                              className="flex items-center justify-center [&>svg]:w-[18px] [&>svg]:h-[18px]"
-                            />
-                          ) : (
-                            <FiLayout size={18} />
-                          )}
-                        </span>
-                        {module.name}
-                      </span>
-                    </Link>
-                  )}
-
-                  {hasChildren && (
-                    <div
-                      className={`overflow-hidden transition-all duration-300 ease-in-out ${isDrawerOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"}`}
-                    >
-                      <ul className="pl-[3.20rem] pr-3 space-y-0.5 flex flex-col relative before:absolute before:left-[1.8rem] before:top-2 before:bottom-2 before:w-[1px] before:bg-xeflow-border">
-                        {module.children.map((child) => {
-                          const isChildActive = location.pathname === child.url;
-                          return (
-                            <li key={child.id || child.name}>
-                              <Link
-                                transition-style="fade"
-                                to={child.url || "#"}
-                                onClick={handleLinkClick}
-                                className={`relative block text-sm py-2 font-semibold transition-colors hover:text-xeflow-brand ${isChildActive ? "text-xeflow-brand" : "text-xeflow-muted"}`}
-                              >
-                                {isChildActive && (
-                                  <span className="absolute -left-[23px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-xeflow-brand border-[3px] border-xeflow-surface box-content shadow-[0_0_0_1px_var(--color-xeflow-brand)]"></span>
-                                )}
-                                {child.name}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  )}
+          {modulesLoading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-xl mb-3 bg-xeflow-bg/30"
+                >
+                  <Skeleton
+                    width={40}
+                    height={40}
+                    className="rounded-lg shrink-0 animate-pulse"
+                  />
+                  <Skeleton
+                    width={120}
+                    height={18}
+                    className="rounded animate-pulse"
+                  />
                 </div>
-              );
-            })
-          )}
+              ))
+            : modules.map((module) => {
+                const hasChildren =
+                  module.children && module.children.length > 0;
+                const isDrawerOpen = openDrawerId === module.name;
+                const isActive =
+                  location.pathname === module.url ||
+                  (hasChildren &&
+                    module.children.some(
+                      (child) => location.pathname === child.url,
+                    ));
+
+                return (
+                  <div key={module.name || Math.random()} className="mb-3">
+                    {hasChildren ? (
+                      <button
+                        type="button"
+                        onClick={(e) => toggleDrawer(e, module.name)}
+                        className={`group w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${isActive ? "bg-xeflow-brand text-white shadow-md shadow-xeflow-brand/25" : "text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-brand/6"}`}
+                      >
+                        <span className="flex items-center gap-3">
+                          <span
+                            className={`w-10 h-10 flex items-center justify-center rounded-lg shrink-0 transition-colors duration-200 ${isActive ? "bg-white/15" : "bg-xeflow-bg group-hover:bg-xeflow-brand/10"}`}
+                          >
+                            {module.icon && module.icon.startsWith("<svg") ? (
+                              <span
+                                dangerouslySetInnerHTML={{
+                                  __html: module.icon,
+                                }}
+                                className="flex items-center justify-center [&>svg]:w-[18px] [&>svg]:h-[18px]"
+                              />
+                            ) : (
+                              <FiLayout size={18} />
+                            )}
+                          </span>
+                          {module.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <FiChevronDown
+                            size={18}
+                            className={`transition-transform duration-200 ${isDrawerOpen ? "rotate-180" : ""}`}
+                          />
+                        </div>
+                      </button>
+                    ) : (
+                      <Link
+                        to={module.url || "#"}
+                        onClick={() => {
+                          setOpenDrawerId(null);
+                          handleLinkClick();
+                        }}
+                        className={`group w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${isActive ? "bg-xeflow-brand text-white shadow-md shadow-xeflow-brand/25" : "text-xeflow-muted hover:text-xeflow-text hover:bg-xeflow-brand/6"}`}
+                      >
+                        <span className="flex items-center gap-3">
+                          <span
+                            className={`w-10 h-10 flex items-center justify-center rounded-lg shrink-0 transition-colors duration-200 ${isActive ? "bg-white/15" : "bg-xeflow-bg group-hover:bg-xeflow-brand/10"}`}
+                          >
+                            {module.icon && module.icon.startsWith("<svg") ? (
+                              <span
+                                dangerouslySetInnerHTML={{
+                                  __html: module.icon,
+                                }}
+                                className="flex items-center justify-center [&>svg]:w-[18px] [&>svg]:h-[18px]"
+                              />
+                            ) : (
+                              <FiLayout size={18} />
+                            )}
+                          </span>
+                          {module.name}
+                        </span>
+                      </Link>
+                    )}
+
+                    {hasChildren && (
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${isDrawerOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"}`}
+                      >
+                        <ul className="pl-[3.20rem] pr-3 space-y-0.5 flex flex-col relative before:absolute before:left-[1.8rem] before:top-2 before:bottom-2 before:w-[1px] before:bg-xeflow-border">
+                          {module.children.map((child) => {
+                            const isChildActive =
+                              location.pathname === child.url;
+                            return (
+                              <li key={child.id || child.name}>
+                                <Link
+                                  transition-style="fade"
+                                  to={child.url || "#"}
+                                  onClick={handleLinkClick}
+                                  className={`relative block text-sm py-2 font-semibold transition-colors hover:text-xeflow-brand ${isChildActive ? "text-xeflow-brand" : "text-xeflow-muted"}`}
+                                >
+                                  {isChildActive && (
+                                    <span className="absolute -left-[23px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-xeflow-brand border-[3px] border-xeflow-surface box-content shadow-[0_0_0_1px_var(--color-xeflow-brand)]"></span>
+                                  )}
+                                  {child.name}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
         </nav>
 
         {/* Bottom section */}
@@ -253,10 +273,23 @@ export default function Sidebar({ isOpen, onClose }) {
 
           {loading ? (
             <div className="flex items-center gap-3 p-3 rounded-xl bg-xeflow-bg border border-xeflow-border">
-              <Skeleton circle width={36} height={36} className="shrink-0 animate-pulse" />
+              <Skeleton
+                circle
+                width={36}
+                height={36}
+                className="shrink-0 animate-pulse"
+              />
               <div className="flex-1 space-y-2">
-                <Skeleton width={100} height={14} className="rounded animate-pulse" />
-                <Skeleton width={140} height={10} className="rounded animate-pulse" />
+                <Skeleton
+                  width={100}
+                  height={14}
+                  className="rounded animate-pulse"
+                />
+                <Skeleton
+                  width={140}
+                  height={10}
+                  className="rounded animate-pulse"
+                />
               </div>
             </div>
           ) : (
