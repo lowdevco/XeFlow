@@ -1,77 +1,212 @@
-import React from "react";
 import BG from "../image/invoice-template.png";
 import { COMPANY } from "../info/company.js";
 import { BANK } from "../info/bank.js";
+import { fmtMonthName } from "../info/formatter";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
-export default function InvoicePreview() {
-  const invoice = {
-    invoiceNumber: "INV-001",
-    invoiceDate: "23/05/2026",
-    invoiceMonth: "May 2026",
-    placeOfSupply: "Kerala",
-    tax_type: "NO_GST", // Dynamic modes: "GST", "IGST", or "NO_GST"
-    discount_percent: 5, // Set to 0 if utilizing flat discount amount instead
-    discount_amount: 0, // Flat discount amount if percentage is 0
-    amount_paid: 5000, // Advance payment parameter from backend server
+function parseSafeDate(d) {
+  if (!d) return new Date();
+  if (d instanceof Date) return d;
+  if (typeof d === "string") {
+    if (d.includes("/")) {
+      const parts = d.split("/");
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        const date = new Date(year, month, day);
+        if (!isNaN(date.getTime())) return date;
+      }
+    }
 
-    customer: {
-      name: "Acme Technologies Pvt Ltd",
-      address: "Infopark, Kochi",
-      phone: "+91 9876543210",
-      email: "contact@acme.com",
-      gstin: "32ABCDE1234F1Z5",
-    },
+    if (d.includes("-")) {
+      const parts = d.split("T")[0].split("-");
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        const date = new Date(year, month, day);
+        if (!isNaN(date.getTime())) return date;
+      }
+    }
+  }
+  const parsed = new Date(d);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
 
-    company: {
-      name: "Xeflow Technologies",
-      address: "Kalpetta, Wayanad",
-      phone: "+91 9746905919",
-      email: "admin@xeflow.com",
-      gstin: "32BEDPT5030H1ZR",
-    },
+function fmtDDMMYYYY(d) {
+  const dt = parseSafeDate(d);
+  const dd = String(dt.getDate()).padStart(2, "0");
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${dt.getFullYear()}`;
+}
 
-    items: [
-      {
-        description: "Website Development",
-        qty: 1,
-        rate: 25000,
-        total: 25000,
-      },
-      {
-        description: "Hosting & Maintenance",
-        qty: 1,
-        rate: 5000,
-        total: 5000,
-      },
-    ],
+function getInvoiceMonthAndYear(invoice) {
+  const dateStr =
+    invoice.issue_date || invoice.invoice_date || invoice.invoiceDate;
+  const dateObj = parseSafeDate(dateStr);
 
-    totalWords: "Thirty Thousand Rupees Only",
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const monthName = monthNames[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  return {
+    monthName,
+    year,
+    monthYear: `${monthName} ${year}`,
   };
+}
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // GLOBAL CALCULATION LAYER
-  // ─────────────────────────────────────────────────────────────────────────────
+const _ONES = [
+  "",
+  "One",
+  "Two",
+  "Three",
+  "Four",
+  "Five",
+  "Six",
+  "Seven",
+  "Eight",
+  "Nine",
+  "Ten",
+  "Eleven",
+  "Twelve",
+  "Thirteen",
+  "Fourteen",
+  "Fifteen",
+  "Sixteen",
+  "Seventeen",
+  "Eighteen",
+  "Nineteen",
+];
+const _TENS = [
+  "",
+  "",
+  "Twenty",
+  "Thirty",
+  "Forty",
+  "Fifty",
+  "Sixty",
+  "Seventy",
+  "Eighty",
+  "Ninety",
+];
+
+function _below100(n) {
+  if (n < 20) return _ONES[n];
+  return _TENS[Math.floor(n / 10)] + (n % 10 ? " " + _ONES[n % 10] : "");
+}
+
+function _below1000(n) {
+  if (n < 100) return _below100(n);
+  return (
+    _ONES[Math.floor(n / 100)] +
+    " Hundred" +
+    (n % 100 ? " " + _below100(n % 100) : "")
+  );
+}
+
+function _numWords(n) {
+  if (n === 0) return "Zero";
+  let w = "";
+  if (n >= 10000000) {
+    w += _below1000(Math.floor(n / 10000000)) + " Crore ";
+    n %= 10000000;
+  }
+  if (n >= 100000) {
+    w += _below100(Math.floor(n / 100000)) + " Lakh ";
+    n %= 100000;
+  }
+  if (n >= 1000) {
+    w += _below100(Math.floor(n / 1000)) + " Thousand ";
+    n %= 1000;
+  }
+  if (n > 0) {
+    w += _below1000(n);
+  }
+  return w.trim();
+}
+
+export function amountToWords(amount) {
+  const num = parseFloat(amount) || 0;
+  const rupees = Math.floor(num);
+  const paise = Math.round((num - rupees) * 100);
+  let w = "Rupees " + (rupees > 0 ? _numWords(rupees) : "Zero");
+  if (paise > 0) w += " And " + _numWords(paise) + " Paise";
+  return (w + " Only").toUpperCase();
+}
+
+export default function InvoicePreview({ invoice, isPrinting = false }) {
+  if (!invoice) return null;
+
+  const dateInfo = getInvoiceMonthAndYear(invoice);
+  const invNum = invoice.invoice_number || invoice.invoiceNumber || "—";
+  const invDate = invoice.issue_date
+    ? fmtDDMMYYYY(invoice.issue_date)
+    : invoice.invoiceDate || "—";
+  const invMonth = dateInfo.monthName;
+  const placeSupply =
+    invoice.place_of_supply || invoice.placeOfSupply || "Kerala";
+  const yearStr = dateInfo.year.toString();
+
+  const cust = invoice.customer || {};
+  const custName = cust.company_name || cust.name || "—";
+  const custGstin = cust.gstin || cust.gst_number || "—";
+  const custAddress = cust.address || "—";
+  const custPhone = cust.phone || "—";
+  const custWebsite = cust.website || "—";
+  const custEmail = cust.email || "—";
+
   const HSN_SAC_CODE = "998314";
-  const taxType = (invoice.tax_type || "GST").toUpperCase();
+  const taxType = (invoice.tax_type || "GST")
+    .toUpperCase()
+    .replace(/[\s_-]/g, "");
   const isGST = taxType === "GST";
   const isIGST = taxType === "IGST";
-  const isNoGST = taxType === "NO_GST" || taxType === "NO GST";
+  const isNoGST = taxType === "NOGST" || taxType === "NONE" || taxType === "";
 
-  const cgstRate = Number(invoice.cgst_rate || 9);
-  const sgstRate = Number(invoice.sgst_rate || 9);
-  const igstRate = Number(invoice.igst_rate || 18);
+  const cgstRate =
+    invoice.cgst_rate !== undefined && invoice.cgst_rate !== null
+      ? Number(invoice.cgst_rate)
+      : 9;
+  const sgstRate =
+    invoice.sgst_rate !== undefined && invoice.sgst_rate !== null
+      ? Number(invoice.sgst_rate)
+      : 9;
+  const igstRate =
+    invoice.igst_rate !== undefined && invoice.igst_rate !== null
+      ? Number(invoice.igst_rate)
+      : 18;
   const items = invoice.items || [];
 
-  let totalTaxable = 0;
-  let totalCGST = 0;
-  let totalSGST = 0;
-  let totalIGST = 0;
+  const fmt = (num) =>
+    Number(num || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
-  // Process core item aggregates
   const rows = items.map((item) => {
     const qty = Number(item.qty || item.quantity || 1);
     const rate = Number(item.rate || 0);
-    const taxableValue = qty * rate;
+    const taxableValue = Number(
+      item.taxable_value ?? item.amount ?? qty * rate,
+    );
     let cgstAmount = 0;
     let sgstAmount = 0;
     let igstAmount = 0;
@@ -82,15 +217,11 @@ export default function InvoicePreview() {
       sgstAmount = (taxableValue * sgstRate) / 100;
       lineTotal += cgstAmount + sgstAmount;
     }
+
     if (isIGST) {
       igstAmount = (taxableValue * igstRate) / 100;
       lineTotal += igstAmount;
     }
-
-    totalTaxable += taxableValue;
-    totalCGST += cgstAmount;
-    totalSGST += sgstAmount;
-    totalIGST += igstAmount;
 
     return {
       ...item,
@@ -104,33 +235,58 @@ export default function InvoicePreview() {
     };
   });
 
-  // Process conditional discount metrics
-  const discountPercent = Number(invoice.discount_percent || 0);
-  const discountAmountRaw = Number(invoice.discount_amount || 0);
-  let computedDiscount = 0;
+  const totalTaxable = rows.reduce((sum, item) => sum + item.taxableValue, 0);
+  const totalCGST = rows.reduce((sum, item) => sum + item.cgstAmount, 0);
+  const totalSGST = rows.reduce((sum, item) => sum + item.sgstAmount, 0);
+  const totalIGST = rows.reduce((sum, item) => sum + item.igstAmount, 0);
+
+  const discountPercent = Number(invoice.discount_percentage || invoice.discount_percent || invoice.discountPercent || 0);
+  const discountAmountRaw = Number(invoice.discount_amount || invoice.discountAmount || 0);
+  let discountVal = 0;
+  let discountLabel = "Discount";
 
   if (discountPercent > 0) {
-    computedDiscount = (totalTaxable * discountPercent) / 100;
+    discountVal = (totalTaxable * discountPercent) / 100;
+    discountLabel = `Discount (${discountPercent}%)`;
   } else if (discountAmountRaw > 0) {
-    computedDiscount = discountAmountRaw;
+    discountVal = discountAmountRaw;
+  }
+  const finalGrandTotal =
+    invoice.total_amount !== undefined && invoice.total_amount !== null
+      ? Number(invoice.total_amount)
+      : totalTaxable -
+        discountVal +
+        (isGST ? totalCGST + totalSGST : isIGST ? totalIGST : 0);
+
+  const amtPaid = Number(invoice.amount_paid || 0);
+  const netGrandTotal = finalGrandTotal - amtPaid;
+  const totalWords = amountToWords(finalGrandTotal);
+  const balDue =
+    invoice.balance_due !== undefined && invoice.balance_due !== null
+      ? Number(invoice.balance_due)
+      : netGrandTotal;
+
+  const displayRows = [...rows];
+  while (displayRows.length < 5) {
+    displayRows.push({
+      description: "",
+      qty: "",
+      rate: "",
+      taxableValue: "",
+      cgstAmount: "",
+      sgstAmount: "",
+      igstAmount: "",
+      lineTotal: "",
+    });
   }
 
-  // Final structural value compilation
-  const totalTax = isGST ? totalCGST + totalSGST : isIGST ? totalIGST : 0;
-  const advancePaid = Number(invoice.amount_paid || 0);
-  const finalGrandTotal =
-    totalTaxable - computedDiscount + totalTax - advancePaid;
-
-  const fmt = (num) =>
-    Number(num || 0).toLocaleString("en-IN", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-
   return (
-    <div className="flex justify-center bg-slate-200 py-10">
-      <div className="relative w-[794px] h-[1123px] bg-white shadow-xl overflow-hidden">
+    <div className="flex justify-center bg-[#e2e8f0] py-10 font-sans">
+      <div
+        className={`relative w-[794px] h-[1122px] bg-[#ffffff] overflow-hidden text-[#0f172a] ${isPrinting ? "" : "shadow-xl"}`}
+      >
         {/* Background Template */}
+
         <img
           src={BG}
           alt=""
@@ -138,37 +294,39 @@ export default function InvoicePreview() {
         />
 
         {/* Invoice Header */}
-        <div className="flex absolute text-sm font-bold gap-[132px] top-[195px] left-[79px]">
-          <div>{invoice.invoiceNumber}</div>
-          <div>{invoice.invoiceDate}</div>
-          <div>{invoice.invoiceMonth}</div>
-          <div>{invoice.placeOfSupply}</div>
+
+        <div className="flex absolute text-sm font-bold gap-[135px] top-[195px] left-[79px]">
+          <div>{invNum}</div>
+          <div>{invDate}</div>
+          <div>{invMonth}</div>
+          <div className="!ml-2">{placeSupply}</div>
         </div>
 
         {/* Year */}
-        <div className="absolute top-[100px] left-[690px]">
-          <h1 className="font-semibold scale-260 text-[#2158A9]">2026</h1>
+        <div className="absolute top-[80px] left-[660px] ">
+          <h1 className="font-semibold text-[#2158A9]" style={{ transform: 'scale(2.6)', transformOrigin: 'top left' }}>{yearStr}</h1>
         </div>
 
         {/* Bill To */}
+
         <div className="absolute top-[275px] left-[50px] w-[270px] text-xs p-2 space-y-2">
           <p className="font-semibold flex gap-8">
-            <strong>Name:</strong> {invoice.customer.name}
+            <strong>Name:</strong> {custName}
           </p>
           <p className="font-semibold flex gap-8">
-            <strong>GSTIN:</strong> {invoice.customer.gstin}
+            <strong>GSTIN:</strong> {custGstin}
           </p>
           <p className="font-semibold flex gap-6">
-            <strong>Address:</strong> {invoice.customer.address}
+            <strong>Address:</strong> {custAddress}
           </p>
           <p className="font-semibold flex gap-8">
-            <strong>Phone:</strong> {invoice.customer.phone}
+            <strong>Phone:</strong> {custPhone}
           </p>
           <p className="font-semibold flex gap-6">
-            <strong>Website:</strong> {invoice.customer.website}
+            <strong>Website:</strong> {custWebsite}
           </p>
           <p className="font-semibold flex gap-8">
-            <strong>Email:</strong> {invoice.customer.email}
+            <strong>Email:</strong> {custEmail}
           </p>
         </div>
 
@@ -266,25 +424,10 @@ export default function InvoicePreview() {
               </thead>
               <tbody>
                 {(() => {
-                  const displayRows = [...rows];
-                  while (displayRows.length < 5) {
-                    displayRows.push({
-                      description: "",
-                      qty: "",
-                      rate: "",
-                      taxableValue: "",
-                      cgstAmount: "",
-                      sgstAmount: "",
-                      igstAmount: "",
-                      lineTotal: "",
-                    });
-                  }
-
                   return displayRows.map((item, index) => {
                     const isLastRow = index === displayRows.length - 1;
                     const borderClass = `border-l border-r border-[#d6dee9] ${isLastRow ? "border-b" : ""}`;
 
-                    // Dynamic padding assignment logic based on tax framework mode
                     const cellPadding = isGST ? "p-1" : "px-2";
                     const descPadding = isGST ? "p-1" : "px-3 pt-3";
 
@@ -438,7 +581,7 @@ export default function InvoicePreview() {
                   <td
                     className={`bg-[#eef2f7] border border-[#d6dee9] text-center font-bold text-[11px] whitespace-nowrap ${isGST ? "p-1" : "px-2"}`}
                   >
-                    {fmt(totalTaxable - computedDiscount + totalTax)}
+                    {fmt(finalGrandTotal)}
                   </td>
                 </tr>
               </tfoot>
@@ -447,8 +590,10 @@ export default function InvoicePreview() {
         </div>
 
         {/* Total In Words */}
-        <div className="absolute top-[840px] left-[70px] w-[280px]">
-          <p className="text-sm font-bold uppercase">{invoice.totalWords}</p>
+        <div className="absolute top-[828px] left-[30px] w-[320px] h-[45px] flex items-center justify-center text-center px-2">
+          <p className="text-[11px] font-bold uppercase text-[#0f172a] leading-snug">
+            {totalWords}
+          </p>
         </div>
 
         {/* Bank Details */}
@@ -468,44 +613,43 @@ export default function InvoicePreview() {
         </div>
 
         {/* DYNAMIC TAX SUMMARY PANEL */}
-        <div className="absolute top-[773px] p-3 right-[31px] w-[362px]">
+        <div className="absolute top-[812px] p-3 right-[31px] w-[362px] text-[#0f172a]">
           <div className="overflow-hidden rounded-lg border border-[#d6dee9] bg-white text-[10px]">
-            <table className="w-full border-separate border-spacing-0 ">
+            <table className="w-full border-separate border-spacing-0">
               <tbody>
                 <tr className="border-b border-[#eef2f7]">
-                  <td className="p-1 border-b border-[#eef2f7] text-gray-500 font-medium">
+                  <td className="p-1 border-b border-[#eef2f7] text-[#64748b] font-medium">
                     Taxable Amount
                   </td>
-                  <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-gray-800">
+                  <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-[#1e293b]">
                     ₹ {fmt(totalTaxable)}
                   </td>
                 </tr>
-                {computedDiscount > 0 && (
+                {discountVal > 0 && (
                   <tr className="border-b border-[#eef2f7] bg-red-50/30">
-                    <td className="p-1 border-b border-[#eef2f7] text-red-600 font-medium">
-                      Discount{" "}
-                      {discountPercent > 0 ? `(${discountPercent}%)` : ""}
+                    <td className="p-1 border-b border-[#eef2f7] text-[#dc2626] font-medium">
+                      {discountLabel}
                     </td>
-                    <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-red-600">
-                      - ₹ {fmt(computedDiscount)}
+                    <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-[#dc2626]">
+                      - ₹ {fmt(discountVal)}
                     </td>
                   </tr>
                 )}
                 {isGST && (
                   <>
                     <tr className="border-b border-[#eef2f7]">
-                      <td className="p-1 border-b border-[#eef2f7] text-gray-500 font-medium">
+                      <td className="p-1 border-b border-[#eef2f7] text-[#64748b] font-medium">
                         Add CGST ({cgstRate}%)
                       </td>
-                      <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-gray-800">
+                      <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-[#1e293b]">
                         ₹ {fmt(totalCGST)}
                       </td>
                     </tr>
                     <tr className="border-b border-[#eef2f7]">
-                      <td className="p-1 border-b border-[#eef2f7] text-gray-500 font-medium">
+                      <td className="p-1 border-b border-[#eef2f7] text-[#64748b] font-medium">
                         Add SGST ({sgstRate}%)
                       </td>
-                      <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-gray-800">
+                      <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-[#1e293b]">
                         ₹ {fmt(totalSGST)}
                       </td>
                     </tr>
@@ -513,46 +657,50 @@ export default function InvoicePreview() {
                 )}
                 {isIGST && (
                   <tr className="border-b border-[#eef2f7]">
-                    <td className="p-1 border-b border-[#eef2f7] text-gray-500 font-medium">
+                    <td className="p-1 border-b border-[#eef2f7] text-[#64748b] font-medium">
                       Add IGST ({igstRate}%)
                     </td>
-                    <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-gray-800">
+                    <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-[#1e293b]">
                       ₹ {fmt(totalIGST)}
                     </td>
                   </tr>
                 )}
-                {!isNoGST && (
-                  <tr className="border-b border-[#eef2f7] bg-slate-50/50">
-                    <td className="p-1 border-b border-[#eef2f7] text-gray-600 font-bold">
-                      Total Tax
-                    </td>
-                    <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-gray-800">
-                      ₹ {fmt(totalTax)}
-                    </td>
-                  </tr>
-                )}
-                {advancePaid > 0 && (
-                  <tr className="border-b border-[#eef2f7] bg-green-50/30">
-                    <td className="p-1 border-b border-[#eef2f7] text-green-600 font-medium">
-                      Amount Paid / Advance
-                    </td>
-                    <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-green-600">
-                      - ₹ {fmt(advancePaid)}
-                    </td>
-                  </tr>
-                )}
-                <tr className="bg-[#2158A9] text-white font-bold">
-                  <td className="p-2.5 text-xs font-black tracking-wide rounded-bl-xs">
+                <tr className="bg-[#2158A9] text-[#ffffff] font-bold">
+                  <td
+                    className={`p-2.5 text-xs font-black tracking-wide ${amtPaid > 0 ? "" : "rounded-bl-xs"}`}
+                  >
                     Grand Total
                   </td>
-                  <td className="p-2.5 text-right text-xs font-black tracking-wide rounded-br-xs">
+                  <td
+                    className={`p-2.5 text-right text-xs font-black tracking-wide ${amtPaid > 0 ? "" : "rounded-br-xs"}`}
+                  >
                     ₹ {fmt(finalGrandTotal)}
                   </td>
                 </tr>
+                {amtPaid > 0 && (
+                  <>
+                    <tr className="border-b border-[#eef2f7] bg-green-50/30">
+                      <td className="p-1 border-b border-[#eef2f7] text-[#16a34a] font-medium">
+                        Amount Paid / Advance
+                      </td>
+                      <td className="p-1 border-b border-[#eef2f7] text-right font-bold text-[#16a34a]">
+                        - ₹ {fmt(amtPaid)}
+                      </td>
+                    </tr>
+                    <tr className="bg-red-50/30 font-bold">
+                      <td className="p-2.5 text-xs text-[#dc2626] font-black tracking-wide rounded-bl-xs">
+                        Balance Due
+                      </td>
+                      <td className="p-2.5 text-right text-xs text-[#dc2626] font-black tracking-wide rounded-br-xs">
+                        ₹ {fmt(balDue)}
+                      </td>
+                    </tr>
+                  </>
+                )}
               </tbody>
             </table>
           </div>
-          <div className="w-full text-right text-[9px] text-gray-400 font-medium mt-1 pr-1">
+          <div className="w-full text-right text-[9px] text-[#64748b] font-medium mt-1 pr-1">
             (E &amp; O.E.)
           </div>
         </div>
@@ -560,3 +708,164 @@ export default function InvoicePreview() {
     </div>
   );
 }
+
+
+
+export const generateInvoicePDF = (
+  invoice,
+  _formatDate,
+  _formatMoney,
+  toast,
+) => {
+  const loadingToast = toast.loading("Generating PDF...");
+
+  try {
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = "fixed";
+    tempDiv.style.left = "0";
+    tempDiv.style.top = "0";
+    tempDiv.style.width = "794px";
+    tempDiv.style.height = "1122px";
+    tempDiv.style.zIndex = "-9999";
+    tempDiv.style.pointerEvents = "none";
+    tempDiv.style.overflow = "hidden";
+    document.body.appendChild(tempDiv);
+
+    const root = createRoot(tempDiv);
+    flushSync(() => {
+      root.render(<InvoicePreview invoice={invoice} isPrinting={true} />);
+    });
+
+    const runRender = () => {
+      const target = tempDiv.querySelector(".relative") || tempDiv;
+
+      const captureCanvas = () => {
+        html2canvas(target, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          width: 794,
+          height: 1122,
+          scrollX: 0,
+          scrollY: 0,
+          x: 0,
+          y: 0,
+        })
+          .then((canvas) => {
+            const imgData = canvas.toDataURL("image/jpeg", 0.98);
+            const pdf = new jsPDF("p", "mm", "a4");
+            pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+            pdf.save(`Invoice_${invoice.invoice_number || "draft"}.pdf`);
+
+            toast.success("Download started!", { id: loadingToast });
+            root.unmount();
+            document.body.removeChild(tempDiv);
+          })
+          .catch((err) => {
+            console.error("html2canvas render error:", err);
+            toast.error("Failed to render PDF.", { id: loadingToast });
+            root.unmount();
+            document.body.removeChild(tempDiv);
+          });
+      };
+
+      const img = target.querySelector("img");
+      if (img) {
+        if (img.complete) {
+          img.decode().then(captureCanvas).catch(captureCanvas);
+        } else {
+          img.addEventListener("load", () => {
+            img.decode().then(captureCanvas).catch(captureCanvas);
+          });
+          img.addEventListener("error", captureCanvas);
+        }
+      } else {
+        captureCanvas();
+      }
+    };
+
+    runRender();
+  } catch (err) {
+    console.error("generateInvoicePDF error:", err);
+    toast.error("Failed to generate PDF.", { id: loadingToast });
+  }
+};
+
+export const generateInvoicePDFBase64 = (
+  invoice,
+  _formatDate,
+  _formatMoney,
+) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const tempDiv = document.createElement("div");
+      tempDiv.style.position = "fixed";
+      tempDiv.style.left = "0";
+      tempDiv.style.top = "0";
+      tempDiv.style.width = "794px";
+      tempDiv.style.height = "1122px";
+      tempDiv.style.zIndex = "-9999";
+      tempDiv.style.pointerEvents = "none";
+      tempDiv.style.overflow = "hidden";
+      document.body.appendChild(tempDiv);
+
+      const root = createRoot(tempDiv);
+      flushSync(() => {
+        root.render(<InvoicePreview invoice={invoice} isPrinting={true} />);
+      });
+
+      const runRender = () => {
+        const target = tempDiv.querySelector(".relative") || tempDiv;
+
+        const captureCanvas = () => {
+          html2canvas(target, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            width: 794,
+            height: 1122,
+            scrollX: 0,
+            scrollY: 0,
+            x: 0,
+            y: 0,
+          })
+            .then((canvas) => {
+              const imgData = canvas.toDataURL("image/jpeg", 0.98);
+              const pdf = new jsPDF("p", "mm", "a4");
+              pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+              const base64 = pdf.output("datauristring").split(",")[1];
+
+              resolve(base64);
+              root.unmount();
+              document.body.removeChild(tempDiv);
+            })
+            .catch((err) => {
+              console.error("html2canvas render base64 error:", err);
+              reject(err);
+              root.unmount();
+              document.body.removeChild(tempDiv);
+            });
+        };
+
+        const img = target.querySelector("img");
+        if (img) {
+          if (img.complete) {
+            img.decode().then(captureCanvas).catch(captureCanvas);
+          } else {
+            img.addEventListener("load", () => {
+              img.decode().then(captureCanvas).catch(captureCanvas);
+            });
+            img.addEventListener("error", captureCanvas);
+          }
+        } else {
+          captureCanvas();
+        }
+      };
+
+      runRender();
+    } catch (err) {
+      console.error("generateInvoicePDFBase64 error:", err);
+      reject(err);
+    }
+  });
+};

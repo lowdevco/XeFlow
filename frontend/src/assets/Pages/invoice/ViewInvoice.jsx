@@ -15,7 +15,7 @@ import {
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth, API_BASE_URL } from "../../js/api";
-import { generateInvoicePDF } from "../../js/pdfGenerator";
+import { generateInvoicePDF } from "../../js/PDF_template";
 import SendEmailModal from "../../components/SendEmailModal";
 import CustomSelect from "../../components/CustomSelect";
 import Skeleton from "react-loading-skeleton";
