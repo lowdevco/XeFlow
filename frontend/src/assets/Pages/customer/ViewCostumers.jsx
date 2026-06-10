@@ -12,7 +12,8 @@ import {
   FiX,
   FiEye,
   FiFileText,
-  FiDollarSign,
+  FiGlobe,
+  FiTag,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -361,6 +362,14 @@ const ViewCustomers = () => {
                           />
                           <span className="truncate max-w-[200px]" title={customer.address}>{customer.address || "N/A"}</span>
                         </div>
+                        {customer.website && (
+                          <div className="flex items-center gap-2 text-xs mt-1">
+                            <FiGlobe className="text-xeflow-muted shrink-0" size={14} />
+                            <a href={customer.website.startsWith('http') ? customer.website : `https://${customer.website}`} target="_blank" rel="noopener noreferrer" className="text-xeflow-brand hover:underline truncate max-w-[200px]" onClick={(e) => e.stopPropagation()}>
+                              {customer.website}
+                            </a>
+                          </div>
+                        )}
                       </td>
 
                       <td className="px-6 py-4 text-xeflow-muted font-medium">
@@ -510,6 +519,28 @@ const ViewCustomers = () => {
                     <div>
                       <p className="text-xs font-semibold text-xeflow-muted">Address</p>
                       <p className="font-semibold leading-relaxed text-xs text-xeflow-muted">{selectedCustomer.address}</p>
+                    </div>
+                  </div>
+                )}
+                {selectedCustomer.website && (
+                  <div className="flex items-center gap-3 text-sm pt-2 border-t border-xeflow-border/40">
+                    <FiGlobe className="text-xeflow-muted shrink-0" size={16} />
+                    <div>
+                      <p className="text-xs font-semibold text-xeflow-muted">Website</p>
+                      <p className="font-semibold">
+                        <a href={selectedCustomer.website.startsWith('http') ? selectedCustomer.website : `https://${selectedCustomer.website}`} target="_blank" rel="noopener noreferrer" className="text-xeflow-brand hover:underline">
+                          {selectedCustomer.website}
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {selectedCustomer.gtin && (
+                  <div className="flex items-center gap-3 text-sm pt-2 border-t border-xeflow-border/40">
+                    <FiTag className="text-xeflow-muted shrink-0" size={16} />
+                    <div>
+                      <p className="text-xs font-semibold text-xeflow-muted">GTIN</p>
+                      <p className="font-semibold">{selectedCustomer.gtin}</p>
                     </div>
                   </div>
                 )}

@@ -24,7 +24,6 @@ import {
   FiTrendingUp,
   FiTrendingDown,
   FiActivity,
-  FiDollarSign,
   FiAward,
   FiRepeat,
   FiArrowRight,

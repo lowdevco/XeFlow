@@ -45,6 +45,8 @@ class Customer(models.Model):
     email = models.EmailField()
     address = models.TextField(blank=True, null=True)
     logo = models.ImageField(upload_to='logos/', blank=True, null=True) 
+    gtin = models.CharField(max_length=100, blank=True, null=True)
+    website = models.CharField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -69,7 +71,7 @@ class Service(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - ${self.price}"
+        return f"{self.name} - ₹{self.price}"
 
 
 #---------------Invoice-------------------#

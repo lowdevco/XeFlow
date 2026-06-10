@@ -28,8 +28,8 @@ class Menu_ChildAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'logo_preview', 'company_name', 'rep_name', 'email')
-    search_fields = ('company_name', 'rep_name', 'email')
+    list_display = ('id', 'logo_preview', 'company_name', 'rep_name', 'email', 'gtin', 'website')
+    search_fields = ('company_name', 'rep_name', 'email', 'gtin', 'website')
     list_display_links = ('id', 'company_name')
     readonly_fields = ('logo_preview',)
     def logo_preview(self, obj):
