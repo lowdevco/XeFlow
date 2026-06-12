@@ -29,6 +29,18 @@ import { COMPANY } from "../../info/company";
 import { formatMoney, formatDate } from "../../info/formatter";
 import { API_ROUTES } from "../../../Routing/apiroutes";
 
+const combineDateWithCurrentTime = (dateStr) => {
+  if (!dateStr) return new Date().toISOString();
+  try {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const dateObj = new Date();
+    dateObj.setFullYear(year, month - 1, day);
+    return dateObj.toISOString();
+  } catch (e) {
+    return new Date(dateStr).toISOString();
+  }
+};
+
 const ViewInvoice = () => {
   const [invoices, setInvoices] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -57,6 +69,9 @@ const ViewInvoice = () => {
   const [expandedInvoiceId, setExpandedInvoiceId] = useState(null);
   const [paymentInvoice, setPaymentInvoice] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentTransactionId, setPaymentTransactionId] = useState("");
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
+  const [paymentDescription, setPaymentDescription] = useState("");
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
 
   const handleRecordPayment = async (e) => {
@@ -80,12 +95,16 @@ const ViewInvoice = () => {
     try {
       const response = await fetchWithAuth(API_ROUTES.INVOICE_PAYMENT(paymentInvoice.id), {
         method: "POST",
-        body: JSON.stringify({ amount: amt }),
+        body: JSON.stringify({
+          amount: amt,
+          transaction_id: paymentTransactionId,
+          payment_date: combineDateWithCurrentTime(paymentDate),
+          description: paymentDescription || "Client payment recorded",
+        }),
       });
 
       if (response.ok) {
         const updatedInvoice = await response.json();
-        
 
         setInvoices((prevInvoices) =>
           prevInvoices.map((inv) =>
@@ -96,6 +115,9 @@ const ViewInvoice = () => {
         toast.success("Payment recorded successfully!", { id: toastId });
         setPaymentInvoice(null);
         setPaymentAmount("");
+        setPaymentTransactionId("");
+        setPaymentDate(new Date().toISOString().split("T")[0]);
+        setPaymentDescription("");
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to record payment.", { id: toastId });
@@ -534,7 +556,13 @@ const ViewInvoice = () => {
                                   </div>
                                   {parseFloat(invoice.balance_due) > 0 && (
                                     <button
-                                      onClick={() => setPaymentInvoice(invoice)}
+                                      onClick={() => {
+                                        setPaymentInvoice(invoice);
+                                        setPaymentAmount("");
+                                        setPaymentTransactionId("");
+                                        setPaymentDate(new Date().toISOString().split("T")[0]);
+                                        setPaymentDescription("");
+                                      }}
                                       className="px-3 py-1.5 bg-xeflow-brand text-white text-xs font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1 cursor-pointer"
                                     >
                                       <FiCreditCard size={12} /> Pay
@@ -909,22 +937,53 @@ const ViewInvoice = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Payment Amount (INR) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max={paymentInvoice.balance_due}
+                    placeholder={`Max: ${parseFloat(paymentInvoice.balance_due)}`}
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-bold text-xeflow-text transition-all"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Payment Date</label>
+                  <input
+                    type="date"
+                    value={paymentDate}
+                    onChange={(e) => setPaymentDate(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-semibold text-xeflow-text transition-all"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Payment Amount (INR)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Transaction ID</label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  max={paymentInvoice.balance_due}
-                  placeholder={`Max: ${parseFloat(paymentInvoice.balance_due)}`}
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-bold text-xeflow-text transition-all"
-                  required
+                  type="text"
+                  placeholder="Enter Bank or Payment TXN ID"
+                  value={paymentTransactionId}
+                  onChange={(e) => setPaymentTransactionId(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-semibold text-xeflow-text transition-all"
                 />
-                <span className="text-[10px] text-xeflow-muted block">
-                  * Dynamic limit matches the current outstanding balance.
-                </span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Description / Notes</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Bank transfer payment"
+                  value={paymentDescription}
+                  onChange={(e) => setPaymentDescription(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-semibold text-xeflow-text transition-all"
+                />
               </div>
 
               <div className="flex gap-3 pt-2">

@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Menu_Module, Customer, Service, Invoice
+from .models import Menu_Module, Customer, Service, Invoice, Payment
 from django.contrib.auth.models import User, Group, Permission
-from .serializers import ModuleSerializer, CustomerSerializer, ServiceSerializer, InvoiceSerializer, UserRegistrationSerializer, GroupSerializer, PermissionSerializer, CurrentUserSerializer, UserAdminSerializer
+from .serializers import ModuleSerializer, CustomerSerializer, ServiceSerializer, InvoiceSerializer, UserRegistrationSerializer, GroupSerializer, PermissionSerializer, CurrentUserSerializer, UserAdminSerializer, PaymentSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import generics , permissions
 from rest_framework.permissions import IsAuthenticated
@@ -75,6 +75,19 @@ class AddInvoicePaymentView(APIView):
         
         invoice = get_object_or_404(Invoice, pk=pk)
         amount_raw = request.data.get('amount')
+        transaction_id = request.data.get('transaction_id', '')
+        description = request.data.get('description', "Payment recorded via Invoice Details")
+        
+        payment_date_raw = request.data.get('payment_date')
+        payment_date = timezone.now()
+        if payment_date_raw:
+            try:
+                from django.utils.dateparse import parse_datetime
+                parsed = parse_datetime(payment_date_raw)
+                if parsed:
+                    payment_date = parsed
+            except Exception:
+                pass
         
         if amount_raw is None:
             return Response(
@@ -97,7 +110,6 @@ class AddInvoicePaymentView(APIView):
             )
           
         outstanding = invoice.total_amount - invoice.amount_paid
-        
         outstanding = outstanding.quantize(Decimal('0.01'))
         payment_amount = payment_amount.quantize(Decimal('0.01'))
         
@@ -107,11 +119,58 @@ class AddInvoicePaymentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
             
-        invoice.amount_paid += payment_amount
-        invoice.save()
+        # Create Payment record, which auto-updates the invoice amount_paid on save
+        Payment.objects.create(
+            invoice=invoice,
+            amount=payment_amount,
+            transaction_id=transaction_id,
+            description=description,
+            payment_date=payment_date
+        )
         
         serializer = InvoiceSerializer(invoice)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PaymentListCreateView(generics.ListCreateAPIView):
+    queryset = Payment.objects.all().order_by('-payment_date')
+    serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        from decimal import Decimal
+        from rest_framework import status
+        
+        invoice_id = request.data.get('invoice')
+        amount_raw = request.data.get('amount')
+        transaction_id = request.data.get('transaction_id')
+        
+        if not invoice_id:
+            return Response({"error": "Invoice is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if amount_raw is None:
+            return Response({"error": "Payment amount is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        invoice = get_object_or_404(Invoice, pk=invoice_id)
+        
+        try:
+            payment_amount = Decimal(str(amount_raw))
+        except Exception:
+            return Response({"error": "Invalid payment amount format."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if payment_amount <= 0:
+            return Response({"error": "Payment amount must be greater than zero."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        outstanding = invoice.total_amount - invoice.amount_paid
+        outstanding = outstanding.quantize(Decimal('0.01'))
+        payment_amount = payment_amount.quantize(Decimal('0.01'))
+        
+        if payment_amount > outstanding:
+            return Response(
+                {"error": f"Payment amount of {payment_amount} exceeds outstanding balance of {outstanding}."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        return super().create(request, *args, **kwargs)
     
 
 

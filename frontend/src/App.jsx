@@ -23,7 +23,8 @@ import Login from "./assets/Pages/Login";
 import NewInvoice from "./assets/Pages/invoice/NewInvoice";
 import EditInvoice from "./assets/Pages/invoice/EditInvoice";
 import ViewInvoice from "./assets/Pages/invoice/ViewInvoice";
-import Ledger from "./assets/Pages/invoice/Ledger";
+import Statement from "./assets/Pages/bank/Statement";
+import Ledger from "./assets/Pages/bank/Ledger";
 import AddCustomer from "./assets/Pages/customer/AddCustomer";
 import EditCustomer from "./assets/Pages/customer/EditCustomer";
 import ViewCostumers from "./assets/Pages/customer/ViewCostumers";
@@ -98,13 +99,16 @@ export default function App() {
               element={
                 <div className="flex h-screen w-full bg-xeflow-bg font-sans overflow-hidden">
                   {isSidebarOpen && (
-                    <div 
+                    <div
                       className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998] md:hidden transition-all duration-300"
                       onClick={() => setIsSidebarOpen(false)}
                     />
                   )}
 
-                  <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                  <Sidebar
+                    isOpen={isSidebarOpen}
+                    onClose={() => setIsSidebarOpen(false)}
+                  />
                   <main className="flex-1 flex flex-col h-full overflow-hidden relative">
                     <Navbar
                       toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -136,7 +140,11 @@ export default function App() {
               <Route path="/invoice/new" element={<NewInvoice />} />
               <Route path="/invoice/edit" element={<EditInvoice />} />
               <Route path="/invoice/view" element={<ViewInvoice />} />
-              <Route path="/invoice/ledger" element={<Ledger />} />
+
+              {/* bank routes */}
+
+              <Route path="/bank/ledger" element={<Ledger />} />
+              <Route path="/bank/statement" element={<Statement />} />
 
               {/* customer routes */}
 

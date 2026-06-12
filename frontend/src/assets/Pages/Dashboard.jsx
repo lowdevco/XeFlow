@@ -697,7 +697,7 @@ export default function Dashboard() {
                 />
                 <XAxis
                   dataKey="name"
-                  interval={0}
+                  interval={chartData.length > 15 ? 4 : 0}
                   axisLine={false}
                   tickLine={false}
                   tick={{

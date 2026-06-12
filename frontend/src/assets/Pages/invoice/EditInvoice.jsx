@@ -9,12 +9,26 @@ import {
   FiSave,
   FiChevronUp,
   FiChevronDown,
+  FiCreditCard,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { fetchWithAuth } from "../../js/api";
 import CustomSelect from "../../components/CustomSelect";
 import { COMPANY } from "../../info/company";
+import { BANK } from "../../info/bank";
 import Skeleton from "react-loading-skeleton";
+
+const combineDateWithCurrentTime = (dateStr) => {
+  if (!dateStr) return new Date().toISOString();
+  try {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const dateObj = new Date();
+    dateObj.setFullYear(year, month - 1, day);
+    return dateObj.toISOString();
+  } catch (e) {
+    return new Date(dateStr).toISOString();
+  }
+};
 
 const EditInvoice = () => {
   // Table State
@@ -46,6 +60,9 @@ const EditInvoice = () => {
     const [expandedInvoiceId, setExpandedInvoiceId] = useState(null);
     const [paymentInvoice, setPaymentInvoice] = useState(null);
     const [paymentAmount, setPaymentAmount] = useState("");
+    const [paymentTransactionId, setPaymentTransactionId] = useState("");
+    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
+    const [paymentDescription, setPaymentDescription] = useState("");
     const [isRecordingPayment, setIsRecordingPayment] = useState(false);
 
     const handleRecordPayment = async (e) => {
@@ -69,7 +86,12 @@ const EditInvoice = () => {
       try {
         const response = await fetchWithAuth(`/invoices/${paymentInvoice.id}/payment/`, {
           method: "POST",
-          body: JSON.stringify({ amount: amt }),
+          body: JSON.stringify({
+            amount: amt,
+            transaction_id: paymentTransactionId,
+            payment_date: combineDateWithCurrentTime(paymentDate),
+            description: paymentDescription || "Client payment recorded",
+          }),
         });
 
         if (response.ok) {
@@ -84,6 +106,9 @@ const EditInvoice = () => {
           toast.success("Payment recorded successfully!", { id: toastId });
           setPaymentInvoice(null);
           setPaymentAmount("");
+          setPaymentTransactionId("");
+          setPaymentDate(new Date().toISOString().split("T")[0]);
+          setPaymentDescription("");
         } else {
           const errorData = await response.json();
           toast.error(errorData.error || "Failed to record payment.", { id: toastId });
@@ -119,7 +144,7 @@ const EditInvoice = () => {
       { value: "", label: "Select a Customer" },
       ...dbCustomers.map((cust) => ({
         value: cust.id.toString(),
-        label: `${cust.company_name} (${cust.rep_name})`,
+        label: `${cust.company_name} (Attn: ${cust.rep_name}, Email: ${cust.email}, Phone: ${cust.phone}${cust.address ? `, Address: ${cust.address}` : ""})`,
       })),
     ];
   }, [dbCustomers]);
@@ -370,8 +395,8 @@ const EditInvoice = () => {
       invoiceNumber: invoice.invoice_number,
       issueDate: invoice.issue_date,
       dueDate: invoice.due_date,
-      notes: invoice.notes || "",
-      terms: invoice.terms || "",
+      notes: "",
+      terms: "",
       status: invoice.status || "Draft",
     });
 
@@ -422,6 +447,10 @@ const EditInvoice = () => {
   };
 
   const addLineItem = () => {
+    if (lineItems.length >= 5) {
+      toast.error("Maximum 5 service lines allowed per invoice.");
+      return;
+    }
     setLineItems([
       ...lineItems,
       {
@@ -814,10 +843,13 @@ const EditInvoice = () => {
                                         e.stopPropagation();
                                         setPaymentInvoice(invoice);
                                         setPaymentAmount("");
+                                        setPaymentTransactionId("");
+                                        setPaymentDate(new Date().toISOString().split("T")[0]);
+                                        setPaymentDescription("");
                                       }}
-                                      className="w-full md:w-auto px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
+                                      className="w-full md:w-auto px-4 py-2 bg-xeflow-brand hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
                                     >
-                                      Add Payment
+                                      <FiCreditCard size={14} /> Pay
                                     </button>
                                   ) : (
                                     <span className="px-4 py-2.5 text-xs font-bold text-green-500 bg-green-500/10 rounded-xl border border-green-500/20 text-center w-full md:w-auto">
@@ -959,7 +991,7 @@ const EditInvoice = () => {
                   <img
                     src={COMPANY.logo}
                     alt={COMPANY.name}
-                    className="w-auto h-20 md:h-24 scale-500 ml-29"
+                    className="w-auto h-16 md:h-20 object-contain"
                   />
                   <div className="text-sm text-xeflow-muted space-y-1 mt-2">
                     <p>{COMPANY.address}</p>
@@ -1230,41 +1262,41 @@ const EditInvoice = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-                <div className="flex flex-col gap-4">
-                  <div className="flex-1 flex flex-col">
-                    <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-1">
-                      Notes
-                    </h3>
-                    <textarea
-                      value={invoiceMeta.notes}
-                      onChange={(e) =>
-                        setInvoiceMeta({
-                          ...invoiceMeta,
-                          notes: e.target.value,
-                        })
-                      }
-                      className="w-full flex-1 bg-xeflow-bg border border-xeflow-border rounded-xl p-3 text-sm text-xeflow-text outline-none focus:border-xeflow-brand resize-none transition-colors custom-scrollbar min-h-[100px]"
-                    ></textarea>
-                  </div>
-                  <div className="flex-1 flex flex-col">
-                    <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-1">
-                      Terms & Conditions
-                    </h3>
-                    <textarea
-                      value={invoiceMeta.terms}
-                      onChange={(e) =>
-                        setInvoiceMeta({
-                          ...invoiceMeta,
-                          terms: e.target.value,
-                        })
-                      }
-                      className="w-full flex-1 bg-xeflow-bg border border-xeflow-border rounded-xl p-3 text-sm text-xeflow-text outline-none focus:border-xeflow-brand resize-none transition-colors custom-scrollbar min-h-[100px]"
-                    ></textarea>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                {/* Payment Instructions / Bank Details */}
+                <div className="w-full space-y-3 bg-xeflow-bg p-6 rounded-2xl border border-xeflow-border flex flex-col animate-in fade-in duration-200">
+                  <h3 className="text-xs font-bold text-xeflow-muted uppercase tracking-wider border-b border-xeflow-border pb-2">
+                    Payment Instructions
+                  </h3>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between items-center py-0.5 border-b border-xeflow-border/40">
+                      <span className="text-xeflow-muted font-semibold">Account Holder</span>
+                      <span className="font-bold text-xeflow-text">{BANK.accountName}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5 border-b border-xeflow-border/40">
+                      <span className="text-xeflow-muted font-semibold">Bank Name</span>
+                      <span className="font-bold text-xeflow-text">{BANK.bankName}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5 border-b border-xeflow-border/40">
+                      <span className="text-xeflow-muted font-semibold">Account Number</span>
+                      <span className="font-bold text-xeflow-text">{BANK.accountNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5 border-b border-xeflow-border/40">
+                      <span className="text-xeflow-muted font-semibold">IFSC Code</span>
+                      <span className="font-bold text-xeflow-text">{BANK.ifsc}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-0.5 border-b border-xeflow-border/40">
+                      <span className="text-xeflow-muted font-semibold">Branch</span>
+                      <span className="font-bold text-xeflow-text">{BANK.branch}</span>
+                    </div>
+                    <div className="pt-2 text-xs text-xeflow-muted leading-relaxed">
+                      <p className="font-semibold text-xeflow-text mb-1">Terms &amp; Conditions:</p>
+                      <p>Payment is due within 15 days of the invoice issue date. Please share the transaction receipt once payment is processed.</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="w-full space-y-3 bg-xeflow-bg p-6 rounded-2xl border border-xeflow-border flex flex-col justify-center">
+                <div className="w-full space-y-3 bg-xeflow-bg p-6 rounded-2xl border border-xeflow-border flex flex-col justify-center animate-in fade-in duration-200">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-xeflow-muted font-bold uppercase tracking-wide">
                       Subtotal
@@ -1448,22 +1480,53 @@ const EditInvoice = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Payment Amount (INR) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max={paymentInvoice.balance_due}
+                    placeholder={`Max: ${parseFloat(paymentInvoice.balance_due)}`}
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-bold text-xeflow-text transition-all"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Payment Date</label>
+                  <input
+                    type="date"
+                    value={paymentDate}
+                    onChange={(e) => setPaymentDate(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-semibold text-xeflow-text transition-all"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Payment Amount (INR)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Transaction ID</label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  max={paymentInvoice.balance_due}
-                  placeholder={`Max: ${parseFloat(paymentInvoice.balance_due)}`}
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-bold text-xeflow-text transition-all"
-                  required
+                  type="text"
+                  placeholder="Enter Bank or Payment TXN ID"
+                  value={paymentTransactionId}
+                  onChange={(e) => setPaymentTransactionId(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-semibold text-xeflow-text transition-all"
                 />
-                <span className="text-[10px] text-xeflow-muted block">
-                  * Dynamic limit matches the current outstanding balance.
-                </span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Description / Notes</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Bank transfer payment"
+                  value={paymentDescription}
+                  onChange={(e) => setPaymentDescription(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-xeflow-bg border border-xeflow-border rounded-xl text-sm outline-none focus:border-xeflow-brand font-semibold text-xeflow-text transition-all"
+                />
               </div>
 
               <div className="flex gap-3 pt-2">

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import SidebarMenuView, CustomerListCreateView, CustomerDetailView, ServiceListCreateView, ServiceDetailView, InvoiceListCreateView, InvoiceDetailView, AddInvoicePaymentView
+from .views import SidebarMenuView, CustomerListCreateView, CustomerDetailView, ServiceListCreateView, ServiceDetailView, InvoiceListCreateView, InvoiceDetailView, AddInvoicePaymentView, PaymentListCreateView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView   
 from .views import UserRegistrationView, GroupCreateView, GroupListView, PermissionListView,GroupUpdateDeleteView, CurrentUserView, UserListView, UserAdminDetailView, MailSystem
 
@@ -12,6 +12,7 @@ urlpatterns = [
     path('invoices/', InvoiceListCreateView.as_view(), name='invoice-list-create'),
     path('invoices/<int:pk>/', InvoiceDetailView.as_view(), name='invoice-detail'),
     path('invoices/<int:pk>/payment/', AddInvoicePaymentView.as_view(), name='invoice-payment'),
+    path('payments/', PaymentListCreateView.as_view(), name='payment-list-create'),
     path('users/register/', UserRegistrationView.as_view(), name='user-register'),
     path('users/me/', CurrentUserView.as_view(), name='current-user'),
     path('users/', UserListView.as_view(), name='user-list'),

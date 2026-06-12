@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Menu_Module , Menu_Child, Customer, Service, Invoice, InvoiceItem, UserProfile, GroupProfile
+from .models import Menu_Module , Menu_Child, Customer, Service, Invoice, InvoiceItem, UserProfile, GroupProfile, Payment
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User, Group, Permission
 from decimal import Decimal
@@ -34,6 +34,14 @@ class ServiceSerializer(serializers.ModelSerializer):
         model = Service
         fields = '__all__'
 
+
+#--------------Payment Serializer--------------#
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = '__all__'
+
 #--------------invoice Serializer----------------#
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
@@ -45,6 +53,7 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
 
 class InvoiceSerializer(serializers.ModelSerializer):
     items = InvoiceItemSerializer(many=True) 
+    payments = PaymentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Invoice
@@ -118,6 +127,22 @@ class InvoiceSerializer(serializers.ModelSerializer):
         invoice = Invoice.objects.create(**validated_data)
         for item_data in calculated_items:
             InvoiceItem.objects.create(invoice=invoice, **item_data)
+
+        # Payment Sync Logic for Create
+        if amount_paid > 0:
+            from django.utils import timezone
+            issue_date = validated_data.get('issue_date', timezone.now().date())
+            current_time = timezone.now().time()
+            payment_datetime = timezone.datetime.combine(issue_date, current_time)
+            payment_datetime = timezone.make_aware(payment_datetime, timezone.get_current_timezone())
+            Payment.objects.create(
+                invoice=invoice,
+                amount=amount_paid,
+                transaction_id='',
+                description="Initial payment recorded on invoice creation",
+                payment_date=payment_datetime
+            )
+
         return invoice
 
     def update(self, instance, validated_data):
@@ -192,7 +217,36 @@ class InvoiceSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
+
+        # Payment Sync Logic for Update
+        initial_payment = instance.payments.filter(description="Initial payment recorded on invoice creation").first()
+        from django.utils import timezone
+        issue_date = validated_data.get('issue_date', instance.issue_date)
+        current_time = timezone.now().time()
+        payment_datetime = timezone.datetime.combine(issue_date, current_time)
+        payment_datetime = timezone.make_aware(payment_datetime, timezone.get_current_timezone())
+
+        if initial_payment:
+            other_payments_sum = sum(p.amount for p in instance.payments.exclude(id=initial_payment.id))
+            target_initial_amount = amount_paid - other_payments_sum
+            if target_initial_amount <= 0:
+                initial_payment.delete()
+            else:
+                initial_payment.amount = target_initial_amount
+                initial_payment.payment_date = payment_datetime
+                initial_payment.save()
+        else:
+            all_payments_sum = sum(p.amount for p in instance.payments.all())
+            target_initial_amount = amount_paid - all_payments_sum
+            if target_initial_amount > 0:
+                Payment.objects.create(
+                    invoice=instance,
+                    amount=target_initial_amount,
+                    transaction_id='',
+                    description="Initial payment recorded on invoice creation",
+                    payment_date=payment_datetime
+                )
+
         if items_data is not None:
             instance.items.all().delete()
             for item_data in calculated_items:

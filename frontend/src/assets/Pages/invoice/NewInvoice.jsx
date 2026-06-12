@@ -10,6 +10,7 @@ import CustomSelect from "../../components/CustomSelect";
 // Const Values
 
 import { COMPANY } from "../../info/company";
+import { BANK } from "../../info/bank";
 
 const NewInvoice = () => {
   const navigate = useNavigate();
@@ -21,13 +22,13 @@ const NewInvoice = () => {
 
   //  STATE: INVOICE DETAILS
   const [invoiceMeta, setInvoiceMeta] = useState({
-    invoiceNumber: "INV-" + Math.floor(1000 + Math.random() * 9000),
+    invoiceNumber: "INV-0001",
     issueDate: new Date().toISOString().split("T")[0],
     dueDate: new Date(new Date().setDate(new Date().getDate() + 15))
       .toISOString()
       .split("T")[0],
-    notes: "Thank you for your business!",
-    terms: "Payment is due within 15 days.",
+    notes: "",
+    terms: "",
   });
 
   //  States For Selected Data From Drop Down
@@ -61,7 +62,7 @@ const NewInvoice = () => {
       { value: "", label: "-- Select a Customer --" },
       ...dbCustomers.map((cust) => ({
         value: cust.id.toString(),
-        label: `${cust.company_name} (${cust.rep_name})`,
+        label: `${cust.company_name} (Attn: ${cust.rep_name}, Email: ${cust.email}, Phone: ${cust.phone}${cust.address ? `, Address: ${cust.address}` : ""})`,
       })),
     ];
   }, [dbCustomers]);
@@ -89,13 +90,36 @@ const NewInvoice = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [custRes, servRes] = await Promise.all([
+        const [custRes, servRes, invRes] = await Promise.all([
           fetchWithAuth("/customers/", { method: "GET" }),
           fetchWithAuth("/services/", { method: "GET" }),
+          fetchWithAuth("/invoices/", { method: "GET" }),
         ]);
 
         if (custRes.ok) setDbCustomers(await custRes.json());
         if (servRes.ok) setDbServices(await servRes.json());
+
+        if (invRes.ok) {
+          const invoices = await invRes.json();
+          let maxNum = 0;
+          invoices.forEach((inv) => {
+            if (inv.invoice_number) {
+              const match = inv.invoice_number.match(/INV-(\d+)/i);
+              if (match) {
+                const num = parseInt(match[1], 10);
+                if (num > maxNum) {
+                  maxNum = num;
+                }
+              }
+            }
+          });
+          const nextNum = maxNum + 1;
+          const formattedNum = "INV-" + String(nextNum).padStart(4, "0");
+          setInvoiceMeta((prev) => ({
+            ...prev,
+            invoiceNumber: formattedNum,
+          }));
+        }
       } catch (error) {
         console.error("Failed to load DB data:", error);
       }
@@ -106,6 +130,10 @@ const NewInvoice = () => {
   //  Line Item Handler
 
   const addLineItem = () => {
+    if (lineItems.length >= 5) {
+      toast.error("Maximum 5 service lines allowed per invoice.");
+      return;
+    }
     setLineItems([
       ...lineItems,
       {
@@ -364,7 +392,7 @@ const NewInvoice = () => {
             <img
               src={COMPANY.logo}
               alt={COMPANY.name}
-              className="w-auto h-24 pl-13 md:h-32 lg:scale-500 scale-300 sm:scale-320 md:scale-300 object-contain "
+              className="w-auto h-16 md:h-20 object-contain"
             />
             <div className="text-sm text-xeflow-muted space-y-1 mt-2">
               <p>{COMPANY.address}</p>
@@ -603,39 +631,43 @@ const NewInvoice = () => {
 
         {/*  BOTTOM SUMMARY SECTION  */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-stretch">
-          {/* Notes and  Terms Section  */}
-
-          <div className="flex flex-col gap-6">
-            <div className="flex-1 flex flex-col">
-              <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-2">
-                Notes
-              </h3>
-              <textarea
-                value={invoiceMeta.notes}
-                onChange={(e) =>
-                  setInvoiceMeta({ ...invoiceMeta, notes: e.target.value })
-                }
-                className="w-full flex-1 bg-xeflow-bg border border-xeflow-border rounded-xl p-4 text-sm text-xeflow-text outline-none focus:border-xeflow-brand resize-none transition-colors custom-scrollbar min-h-[120px]"
-              ></textarea>
-            </div>
-            <div className="flex-1 flex flex-col">
-              <h3 className="text-xs font-bold text-xeflow-muted uppercase mb-2">
-                Terms & Conditions
-              </h3>
-              <textarea
-                value={invoiceMeta.terms}
-                onChange={(e) =>
-                  setInvoiceMeta({ ...invoiceMeta, terms: e.target.value })
-                }
-                className="w-full flex-1 bg-xeflow-bg border border-xeflow-border rounded-xl p-4 text-sm text-xeflow-text outline-none focus:border-xeflow-brand resize-none transition-colors custom-scrollbar min-h-[120px]"
-              ></textarea>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          {/* Payment Instructions / Bank Details */}
+          <div className="w-full space-y-4 bg-xeflow-bg p-6 md:p-8 rounded-2xl border border-xeflow-border flex flex-col animate-in fade-in duration-200">
+            <h3 className="text-xs font-bold text-xeflow-muted uppercase tracking-wider border-b border-xeflow-border pb-2">
+              Payment Instructions
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center py-1 border-b border-xeflow-border/40">
+                <span className="text-xeflow-muted font-semibold">Account Holder</span>
+                <span className="font-bold text-xeflow-text">{BANK.accountName}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-xeflow-border/40">
+                <span className="text-xeflow-muted font-semibold">Bank Name</span>
+                <span className="font-bold text-xeflow-text">{BANK.bankName}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-xeflow-border/40">
+                <span className="text-xeflow-muted font-semibold">Account Number</span>
+                <span className="font-bold text-xeflow-text">{BANK.accountNumber}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-xeflow-border/40">
+                <span className="text-xeflow-muted font-semibold">IFSC Code</span>
+                <span className="font-bold text-xeflow-text">{BANK.ifsc}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-xeflow-border/40">
+                <span className="text-xeflow-muted font-semibold">Branch</span>
+                <span className="font-bold text-xeflow-text">{BANK.branch}</span>
+              </div>
+              <div className="pt-2 text-xs text-xeflow-muted leading-relaxed">
+                <p className="font-semibold text-xeflow-text mb-1">Terms &amp; Conditions:</p>
+                <p>Payment is due within 15 days of the invoice issue date. Please share the transaction receipt once payment is processed.</p>
+              </div>
             </div>
           </div>
 
           {/*  TOTALS ENGINE  */}
 
-          <div className="w-full space-y-4 bg-xeflow-bg p-6 md:p-8 rounded-2xl border border-xeflow-border flex flex-col justify-center">
+          <div className="w-full space-y-4 bg-xeflow-bg p-6 md:p-8 rounded-2xl border border-xeflow-border flex flex-col justify-center animate-in fade-in duration-200">
             <div className="flex justify-between items-center text-sm">
               <span className="text-xeflow-muted font-bold uppercase tracking-wide">
                 Subtotal

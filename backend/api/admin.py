@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Menu_Module, Menu_Child, Customer, Service, Invoice, InvoiceItem, UserProfile
+from .models import Menu_Module, Menu_Child, Customer, Service, Invoice, InvoiceItem, UserProfile, Payment
 from django.utils.html import format_html
 
 #---------------------------------#
@@ -77,6 +77,14 @@ class InvoiceAdmin(admin.ModelAdmin):
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'profile_picture')
+
+
+#---------- Payments ----------#
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('invoice', 'amount', 'transaction_id', 'payment_date', 'created_at')
+    search_fields = ('invoice__invoice_number', 'transaction_id')
+    list_filter = ('payment_date',)
 
 
 #--------------Permissions----------#

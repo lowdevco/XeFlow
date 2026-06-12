@@ -145,13 +145,16 @@ class Invoice(models.Model):
         from decimal import Decimal
         self.balance_due = Decimal(str(self.total_amount)) - Decimal(str(self.amount_paid))
         
-     
+        
         if self.total_amount > 0 and self.amount_paid >= self.total_amount:
             self.status = 'Paid'
         elif self.due_date and timezone.now().date() > self.due_date:
             self.status = 'Overdue'
         elif self.amount_paid > 0 and self.amount_paid < self.total_amount:
             self.status = 'Partially Paid'
+        else:
+            if self.status in ['Paid', 'Partially Paid']:
+                self.status = 'Sent'
 
         self.clean()
         super().save(*args, **kwargs)
@@ -171,6 +174,33 @@ class InvoiceItem(models.Model):
 
     def __str__(self):
         return f"{self.invoice.invoice_number} - {self.description}"
+
+
+#---------------Payments-------------------#
+
+
+class Payment(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='payments')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    payment_date = models.DateTimeField(default=timezone.now)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Recalculate amount_paid of the invoice
+        self.invoice.amount_paid = sum(p.amount for p in self.invoice.payments.all())
+        self.invoice.save()
+
+    def delete(self, *args, **kwargs):
+        invoice = self.invoice
+        super().delete(*args, **kwargs)
+        invoice.amount_paid = sum(p.amount for p in invoice.payments.all())
+        invoice.save()
+
+    def __str__(self):
+        return f"Payment of {self.amount} for {self.invoice.invoice_number} (TXN: {self.transaction_id})"
 
 
 #---------------User Profile-------------------#

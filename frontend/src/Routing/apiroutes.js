@@ -8,6 +8,7 @@ export const API_ROUTES = {
   INVOICES: "/invoices/",
   INVOICE_PAYMENT: (id) => `/invoices/${id}/payment/`,
   INVOICE_DETAIL: (id) => `/invoices/${id}/`,
+  PAYMENTS: "/payments/",
   CUSTOMERS: "/customers/",
   CUSTOMER_DETAIL: (id) => `/customers/${id}/`,
   SERVICES: "/services/",
