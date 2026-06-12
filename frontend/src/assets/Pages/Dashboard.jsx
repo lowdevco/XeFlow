@@ -135,6 +135,7 @@ function StatWidget({
   trendUp = true,
   sparkData,
   showChart = false,
+  className = "",
 }) {
   const upColor = "#1b4fd8";
   const downColor = "#DC2626";
@@ -142,7 +143,7 @@ function StatWidget({
 
 
   return (
-    <div className="relative bg-xeflow-surface border border-xeflow-border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
+    <div className={`relative bg-xeflow-surface border border-xeflow-border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col ${className}`}>
       <div
         className="absolute inset-x-0 top-0 h-[3px] rounded-t-2xl opacity-80"
         style={{
@@ -170,7 +171,7 @@ function StatWidget({
             {title}
           </p>
           <div className="flex items-end justify-between gap-2">
-            <h3 className="text-2xl xl:text-3xl font-black text-xeflow-text leading-none tracking-tight truncate">
+            <h3 className="text-2xl xl:text-3xl font-black text-xeflow-text leading-tight tracking-tight break-all">
               {amount}
             </h3>
             {trend && (
@@ -609,7 +610,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-5 mb-8">
         <StatWidget
           icon={<FiBarChart2 />}
           title="Total Revenue"
@@ -617,6 +618,7 @@ export default function Dashboard() {
           trend="Up"
           trendUp={true}
           showChart={true}
+          className="sm:col-span-2 lg:col-span-2 xl:col-span-2"
         />
         <StatWidget
           icon={<FiActivity />}
@@ -625,24 +627,28 @@ export default function Dashboard() {
           trend="Tax"
           trendUp={true}
           showChart={true}
+          className="sm:col-span-2 lg:col-span-2 xl:col-span-2"
         />
         <StatWidget
           icon={<FiFileText />}
           title="Invoices Sent"
           amount={stats.invoicesSent.toString()}
           showChart={false}
+          className="sm:col-span-1 lg:col-span-2 xl:col-span-1"
         />
         <StatWidget
           icon={<FiUsers />}
           title="Customers"
           amount={stats.customers.toString()}
           showChart={false}
+          className="sm:col-span-1 lg:col-span-1 xl:col-span-1"
         />
         <StatWidget
           icon={<FiBriefcase />}
           title="Services"
           amount={stats.services.toString()}
           showChart={false}
+          className="sm:col-span-2 lg:col-span-1 xl:col-span-1"
         />
       </div>
 
