@@ -1,4 +1,4 @@
-import  { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Skeleton from "react-loading-skeleton";
 import Logo from "../image/Logo.png";
@@ -10,16 +10,14 @@ import {
   FiCommand,
   FiArrowRight,
 } from "react-icons/fi";
-import { API_BASE_URL } from "../js/api"
-
+import { API_BASE_URL } from "../js/api";
 
 // Fetch with auth wrapper
 
 import { fetchWithAuth } from "../js/api";
 import { useAuth } from "../../context/AuthContext";
 
-
-// Dark Mode toggle Pill 
+// Dark Mode toggle Pill
 
 function DarkModeToggle({ isDark, onToggle }) {
   return (
@@ -75,8 +73,8 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
   const [modules, setModules] = useState([]);
   const searchInputRef = useRef(null);
 
-  // Fetch modules for the search 
-  
+  // Fetch modules for the search
+
   useEffect(() => {
     const fetchNavModules = async () => {
       try {
@@ -110,7 +108,6 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
     return items;
   }, [modules]);
 
-  
   const filteredItems = searchableItems.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
@@ -129,12 +126,11 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       setTimeout(() => searchInputRef.current.focus(), 50);
     } else {
-      setSearchQuery(""); 
+      setSearchQuery("");
     }
   }, [isSearchOpen]);
 
@@ -237,10 +233,23 @@ export default function Navbar({ toggleSidebar, isDark, toggleDarkMode }) {
 
           {loading ? (
             <div className="flex items-center gap-3 pl-1 pr-3 py-1">
-              <Skeleton circle width={36} height={36} className="shrink-0 animate-pulse" />
+              <Skeleton
+                circle
+                width={36}
+                height={36}
+                className="shrink-0 animate-pulse"
+              />
               <div className="hidden lg:block space-y-1 text-left">
-                <Skeleton width={70} height={14} className="rounded animate-pulse" />
-                <Skeleton width={50} height={10} className="rounded animate-pulse" />
+                <Skeleton
+                  width={70}
+                  height={14}
+                  className="rounded animate-pulse"
+                />
+                <Skeleton
+                  width={50}
+                  height={10}
+                  className="rounded animate-pulse"
+                />
               </div>
             </div>
           ) : (

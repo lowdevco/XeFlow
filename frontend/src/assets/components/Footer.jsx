@@ -2,8 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { COMPANY } from "../info/company";
 
-
-
 const Footer = () => {
   return (
     <footer className="bg-xeflow-surface border-t border-xeflow-border/50 py-5 px-6 md:px-8 mt-auto z-10 transition-colors duration-300">

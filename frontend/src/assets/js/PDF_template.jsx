@@ -240,8 +240,15 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
   const totalSGST = rows.reduce((sum, item) => sum + item.sgstAmount, 0);
   const totalIGST = rows.reduce((sum, item) => sum + item.igstAmount, 0);
 
-  const discountPercent = Number(invoice.discount_percentage || invoice.discount_percent || invoice.discountPercent || 0);
-  const discountAmountRaw = Number(invoice.discount_amount || invoice.discountAmount || 0);
+  const discountPercent = Number(
+    invoice.discount_percentage ||
+      invoice.discount_percent ||
+      invoice.discountPercent ||
+      0,
+  );
+  const discountAmountRaw = Number(
+    invoice.discount_amount || invoice.discountAmount || 0,
+  );
   let discountVal = 0;
   let discountLabel = "Discount";
 
@@ -266,7 +273,11 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
       ? Number(invoice.balance_due)
       : netGrandTotal;
 
-  const rowCount = 2 + (discountVal > 0 ? 1 : 0) + (isGST ? 3 : isIGST ? 2 : 0) + (amtPaid > 0 ? 2 : 0);
+  const rowCount =
+    2 +
+    (discountVal > 0 ? 1 : 0) +
+    (isGST ? 3 : isIGST ? 2 : 0) +
+    (amtPaid > 0 ? 2 : 0);
 
   let panelTop = 809;
   let panelFontSize = 10;
@@ -329,7 +340,12 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
 
         {/* Year */}
         <div className="absolute top-[80px] left-[660px] ">
-          <h1 className="font-semibold text-[#2158A9]" style={{ transform: 'scale(2.6)', transformOrigin: 'top left' }}>{yearStr}</h1>
+          <h1
+            className="font-semibold text-[#2158A9]"
+            style={{ transform: "scale(2.6)", transformOrigin: "top left" }}
+          >
+            {yearStr}
+          </h1>
         </div>
 
         {/* Bill To */}
@@ -638,24 +654,42 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
         </div>
 
         {/* DYNAMIC TAX SUMMARY PANEL */}
-        <div className="absolute text-[#0f172a]" style={{ top: `${panelTop}px`, right: '43px', width: '338px' }}>
-          <div className="overflow-hidden rounded-lg border border-[#d6dee9] bg-white w-full" style={{ fontSize: `${panelFontSize}px` }}>
+        <div
+          className="absolute text-[#0f172a]"
+          style={{ top: `${panelTop}px`, right: "43px", width: "338px" }}
+        >
+          <div
+            className="overflow-hidden rounded-lg border border-[#d6dee9] bg-white w-full"
+            style={{ fontSize: `${panelFontSize}px` }}
+          >
             <table className="w-full border-separate border-spacing-0">
               <tbody>
                 <tr className="border-b border-[#eef2f7]">
-                  <td className="border-b border-[#eef2f7] text-[#64748b] font-medium" style={{ padding: `${cellPy}px 8px` }}>
+                  <td
+                    className="border-b border-[#eef2f7] text-[#64748b] font-medium"
+                    style={{ padding: `${cellPy}px 8px` }}
+                  >
                     Taxable Amount
                   </td>
-                  <td className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]" style={{ padding: `${cellPy}px 8px` }}>
+                  <td
+                    className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]"
+                    style={{ padding: `${cellPy}px 8px` }}
+                  >
                     ₹ {fmt(totalTaxable)}
                   </td>
                 </tr>
                 {discountVal > 0 && (
                   <tr className="border-b border-[#eef2f7] bg-red-50/30">
-                    <td className="border-b border-[#eef2f7] text-[#dc2626] font-medium" style={{ padding: `${cellPy}px 8px` }}>
+                    <td
+                      className="border-b border-[#eef2f7] text-[#dc2626] font-medium"
+                      style={{ padding: `${cellPy}px 8px` }}
+                    >
                       {discountLabel}
                     </td>
-                    <td className="border-b border-[#eef2f7] text-right font-bold text-[#dc2626]" style={{ padding: `${cellPy}px 8px` }}>
+                    <td
+                      className="border-b border-[#eef2f7] text-right font-bold text-[#dc2626]"
+                      style={{ padding: `${cellPy}px 8px` }}
+                    >
                       - ₹ {fmt(discountVal)}
                     </td>
                   </tr>
@@ -663,26 +697,44 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
                 {isGST && (
                   <>
                     <tr className="border-b border-[#eef2f7]">
-                      <td className="border-b border-[#eef2f7] text-[#64748b] font-medium" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-[#64748b] font-medium"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         Add CGST ({cgstRate}%)
                       </td>
-                      <td className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         ₹ {fmt(totalCGST)}
                       </td>
                     </tr>
                     <tr className="border-b border-[#eef2f7]">
-                      <td className="border-b border-[#eef2f7] text-[#64748b] font-medium" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-[#64748b] font-medium"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         Add SGST ({sgstRate}%)
                       </td>
-                      <td className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         ₹ {fmt(totalSGST)}
                       </td>
                     </tr>
                     <tr className="border-b border-[#eef2f7]">
-                      <td className="border-b border-[#eef2f7] text-[#64748b] font-semibold" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-[#64748b] font-semibold"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         Total Tax
                       </td>
-                      <td className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         ₹ {fmt(totalCGST + totalSGST)}
                       </td>
                     </tr>
@@ -691,18 +743,30 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
                 {isIGST && (
                   <>
                     <tr className="border-b border-[#eef2f7]">
-                      <td className="border-b border-[#eef2f7] text-[#64748b] font-medium" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-[#64748b] font-medium"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         Add IGST ({igstRate}%)
                       </td>
-                      <td className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         ₹ {fmt(totalIGST)}
                       </td>
                     </tr>
                     <tr className="border-b border-[#eef2f7]">
-                      <td className="border-b border-[#eef2f7] text-[#64748b] font-semibold" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-[#64748b] font-semibold"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         Total Tax
                       </td>
-                      <td className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-right font-bold text-[#1e293b]"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         ₹ {fmt(totalIGST)}
                       </td>
                     </tr>
@@ -711,13 +775,21 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
                 <tr className="bg-[#2158A9] text-[#ffffff] font-bold">
                   <td
                     className="font-black tracking-wide"
-                    style={{ padding: `${totalCellPy}px 10px`, fontSize: `${grandTotalFontSize}px`, borderBottomLeftRadius: amtPaid > 0 ? '0' : '6px' }}
+                    style={{
+                      padding: `${totalCellPy}px 10px`,
+                      fontSize: `${grandTotalFontSize}px`,
+                      borderBottomLeftRadius: amtPaid > 0 ? "0" : "6px",
+                    }}
                   >
                     Grand Total
                   </td>
                   <td
                     className="text-right font-black tracking-wide"
-                    style={{ padding: `${totalCellPy}px 10px`, fontSize: `${grandTotalFontSize}px`, borderBottomRightRadius: amtPaid > 0 ? '0' : '6px' }}
+                    style={{
+                      padding: `${totalCellPy}px 10px`,
+                      fontSize: `${grandTotalFontSize}px`,
+                      borderBottomRightRadius: amtPaid > 0 ? "0" : "6px",
+                    }}
                   >
                     ₹ {fmt(finalGrandTotal)}
                   </td>
@@ -725,23 +797,37 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
                 {amtPaid > 0 && (
                   <>
                     <tr className="border-b border-[#eef2f7] bg-green-50/30">
-                      <td className="border-b border-[#eef2f7] text-[#16a34a] font-medium" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-[#16a34a] font-medium"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         Amount Paid / Advance
                       </td>
-                      <td className="border-b border-[#eef2f7] text-right font-bold text-[#16a34a]" style={{ padding: `${cellPy}px 8px` }}>
+                      <td
+                        className="border-b border-[#eef2f7] text-right font-bold text-[#16a34a]"
+                        style={{ padding: `${cellPy}px 8px` }}
+                      >
                         - ₹ {fmt(amtPaid)}
                       </td>
                     </tr>
                     <tr className="bg-red-50/30 font-bold">
                       <td
                         className="text-[#dc2626] font-black tracking-wide"
-                        style={{ padding: `${totalCellPy}px 10px`, fontSize: `${grandTotalFontSize}px`, borderBottomLeftRadius: '6px' }}
+                        style={{
+                          padding: `${totalCellPy}px 10px`,
+                          fontSize: `${grandTotalFontSize}px`,
+                          borderBottomLeftRadius: "6px",
+                        }}
                       >
                         Balance Due
                       </td>
                       <td
                         className="text-right text-[#dc2626] font-black tracking-wide"
-                        style={{ padding: `${totalCellPy}px 10px`, fontSize: `${grandTotalFontSize}px`, borderBottomRightRadius: '6px' }}
+                        style={{
+                          padding: `${totalCellPy}px 10px`,
+                          fontSize: `${grandTotalFontSize}px`,
+                          borderBottomRightRadius: "6px",
+                        }}
                       >
                         ₹ {fmt(balDue)}
                       </td>
@@ -751,7 +837,10 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
               </tbody>
             </table>
           </div>
-          <div className="w-full text-right text-[9px] text-[#64748b] font-medium pr-1" style={{ marginTop: `${oeMargin}px` }}>
+          <div
+            className="w-full text-right text-[9px] text-[#64748b] font-medium pr-1"
+            style={{ marginTop: `${oeMargin}px` }}
+          >
             (E &amp; O.E.)
           </div>
         </div>
@@ -759,8 +848,6 @@ export default function InvoicePreview({ invoice, isPrinting = false }) {
     </div>
   );
 }
-
-
 
 export const generateInvoicePDF = (
   invoice,

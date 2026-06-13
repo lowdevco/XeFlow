@@ -26,25 +26,30 @@ export default function SendEmailModal({
       setToEmail(customer.email || "");
       setCcEmail("");
       setBccEmail("");
-      
+
       const invNum = invoice.invoice_number || "Draft";
       setSubject(`Invoice ${invNum} from ${COMPANY.name}`);
-      
-      const clientName = customer.rep_name || customer.company_name || "Valued Client";
-      const totalStr = formatMoney ? formatMoney(invoice.total_amount) : `INR ${invoice.total_amount}`;
-      const dueDateStr = formatDate ? formatDate(invoice.due_date) : invoice.due_date;
-      
+
+      const clientName =
+        customer.rep_name || customer.company_name || "Valued Client";
+      const totalStr = formatMoney
+        ? formatMoney(invoice.total_amount)
+        : `INR ${invoice.total_amount}`;
+      const dueDateStr = formatDate
+        ? formatDate(invoice.due_date)
+        : invoice.due_date;
+
       setMessage(
         `Dear ${clientName},\n\n` +
-        `We hope you are doing well. Please find attached invoice ${invNum} for the recent services rendered.\n\n` +
-        `Summary:\n` +
-        `· Invoice Number: ${invNum}\n` +
-        `· Total Amount: ${totalStr}\n` +
-        `· Due Date: ${dueDateStr}\n\n` +
-        `Please let us know if you have any questions or require further assistance.\n\n` +
-        `Thank you for your business!\n\n` +
-        `Best regards,\n` +
-        `${COMPANY.name} Billing Department`
+          `We hope you are doing well. Please find attached invoice ${invNum} for the recent services rendered.\n\n` +
+          `Summary:\n` +
+          `· Invoice Number: ${invNum}\n` +
+          `· Total Amount: ${totalStr}\n` +
+          `· Due Date: ${dueDateStr}\n\n` +
+          `Please let us know if you have any questions or require further assistance.\n\n` +
+          `Thank you for your business!\n\n` +
+          `Best regards,\n` +
+          `${COMPANY.name} Billing Department`,
       );
     }
   }, [invoice, isOpen, formatDate, formatMoney]);
@@ -66,7 +71,7 @@ export default function SendEmailModal({
       const pdfBase64 = await generateInvoicePDFBase64(
         invoice,
         formatDate,
-        formatMoney
+        formatMoney,
       );
 
       setStatusText("Sending email via SMTP...");
@@ -86,15 +91,21 @@ export default function SendEmailModal({
       });
 
       if (response.ok) {
-        toast.success(`Invoice sent successfully to ${toEmail}!`, { id: toastId });
+        toast.success(`Invoice sent successfully to ${toEmail}!`, {
+          id: toastId,
+        });
         onClose();
       } else {
         const errData = await response.json();
-        toast.error(errData.error || "Failed to send invoice email.", { id: toastId });
+        toast.error(errData.error || "Failed to send invoice email.", {
+          id: toastId,
+        });
       }
     } catch (err) {
       console.error("Email send error:", err);
-      toast.error("An error occurred while sending the email.", { id: toastId });
+      toast.error("An error occurred while sending the email.", {
+        id: toastId,
+      });
     } finally {
       setIsProcessing(false);
       setStatusText("");
@@ -111,7 +122,9 @@ export default function SendEmailModal({
             </div>
             <div>
               <h3 className="text-lg font-bold">Send Invoice via Email</h3>
-              <p className="text-xs text-xeflow-muted mt-0.5">Attach A4 invoice PDF automatically</p>
+              <p className="text-xs text-xeflow-muted mt-0.5">
+                Attach A4 invoice PDF automatically
+              </p>
             </div>
           </div>
           <button
@@ -123,10 +136,15 @@ export default function SendEmailModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="sm:col-span-3 space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Recipient Email (To) *</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">
+                Recipient Email (To) *
+              </label>
               <input
                 type="email"
                 value={toEmail}
@@ -138,7 +156,9 @@ export default function SendEmailModal({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">CC</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">
+                CC
+              </label>
               <input
                 type="text"
                 value={ccEmail}
@@ -149,7 +169,9 @@ export default function SendEmailModal({
               />
             </div>
             <div className="space-y-1.5 col-span-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">BCC</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">
+                BCC
+              </label>
               <input
                 type="text"
                 value={bccEmail}
@@ -162,7 +184,9 @@ export default function SendEmailModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Subject</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">
+              Subject
+            </label>
             <input
               type="text"
               value={subject}
@@ -175,7 +199,9 @@ export default function SendEmailModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">Message Body</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">
+              Message Body
+            </label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -192,10 +218,16 @@ export default function SendEmailModal({
               <FiPaperclip size={18} />
             </div>
             <div className="flex-1 min-w-0 leading-tight">
-              <p className="text-sm font-bold truncate">Invoice_${invoice.invoice_number || "Draft"}.pdf</p>
-              <p className="text-[10.5px] text-xeflow-muted mt-0.5 font-medium">Automatic high-fidelity print template</p>
+              <p className="text-sm font-bold truncate">
+                Invoice_${invoice.invoice_number || "Draft"}.pdf
+              </p>
+              <p className="text-[10.5px] text-xeflow-muted mt-0.5 font-medium">
+                Automatic high-fidelity print template
+              </p>
             </div>
-            <span className="px-2.5 py-1 text-[10px] font-black uppercase text-green-500 bg-green-500/10 border border-green-500/20 rounded-md">Attached</span>
+            <span className="px-2.5 py-1 text-[10px] font-black uppercase text-green-500 bg-green-500/10 border border-green-500/20 rounded-md">
+              Attached
+            </span>
           </div>
         </form>
 

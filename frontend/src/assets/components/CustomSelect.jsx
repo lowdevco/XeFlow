@@ -31,7 +31,8 @@ export default function CustomSelect({
   }, []);
 
   const selectedOption = options.find((opt) => opt.value === value);
-  const displayLabel = triggerLabel || (selectedOption ? selectedOption.label : placeholder);
+  const displayLabel =
+    triggerLabel || (selectedOption ? selectedOption.label : placeholder);
 
   const btnClass = buttonClassName
     ? `flex items-center justify-between gap-2 cursor-pointer transition-all ${buttonClassName}`
@@ -42,7 +43,10 @@ export default function CustomSelect({
     : `absolute mt-2 ${align === "right" ? "right-0" : "left-0"} ${fullWidth ? "w-full" : "w-48"} rounded-xl bg-xeflow-surface border border-xeflow-border shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-3 duration-250 max-h-[250px] overflow-y-auto custom-scrollbar`;
 
   return (
-    <div className={`relative ${fullWidth ? "w-full" : ""} ${className}`} ref={dropdownRef}>
+    <div
+      className={`relative ${fullWidth ? "w-full" : ""} ${className}`}
+      ref={dropdownRef}
+    >
       <button
         type="button"
         disabled={disabled}
@@ -50,7 +54,9 @@ export default function CustomSelect({
         className={`${btnClass} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
       >
         <span className="flex items-center gap-2 truncate">
-          {prefixIcon && <span className="shrink-0 flex items-center">{prefixIcon}</span>}
+          {prefixIcon && (
+            <span className="shrink-0 flex items-center">{prefixIcon}</span>
+          )}
           <span className="truncate">{displayLabel}</span>
         </span>
         <FiChevronDown
@@ -83,5 +89,3 @@ export default function CustomSelect({
     </div>
   );
 }
-
-

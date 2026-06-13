@@ -1,12 +1,8 @@
-
 import { useState, useRef } from "react";
 
-
-
 export function useInvoice() {
+  // Header
 
-  // Header 
-  
   const [logo, setLogoUrl] = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState("INV-001");
   const [from, setFrom] = useState("");
@@ -17,14 +13,13 @@ export function useInvoice() {
   const [dueDate, setDueDate] = useState("");
   const [poNumber, setPoNumber] = useState("");
 
-
   // Line items
-  
+
   const [items, setItems] = useState([
     { id: 1, description: "", quantity: "", rate: "" },
   ]);
 
-  // Adjustments 
+  // Adjustments
 
   const [discount, setDiscount] = useState({
     show: false,
@@ -35,27 +30,24 @@ export function useInvoice() {
   const [shipping, setShipping] = useState({ show: false, value: "" });
 
   // Footer
-  
+
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
-
 
   // UI state
 
   const [showSend, setShowSend] = useState(false);
   const logoRef = useRef(null);
 
-
   // Logo upload
-  
+
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) setLogoUrl(URL.createObjectURL(file));
   };
 
-
-  // Line item CRUD  Operattions 
+  // Line item CRUD  Operattions
 
   const addItem = () =>
     setItems((prev) => [
@@ -71,7 +63,7 @@ export function useInvoice() {
       prev.map((i) => (i.id === id ? { ...i, [field]: val } : i)),
     );
 
-  // Calculations 
+  // Calculations
 
   const subtotal = items.reduce(
     (s, i) => s + (parseFloat(i.quantity) || 0) * (parseFloat(i.rate) || 0),
@@ -94,27 +86,27 @@ export function useInvoice() {
   const total = subtotal - discountAmt + taxAmt + shippingAmt;
   const balanceDue = total - (parseFloat(amountPaid) || 0);
 
-  // Format helper 
-  
+  // Format helper
+
   const fmt = (n) =>
     `₹ ${Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  // Actions 
+  // Actions
 
   const handleDownload = () => window.print();
 
   return {
-    // refs 
+    // refs
 
     logoRef,
 
-    // logo 
-    
+    // logo
+
     logo,
     handleLogoUpload,
-    
+
     // header fields
-    
+
     invoiceNumber,
     setInvoiceNumber,
     from,
@@ -132,15 +124,15 @@ export function useInvoice() {
     poNumber,
     setPoNumber,
 
-    // items 
-    
+    // items
+
     items,
     addItem,
     removeItem,
     updateItem,
 
-    // adjustments 
-    
+    // adjustments
+
     discount,
     setDiscount,
     tax,
@@ -149,7 +141,7 @@ export function useInvoice() {
     setShipping,
 
     // footer
-    
+
     notes,
     setNotes,
     terms,
@@ -157,7 +149,7 @@ export function useInvoice() {
     amountPaid,
     setAmountPaid,
 
-    // totals 
+    // totals
 
     subtotal,
     discountAmt,
@@ -167,8 +159,8 @@ export function useInvoice() {
     balanceDue,
     fmt,
 
-    // UI  
-    
+    // UI
+
     showSend,
     setShowSend,
     handleDownload,
