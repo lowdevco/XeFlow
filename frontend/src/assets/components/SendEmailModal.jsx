@@ -20,39 +20,55 @@ export default function SendEmailModal({
   const [statusText, setStatusText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const customer = invoice?.customer || {};
+  const invNum = invoice?.invoice_number || "Draft";
+  const clientName =
+    customer.rep_name || customer.company_name || "Valued Client";
+
+  const totalStr =
+    invoice && formatMoney
+      ? formatMoney(invoice.total_amount)
+      : invoice
+        ? `INR ${invoice.total_amount}`
+        : "";
+
+  const paidStr =
+    invoice && formatMoney
+      ? formatMoney(invoice.amount_paid)
+      : invoice
+        ? `INR ${invoice.amount_paid}`
+        : "";
+
+  const balanceDueStr =
+    invoice && formatMoney
+      ? formatMoney(invoice.balance_due)
+      : invoice
+        ? `INR ${invoice.balance_due}`
+        : "";
+
+  const dueDateStr =
+    invoice && formatDate
+      ? formatDate(invoice.due_date)
+      : invoice
+        ? invoice.due_date
+        : "";
+
   useEffect(() => {
     if (invoice && isOpen) {
-      const customer = invoice.customer || {};
       setToEmail(customer.email || "");
       setCcEmail("");
       setBccEmail("");
-
-      const invNum = invoice.invoice_number || "Draft";
       setSubject(`Invoice ${invNum} from ${COMPANY.name}`);
-
-      const clientName =
-        customer.rep_name || customer.company_name || "Valued Client";
-      const totalStr = formatMoney
-        ? formatMoney(invoice.total_amount)
-        : `INR ${invoice.total_amount}`;
-      const dueDateStr = formatDate
-        ? formatDate(invoice.due_date)
-        : invoice.due_date;
-
       setMessage(
         `Dear ${clientName},\n\n` +
           `We hope you are doing well. Please find attached invoice ${invNum} for the recent services rendered.\n\n` +
-          `Summary:\n` +
-          `· Invoice Number: ${invNum}\n` +
-          `· Total Amount: ${totalStr}\n` +
-          `· Due Date: ${dueDateStr}\n\n` +
           `Please let us know if you have any questions or require further assistance.\n\n` +
           `Thank you for your business!\n\n` +
           `Best regards,\n` +
-          `${COMPANY.name} Billing Department`,
+          `${COMPANY.name}`,
       );
     }
-  }, [invoice, isOpen, formatDate, formatMoney]);
+  }, [invoice, isOpen]);
 
   if (!isOpen || !invoice) return null;
 
@@ -74,6 +90,144 @@ export default function SendEmailModal({
         formatMoney,
       );
 
+      const formattedUserMessage = message.replace(/\n/g, "<br/>");
+      const balanceDueNum = parseFloat(invoice.balance_due || 0);
+      const isPaid = balanceDueNum <= 0;
+      const balanceColor = isPaid ? "#22c55e" : "#ef4444";
+      const balanceBg = isPaid ? "#f0fdf4" : "#fef2f2";
+      const balanceText = isPaid ? "Paid" : "Outstanding";
+
+      const htmlEmailBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              background-color: #f1f5f9;
+              padding: 40px 20px;
+              margin: 0;
+            }
+            .max-w-xl { max-width: 540px; }
+            .mx-auto { margin-left: auto; margin-right: auto; }
+            .bg-white { background-color: #ffffff; }
+            .border { border: 1px solid #cbd5e1; }
+            .border-slate-200 { border-color: #cbd5e1; }
+            .rounded-2xl { border-radius: 16px; }
+            .shadow-sm { box-shadow: 0 4px 20px -2px rgba(13, 34, 71, 0.08), 0 2px 8px -1px rgba(13, 34, 71, 0.04); }
+            .p-8 { padding: 32px; }
+            .mb-8 { margin-bottom: 32px; }
+            .text-base { font-size: 16px; }
+            .font-bold { font-weight: 700; }
+            .text-slate-900 { color: #0f172a; }
+            .tracking-tight { letter-spacing: -0.025em; }
+            .text-center { text-align: center; }
+            .my-6 { margin-top: 24px; margin-bottom: 24px; }
+            .text-xs { font-size: 11px; }
+            .uppercase { text-transform: uppercase; }
+            .tracking-widest { letter-spacing: 0.1em; }
+            .text-slate-400 { color: #64748b; }
+            .text-4xl { font-size: 36px; }
+            .font-black { font-weight: 900; }
+            .my-2 { margin-top: 8px; margin-bottom: 8px; }
+            .text-sm { font-size: 14px; }
+            .text-slate-500 { color: #475569; }
+            .border-t { border-top: 1px solid #cbd5e1; }
+            .border-slate-100 { border-color: #cbd5e1; }
+            .my-8 { margin-top: 32px; margin-bottom: 32px; }
+            .leading-relaxed { line-height: 1.625; }
+            .text-slate-600 { color: #1e293b; }
+            .w-full { width: 100%; }
+            .border-collapse { border-collapse: collapse; }
+            .border-b { border-bottom: 1px solid #cbd5e1; }
+            .py-3 { padding-top: 12px; padding-bottom: 12px; }
+            .text-right { text-align: right; }
+            .font-semibold { font-weight: 600; }
+            .border-t-2 { border-top: 2px solid #0f172a; }
+            .pt-4 { padding-top: 16px; }
+            .py-4 { padding-top: 16px; padding-bottom: 16px; }
+            .font-extrabold { font-weight: 800; }
+            .mt-8 { margin-top: 32px; }
+            .leading-normal { line-height: 1.5; }
+            .text-indigo-600 { color: #1b4fd8; }
+            .no-underline { text-decoration: none; }
+          </style>
+        </head>
+        <body>
+          <div class="max-w-xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm" style="overflow: hidden;">
+          
+            <!-- XeFlow Accent Bar -->
+
+            <div style="height: 4px; background-color: #1b4fd8; width: 100%;"></div>
+
+            <div class="p-8">
+              <!-- Header/Logo -->
+              <div class="text-base font-bold text-slate-900 tracking-tight mb-8">
+                <span style="color: #1b4fd8;">Xeventure IT Solutions</span>
+              </div>
+
+              <!-- Hero Amount Due -->
+              <div class="text-center my-6">
+                <div class="text-xs font-bold uppercase tracking-widest text-slate-400">Amount Due</div>
+                <div class="text-4xl font-black text-slate-900 my-2">${balanceDueStr}</div>
+                <div class="text-sm text-slate-500">Due by ${dueDateStr}</div>
+              </div>
+
+              <hr class="border-t border-slate-200 my-8" />
+
+              <!-- User Message -->
+              <div class="text-sm leading-relaxed text-slate-600 mb-8">
+                ${formattedUserMessage}
+              </div>
+
+              <!-- Invoice Summary Table -->
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th colspan="2" style="text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; padding-bottom: 8px; border-bottom: 1px solid #cbd5e1;">
+                      Invoice Summary
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-slate-200">
+                    <td class="py-3 text-slate-500">Invoice Number</td>
+                    <td class="py-3 text-right font-semibold text-slate-900">${invNum}</td>
+                  </tr>
+                  <tr class="border-b border-slate-200">
+                    <td class="py-3 text-slate-500">Total Amount</td>
+                    <td class="py-3 text-right font-semibold text-slate-900">${totalStr}</td>
+                  </tr>
+                  <tr class="border-b border-slate-200">
+                    <td class="py-3 text-slate-500">Amount Paid</td>
+                    <td class="py-3 text-right font-semibold text-slate-900">${paidStr}</td>
+                  </tr>
+                  <tr>
+                    <td class="py-4 font-bold text-slate-900" style="padding-top: 16px;">Outstanding Balance</td>
+                    <td class="py-4 text-right font-extrabold" style="padding-top: 16px; color: ${balanceColor};">
+                      ${balanceDueStr}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Footer (Outside the card to prevent any border-radius/overflow clipping issues) -->
+          <div class="max-w-xl mx-auto mt-8 text-center text-xs text-slate-400 leading-normal">
+            <p>This is an automated billing notification from ${COMPANY.name}.</p>
+            <p class="mt-1">
+              For support, email 
+              <a href="mailto:${COMPANY.email}" class="text-indigo-600 no-underline">${COMPANY.email}</a> 
+              or visit 
+              <a href="${COMPANY.website.startsWith("http") ? COMPANY.website : "https://" + COMPANY.website}" class="text-indigo-600 no-underline">${COMPANY.website}</a>.
+            </p>
+          </div>
+        </body>
+        </html>
+      `;
+
       setStatusText("Sending email via SMTP...");
       toast.loading("Sending email...", { id: toastId });
 
@@ -84,9 +238,9 @@ export default function SendEmailModal({
           cc: ccEmail,
           bcc: bccEmail,
           subject: subject,
-          message: message,
+          message: htmlEmailBody,
           pdf: pdfBase64,
-          filename: `Invoice_${invoice.invoice_number || "Draft"}.pdf`,
+          filename: `Invoice_${invNum}.pdf`,
         }),
       });
 
@@ -140,6 +294,39 @@ export default function SendEmailModal({
           onSubmit={handleSubmit}
           className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar"
         >
+          {/* Invoice Summary Card */}
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-xeflow-surface2 border border-xeflow-border rounded-2xl mb-2">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-xeflow-muted">
+                Invoice Number
+              </span>
+              <p className="text-sm font-bold text-xeflow-text">{invNum}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-xeflow-muted">
+                Total Amount
+              </span>
+              <p className="text-sm font-bold text-xeflow-text">{totalStr}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-xeflow-muted">
+                Amount Paid
+              </span>
+              <p className="text-sm font-bold text-xeflow-text">{paidStr}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-xeflow-muted">
+                Outstanding Balance
+              </span>
+              <p
+                className={`text-sm font-black ${parseFloat(invoice.balance_due || 0) <= 0 ? "text-green-500" : "text-red-500"}`}
+              >
+                {balanceDueStr}
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="sm:col-span-3 space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-xeflow-muted">

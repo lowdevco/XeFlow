@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Invoice
 from django.core.mail import send_mail, EmailMessage
+from django.conf import settings
 import base64
 
 # --------------Module Views--------------#
@@ -243,25 +244,25 @@ class UserAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 
-#---------------------Email (mailtrap) -------------------------#
+#---------------------Email (Gmail SMTP) -------------------------#
 
 
 class MailSystem(APIView):
     permission_classes = []
 
     def get(self, request):
-        recipient = request.query_params.get('email', 'test.mailtrap1234@gmail.com')
+        recipient = request.query_params.get('email', settings.DEFAULT_FROM_EMAIL)
         send_mail(
             subject='Example Subject',
             message='Message body',
-            from_email="django@mailtrap.club",
+            from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[recipient],
             fail_silently=False,
         )
         return Response({'message': f'Message Sent to {recipient}!'})
 
     def post(self, request):
-        recipient = request.data.get('email', 'test.mailtrap1234@gmail.com')
+        recipient = request.data.get('email', settings.DEFAULT_FROM_EMAIL)
         cc = request.data.get('cc', '')
         bcc = request.data.get('bcc', '')
         subject = request.data.get('subject', 'Example Subject')
@@ -275,11 +276,12 @@ class MailSystem(APIView):
         email = EmailMessage(
             subject=subject,
             body=message,
-            from_email="django@mailtrap.club",
+            from_email=settings.DEFAULT_FROM_EMAIL,
             to=[recipient],
             cc=cc_list,
             bcc=bcc_list,
         )
+        email.content_subtype = "html"
 
         if pdf_base64:
             try:

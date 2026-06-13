@@ -392,7 +392,7 @@ const NewInvoice = () => {
             <img
               src={COMPANY.logo}
               alt={COMPANY.name}
-              className="w-auto h-16 md:h-20 object-contain"
+              className="w-auto h-16  md:h-20 object-contain"
             />
             <div className="text-sm text-xeflow-muted space-y-1 mt-2">
               <p>{COMPANY.address}</p>
