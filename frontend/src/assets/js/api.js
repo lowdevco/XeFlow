@@ -3,9 +3,12 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const API_ROOT = `${API_BASE_URL}/api`;
 
-const forceLogout = () => {
+export const forceLogout = (reason = "session_expired") => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
+  localStorage.removeItem("xeflow_last_activity");
+  // Dispatch event so AuthContext can react (e.g. show toast) before redirect
+  window.dispatchEvent(new CustomEvent("xeflow:force-logout", { detail: { reason } }));
   window.location.href = "/login";
 };
 
@@ -49,6 +52,10 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
           const data = await refreshRes.json();
 
           localStorage.setItem("accessToken", data.access);
+          // If backend rotates refresh tokens, update it too
+          if (data.refresh) {
+            localStorage.setItem("refreshToken", data.refresh);
+          }
 
           headers["Authorization"] = `Bearer ${data.access}`;
 
@@ -57,13 +64,13 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
             headers,
           });
         } else {
-          forceLogout();
+          forceLogout("token_expired");
         }
       } catch (error) {
-        forceLogout();
+        forceLogout("network_error");
       }
     } else {
-      forceLogout();
+      forceLogout("no_refresh_token");
     }
   }
 
